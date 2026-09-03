@@ -2,7 +2,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 
 type Step = {
   kicker: string;
@@ -15,7 +14,7 @@ type Step = {
 const STEPS: Step[] = [
   {
     kicker: "Welcome",
-    title: "Deep Waters with ROG",
+    title: "Deep Waters",
     body: "A 90 day journey through the Bible together. Old Testament and New Testament, every single day. You will finish at day 90.",
     emoji: "🌊",
     gradient: "from-rog-purple via-[#4A2A85] to-rog-blue"
@@ -100,13 +99,9 @@ export default function WelcomePage() {
         <Link href="/" className="text-sm text-rog-muted hover:text-rog-purple">
           Skip
         </Link>
-        <Image
-          src="/rog-heart-purple.png"
-          alt="ROG"
-          width={32}
-          height={32}
-          className="w-8 h-8 object-contain"
-        />
+        <p className="text-xs font-bold tracking-[0.2em] uppercase text-rog-purple">
+          Deep Waters
+        </p>
         <div className="w-10" />
       </div>
 

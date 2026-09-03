@@ -77,10 +77,7 @@ export default async function CohortLandingPage({
           </div>
         )}
         <div className="max-w-3xl mx-auto px-6 py-16 text-center">
-          <Link href={user ? "/today" : "/"} className="inline-block">
-            <Image src="/rog-heart-white.png" alt="ROG" width={100} height={100} className="w-24 h-24 mx-auto object-contain" />
-          </Link>
-          <p className="mt-6 kicker !text-rog-pink">Deep Waters with ROG</p>
+          <p className="kicker !text-rog-pink">Deep Waters</p>
           <h1 className="mt-3 text-5xl md:text-6xl font-bold tracking-tight">{cohort.name}</h1>
           {cohort.description && (
             <p className="mt-4 text-white/85 max-w-xl mx-auto">{cohort.description}</p>

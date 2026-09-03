@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -91,8 +90,7 @@ export default function Nav() {
             </button>
           )}
           <Link href="/today" className="flex items-center gap-2">
-            <Image src="/rog-heart-purple.png" alt="ROG" width={40} height={40} className="w-9 h-9 object-contain" />
-            <span className="font-bold text-rog-purple hidden md:inline">Deep Waters</span>
+            <span className="font-bold text-rog-purple text-lg tracking-tight">Deep Waters</span>
           </Link>
         </div>
 

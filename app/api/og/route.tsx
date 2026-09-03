@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
               fontWeight: 500
             }}
           >
-            RIVERS OF GRACE
+            90 DAYS
           </div>
           <div
             style={{
@@ -85,7 +85,6 @@ export async function GET(req: NextRequest) {
           >
             DEEP WATERS
           </div>
-          <div style={{ fontSize: 32, opacity: 0.9, marginTop: 4 }}>with ROG</div>
         </div>
         {/* Blue bar */}
         <div style={{ height: 12, background: "#2E4FD1" }} />
@@ -219,7 +218,7 @@ export async function GET(req: NextRequest) {
             justifyContent: "center"
           }}
         >
-          DEEP WATERS WITH ROG &nbsp;&bull;&nbsp; RIVERS OF GRACE
+          DEEP WATERS
         </div>
       </div>
     ),

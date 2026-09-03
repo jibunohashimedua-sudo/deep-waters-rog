@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -34,10 +33,7 @@ function LoginPageInner() {
   return (
     <main className="min-h-screen flex items-center justify-center px-6">
       <div className="w-full max-w-md">
-        <Link href="/" className="flex justify-center">
-          <Image src="/rog-heart-purple.png" alt="ROG" width={80} height={80} className="w-20 h-20 object-contain" />
-        </Link>
-        <h1 className="mt-6 text-3xl font-bold text-rog-purple text-center">Sign in</h1>
+        <h1 className="text-3xl font-bold text-rog-purple text-center">Sign in</h1>
         <p className="mt-2 text-center text-rog-muted text-sm">
           We&rsquo;ll email you a magic link.
         </p>

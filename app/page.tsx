@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 
 export default function LandingPage() {
   return (
@@ -10,22 +9,16 @@ export default function LandingPage() {
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-rog-pink/30 rounded-full blur-3xl" />
         <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-rog-blue/30 rounded-full blur-3xl" />
 
-        <div className="relative max-w-4xl mx-auto px-6 pt-16 pb-20 text-center">
-          <Image
-            src="/rog-wordmark-white.png"
-            alt="BLW Rivers of Grace London"
-            width={520}
-            height={124}
-            className="mx-auto h-14 w-auto md:h-16 opacity-95"
-            priority
-          />
-          <h1 className="mt-10 text-6xl md:text-8xl font-bold tracking-tight">
+        <div className="relative max-w-4xl mx-auto px-6 pt-20 pb-20 text-center">
+          <h1 className="text-6xl md:text-8xl font-bold tracking-tight">
             DEEP WATERS
           </h1>
-          <p className="mt-2 text-xl md:text-2xl font-light">with ROG</p>
+          <p className="mt-4 text-base md:text-lg font-light tracking-[0.3em] uppercase text-white/80">
+            A 90 day Bible reading plan
+          </p>
           <p className="mt-8 text-white/85 max-w-xl mx-auto">
-            A 90 day Bible reading plan. Old Testament and New Testament,
-            every single day. Read together. Finish together.
+            Old Testament and New Testament, every single day.
+            Read together. Finish together.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/welcome" className="btn bg-white text-rog-purple px-8 py-4 text-lg font-semibold hover:bg-rog-cream shadow-xl shadow-black/10">
@@ -42,14 +35,7 @@ export default function LandingPage() {
       {/* Verse card */}
       <section className="py-20 px-6">
         <div className="max-w-2xl mx-auto card text-center">
-          <Image
-            src="/rog-heart-purple.png"
-            alt="Rivers of Grace"
-            width={120}
-            height={120}
-            className="mx-auto w-24 h-24 object-contain"
-          />
-          <p className="mt-8 italic text-xl text-rog-ink">
+          <p className="italic text-xl text-rog-ink">
             &ldquo;With joy shall ye draw water out of the wells of salvation.&rdquo;
           </p>
           <p className="mt-3 kicker">Isaiah 12:3</p>
@@ -80,15 +66,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <footer className="bg-rog-pink text-white text-center py-8 text-sm">
-        <Image
-          src="/rog-wordmark-white.png"
-          alt="BLW Rivers of Grace London"
-          width={320}
-          height={76}
-          className="mx-auto h-8 w-auto mb-3 opacity-95"
-        />
-        DEEP WATERS WITH ROG
+      <footer className="bg-rog-pink text-white text-center py-8 text-sm tracking-[0.2em] uppercase">
+        Deep Waters
       </footer>
     </main>
   );

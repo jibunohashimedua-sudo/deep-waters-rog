@@ -1,6 +1,6 @@
-# Deep Waters with ROG
+# Deep Waters
 
-A 90 day Bible reading plan web app by Rivers of Grace. Old Testament + New Testament every day, KJV, community reflections, live leaderboard, finisher wall, and auto-generated share cards.
+A 90 day Bible reading plan web app. Old Testament + New Testament every day, KJV, community reflections, live leaderboard, finisher wall, and auto-generated share cards.
 
 ## Stack
 
@@ -101,7 +101,7 @@ Baked into `lib/plan.ts`. OT + NT interleaved: roughly 10 OT chapters + 3 NT cha
 
 ## Branding
 
-Colors and fonts live in `tailwind.config.ts` under `rog.*`. Logo is `public/logo.png` (replace with a higher-res version any time). Font is Poppins from Google Fonts.
+Colors and fonts live in `tailwind.config.ts`. Logo is `public/logo.png` (replace with a higher-res version any time). Font is Poppins from Google Fonts.
 
 ## Extending
 
@@ -116,5 +116,3 @@ Colors and fonts live in `tailwind.config.ts` under `rog.*`. Logo is `public/log
 - **Bible text not loading**: check `API_BIBLE_KEY` is set and API.Bible dashboard shows requests.
 - **Share card fails**: check the profile photo URL is publicly accessible (Supabase storage bucket must be public).
 - **Leaderboard not updating live**: check the realtime publication was created (schema.sql runs it).
-
-Built for Rivers of Grace London.
