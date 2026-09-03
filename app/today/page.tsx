@@ -1,0 +1,88 @@
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import { READING_PLAN, currentDayNumber, formatReading } from "@/lib/plan";
+import Nav from "@/components/Nav";
+import ReflectionForm from "@/components/ReflectionForm";
+import NudgeBanner from "@/components/NudgeBanner";
+
+export default async function TodayPage() {
+  const supabase = createClient();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+  if (!profile) redirect("/onboarding");
+
+  const day = currentDayNumber(profile.start_date);
+  const reading = READING_PLAN[day - 1];
+
+  const { data: existing } = await supabase
+    .from("completions")
+    .select("verse_reference, verse_text, reflection")
+    .eq("user_id", user.id)
+    .eq("day_number", day)
+    .maybeSingle();
+
+  const otRef = formatReading(reading.ot);
+  const ntRef = formatReading(reading.nt);
+
+  return (
+    <>
+      <Nav />
+      <main className="max-w-3xl mx-auto px-6 py-8">
+        <NudgeBanner completed={!!existing} day={day} />
+        {/* Progress */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between text-sm">
+            <span className="kicker">Your progress</span>
+            <span className="text-rog-muted">Day {day} of 90</span>
+          </div>
+          <div className="mt-2 h-2 bg-rog-line rounded-full overflow-hidden">
+            <div
+              className="h-full bg-rog-purple"
+              style={{ width: `${(day / 90) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        <p className="kicker">Today&rsquo;s Reading</p>
+        <h1 className="mt-1 text-4xl font-bold text-rog-purple">Day {day}</h1>
+
+        {/* Reading cards linking to /read */}
+        <div className="mt-6 grid md:grid-cols-2 gap-4">
+          <Link href="/read?t=ot" className="card block hover:border-rog-purple transition group">
+            <p className="kicker !text-rog-blue">Old Testament</p>
+            <p className="mt-2 text-lg font-semibold text-rog-ink">{otRef}</p>
+            <p className="mt-3 text-xs text-rog-pink font-semibold uppercase tracking-wider group-hover:underline">
+              Read now &rarr;
+            </p>
+          </Link>
+          <Link href="/read?t=nt" className="card block hover:border-rog-purple transition group">
+            <p className="kicker !text-rog-blue">New Testament</p>
+            <p className="mt-2 text-lg font-semibold text-rog-ink">{ntRef}</p>
+            <p className="mt-3 text-xs text-rog-pink font-semibold uppercase tracking-wider group-hover:underline">
+              Read now &rarr;
+            </p>
+          </Link>
+        </div>
+
+        {/* Reflection */}
+        <div className="mt-8">
+          <ReflectionForm
+            dayNumber={day}
+            existing={existing ?? null}
+            userName={profile.name}
+            userPhoto={profile.photo_url}
+          />
+        </div>
+      </main>
+    </>
+  );
+}

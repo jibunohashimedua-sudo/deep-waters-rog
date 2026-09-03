@@ -1,0 +1,95 @@
+import Link from "next/link";
+import Image from "next/image";
+
+export default function LandingPage() {
+  return (
+    <main className="min-h-screen">
+      {/* Purple hero block */}
+      <section className="bg-rog-purple text-white relative overflow-hidden">
+        {/* subtle blurred glass orbs for depth */}
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-rog-pink/30 rounded-full blur-3xl" />
+        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-rog-blue/30 rounded-full blur-3xl" />
+
+        <div className="relative max-w-4xl mx-auto px-6 pt-16 pb-20 text-center">
+          <Image
+            src="/rog-wordmark-white.png"
+            alt="BLW Rivers of Grace London"
+            width={520}
+            height={124}
+            className="mx-auto h-14 w-auto md:h-16 opacity-95"
+            priority
+          />
+          <h1 className="mt-10 text-6xl md:text-8xl font-bold tracking-tight">
+            DEEP WATERS
+          </h1>
+          <p className="mt-2 text-xl md:text-2xl font-light">with ROG</p>
+          <p className="mt-8 text-white/85 max-w-xl mx-auto">
+            A 90 day Bible reading plan. Old Testament and New Testament,
+            every single day. Read together. Finish together.
+          </p>
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/welcome" className="btn bg-white text-rog-purple px-8 py-4 text-lg font-semibold hover:bg-rog-cream shadow-xl shadow-black/10">
+              Join Deep Waters
+            </Link>
+            <Link href="/login" className="glass-dark btn text-white px-8 py-4 text-lg">
+              I already have an account
+            </Link>
+          </div>
+        </div>
+        <div className="h-2 bg-rog-blue relative" />
+      </section>
+
+      {/* Verse card */}
+      <section className="py-20 px-6">
+        <div className="max-w-2xl mx-auto card text-center">
+          <Image
+            src="/rog-heart-purple.png"
+            alt="Rivers of Grace"
+            width={120}
+            height={120}
+            className="mx-auto w-24 h-24 object-contain"
+          />
+          <p className="mt-8 italic text-xl text-rog-ink">
+            &ldquo;With joy shall ye draw water out of the wells of salvation.&rdquo;
+          </p>
+          <p className="mt-3 kicker">Isaiah 12:3</p>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="py-16 px-6">
+        <div className="max-w-5xl mx-auto">
+          <p className="kicker text-center">How it works</p>
+          <h2 className="mt-4 text-4xl font-bold text-rog-purple text-center">
+            Read. Reflect. Share. Finish.
+          </h2>
+          <div className="grid md:grid-cols-4 gap-4 mt-12">
+            {[
+              { n: "01", t: "Sign up", d: "Add your name and a photo. Pick your start date." },
+              { n: "02", t: "Read daily", d: "OT + NT every day. Roughly 13 chapters." },
+              { n: "03", t: "Share a verse", d: "One verse. One thought. Post to the community." },
+              { n: "04", t: "Finish at day 90", d: "Get on the finisher wall. Get your card." }
+            ].map((s) => (
+              <div key={s.n} className="card">
+                <p className="text-rog-pink text-sm font-semibold">{s.n}</p>
+                <h3 className="mt-2 font-bold text-lg text-rog-purple">{s.t}</h3>
+                <p className="mt-1 text-sm text-rog-muted">{s.d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <footer className="bg-rog-pink text-white text-center py-8 text-sm">
+        <Image
+          src="/rog-wordmark-white.png"
+          alt="BLW Rivers of Grace London"
+          width={320}
+          height={76}
+          className="mx-auto h-8 w-auto mb-3 opacity-95"
+        />
+        DEEP WATERS WITH ROG
+      </footer>
+    </main>
+  );
+}

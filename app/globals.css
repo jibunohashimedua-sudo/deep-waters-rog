@@ -1,0 +1,259 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================================================
+   THEME TOKENS
+   Light is default. Dark overrides via [data-theme="dark"].
+   ========================================================= */
+
+:root {
+  --bg: #F7F1EA;
+  --text: #0F0F0F;
+  --muted: #6B6459;
+  --line: #E7DFD3;
+
+  --card-bg: rgba(255, 255, 255, 0.62);
+  --card-border: rgba(255, 255, 255, 0.7);
+  --card-highlight: rgba(255, 255, 255, 0.9);
+  --card-shadow: rgba(59, 30, 110, 0.07);
+
+  --nav-bg: rgba(247, 241, 234, 0.72);
+  --nav-border: rgba(255, 255, 255, 0.6);
+
+  --input-bg: rgba(255, 255, 255, 0.55);
+  --input-bg-focus: rgba(255, 255, 255, 0.9);
+  --input-border: #E7DFD3;
+
+  --chip-bg: rgba(255, 255, 255, 0.55);
+  --chip-border: rgba(255, 255, 255, 0.7);
+
+  --accent: #3B1E6E;    /* rog-purple */
+  --accent-strong: #2E4FD1;
+  --pink: #E85D9E;
+
+  --grain-opacity: 0.35;
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #0B0716;
+  --text: #F3EDE4;
+  --muted: #A9A0BB;
+  --line: rgba(255, 255, 255, 0.08);
+
+  --card-bg: rgba(255, 255, 255, 0.055);
+  --card-border: rgba(255, 255, 255, 0.11);
+  --card-highlight: rgba(255, 255, 255, 0.1);
+  --card-shadow: rgba(0, 0, 0, 0.45);
+
+  --nav-bg: rgba(11, 7, 22, 0.72);
+  --nav-border: rgba(255, 255, 255, 0.08);
+
+  --input-bg: rgba(255, 255, 255, 0.06);
+  --input-bg-focus: rgba(255, 255, 255, 0.12);
+  --input-border: rgba(255, 255, 255, 0.14);
+
+  --chip-bg: rgba(255, 255, 255, 0.08);
+  --chip-border: rgba(255, 255, 255, 0.14);
+
+  --accent: #B79FE8;
+  --accent-strong: #8AA5FF;
+  --pink: #FF7EB6;
+
+  --grain-opacity: 0.5;
+
+  color-scheme: dark;
+}
+
+html, body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: "Poppins", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.4s ease, color 0.3s ease;
+}
+
+/* Ambient blurred colour orbs, tinted for each theme */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+:root body::before {
+  background:
+    radial-gradient(600px 400px at 12% 8%, rgba(232, 93, 158, 0.20), transparent 60%),
+    radial-gradient(700px 500px at 88% 18%, rgba(46, 79, 209, 0.14), transparent 60%),
+    radial-gradient(500px 400px at 50% 95%, rgba(59, 30, 110, 0.12), transparent 60%),
+    radial-gradient(400px 300px at 92% 88%, rgba(240, 213, 196, 0.5), transparent 60%);
+}
+
+[data-theme="dark"] body::before {
+  background:
+    radial-gradient(700px 500px at 12% 8%, rgba(232, 93, 158, 0.22), transparent 60%),
+    radial-gradient(800px 600px at 88% 18%, rgba(46, 79, 209, 0.28), transparent 60%),
+    radial-gradient(600px 500px at 50% 95%, rgba(183, 159, 232, 0.18), transparent 60%),
+    radial-gradient(500px 400px at 92% 88%, rgba(255, 126, 182, 0.15), transparent 60%);
+}
+
+/* Film grain, inline SVG turbulence. Sits above the orbs, under content. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0.9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 240px 240px;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.btn {
+  @apply inline-flex items-center justify-center rounded-full font-medium transition-all;
+}
+
+.btn-primary {
+  @apply btn text-white px-6 py-3 shadow-lg;
+  background-color: #3B1E6E;
+  box-shadow: 0 10px 30px -10px rgba(59, 30, 110, 0.5);
+}
+.btn-primary:hover { background-color: #2E4FD1; }
+
+[data-theme="dark"] .btn-primary {
+  background-color: #6A45C7;
+  box-shadow: 0 10px 30px -8px rgba(138, 90, 255, 0.55);
+}
+[data-theme="dark"] .btn-primary:hover { background-color: #8AA5FF; color: #0B0716; }
+
+.btn-secondary {
+  @apply btn px-6 py-3;
+  color: var(--text);
+  background: var(--chip-bg);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid var(--chip-border);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+.btn-secondary:hover {
+  background: var(--input-bg-focus);
+  border-color: var(--accent);
+}
+
+.btn-pink {
+  @apply btn text-white px-6 py-3 hover:opacity-90 shadow-lg;
+  background-color: #E85D9E;
+  box-shadow: 0 10px 30px -10px rgba(232, 93, 158, 0.5);
+}
+
+/* =========================================================
+   GLASS SURFACES
+   ========================================================= */
+
+.card {
+  @apply rounded-3xl p-6;
+  background: var(--card-bg);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  border: 1px solid var(--card-border);
+  box-shadow:
+    0 8px 32px var(--card-shadow),
+    inset 0 1px 0 var(--card-highlight),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.glass-dark {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.glass-nav {
+  background: var(--nav-bg);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  border-bottom: 1px solid var(--nav-border);
+}
+
+.glass-chip {
+  background: var(--chip-bg);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid var(--chip-border);
+  color: var(--text);
+}
+
+/* =========================================================
+   TYPOGRAPHY & UTILITIES
+   ========================================================= */
+
+.kicker {
+  @apply text-xs font-medium tracking-[0.2em] uppercase;
+  color: var(--pink);
+}
+
+.bible-content p {
+  @apply mb-3 leading-relaxed;
+  color: var(--text);
+}
+
+.bible-content .v {
+  @apply text-xs align-super font-semibold mr-1;
+  color: var(--pink);
+}
+
+/* =========================================================
+   FORM CONTROLS
+   ========================================================= */
+
+input, textarea, select {
+  background: var(--input-bg) !important;
+  color: var(--text);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: var(--input-border);
+}
+input:focus, textarea:focus, select:focus {
+  background: var(--input-bg-focus) !important;
+}
+input::placeholder, textarea::placeholder {
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+/* =========================================================
+   DARK-MODE OVERRIDES FOR EXISTING TAILWIND CLASSES
+   These target places in the app that were coded before dark
+   mode existed, so they blend in properly.
+   ========================================================= */
+
+[data-theme="dark"] .text-rog-ink { color: var(--text); }
+[data-theme="dark"] .text-rog-muted { color: var(--muted); }
+[data-theme="dark"] .text-rog-purple { color: var(--accent); }
+[data-theme="dark"] .bg-white { background-color: rgba(255, 255, 255, 0.05); }
+[data-theme="dark"] .bg-rog-cream { background-color: rgba(255, 255, 255, 0.04); }
+[data-theme="dark"] .bg-rog-peach { background-color: rgba(255, 200, 175, 0.09); }
+[data-theme="dark"] .border-rog-line { border-color: var(--line); }
+[data-theme="dark"] .border-rog-pink\/40 { border-color: rgba(255, 126, 182, 0.4); }
+
+/* Hover surfaces used in nav */
+[data-theme="dark"] .hover\:bg-rog-cream:hover { background-color: rgba(255, 255, 255, 0.08); }
+[data-theme="dark"] .hover\:bg-rog-peach:hover { background-color: rgba(255, 200, 175, 0.12); }
+
+/* Nav pill active state */
+[data-theme="dark"] .bg-rog-purple.text-white {
+  background-color: #6A45C7;
+}

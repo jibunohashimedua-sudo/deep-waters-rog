@@ -1,0 +1,70 @@
+import Link from "next/link";
+import Nav from "@/components/Nav";
+import { createClient } from "@/lib/supabase/server";
+
+export default async function CohortsPage() {
+  const supabase = createClient();
+  const { data: cohorts } = await supabase.from("cohort_summary").select("*");
+
+  return (
+    <>
+      <Nav />
+      <main className="max-w-3xl mx-auto px-6 py-8">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <p className="kicker">Groups</p>
+            <h1 className="mt-1 text-4xl font-bold text-rog-purple">Cohorts</h1>
+            <p className="mt-2 text-sm text-rog-muted">
+              Groups starting Deep Waters together. Share a link to invite.
+            </p>
+          </div>
+          <Link href="/cohorts/new" className="btn-primary">
+            + New cohort
+          </Link>
+        </div>
+
+        <div className="mt-8 space-y-3">
+          {!cohorts || cohorts.length === 0 ? (
+            <div className="card text-center py-12">
+              <p className="text-rog-muted">No cohorts yet. Create the first one.</p>
+            </div>
+          ) : (
+            cohorts.map((c: any) => {
+              const startDate = new Date(c.start_date);
+              const today = new Date();
+              const daysUntil = Math.ceil(
+                (startDate.getTime() - today.getTime()) / 86400000
+              );
+              const status =
+                daysUntil > 0
+                  ? `Starts in ${daysUntil} day${daysUntil === 1 ? "" : "s"}`
+                  : daysUntil === 0
+                  ? "Starts today"
+                  : `Day ${Math.min(90, Math.abs(daysUntil) + 1)} in progress`;
+              return (
+                <Link
+                  key={c.id}
+                  href={`/c/${c.slug}`}
+                  className="card block hover:border-rog-purple transition"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="font-bold text-rog-purple text-lg">{c.name}</p>
+                      <p className="text-xs text-rog-muted mt-1">
+                        {status} &bull; {c.member_count} member
+                        {c.member_count === 1 ? "" : "s"}
+                      </p>
+                    </div>
+                    <div className="text-xs text-rog-pink font-semibold uppercase tracking-wider">
+                      View &rarr;
+                    </div>
+                  </div>
+                </Link>
+              );
+            })
+          )}
+        </div>
+      </main>
+    </>
+  );
+}
