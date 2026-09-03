@@ -77,11 +77,25 @@ export default function CommunityPage() {
         <h1 className="mt-1 text-4xl font-bold text-rog-purple">Community</h1>
 
         {votd && (
-          <div className="mt-6 card bg-rog-purple text-white border-0">
-            <p className="kicker !text-rog-pink">Verse of the day</p>
-            <p className="mt-1 text-xl font-bold">{votd.verse_reference}</p>
-            {votd.verse_text && <p className="mt-2 italic text-white/85">&ldquo;{votd.verse_text}&rdquo;</p>}
-            <p className="mt-2 text-xs text-white/60">Picked by {votd.picks} {votd.picks === 1 ? "person" : "people"} today</p>
+          <div
+            className="mt-6 rounded-3xl p-6 text-white shadow-lg"
+            style={{
+              background: "linear-gradient(135deg, #3B1E6E 0%, #4A2A85 55%, #2E4FD1 100%)",
+              boxShadow: "0 10px 32px -12px rgba(59,30,110,0.55)"
+            }}
+          >
+            <p className="text-xs font-medium tracking-[0.2em] uppercase" style={{ color: "#FF7EB6" }}>
+              Verse of the day
+            </p>
+            <p className="mt-1 text-xl font-bold text-white">{votd.verse_reference}</p>
+            {votd.verse_text && (
+              <p className="mt-2 italic" style={{ color: "rgba(255,255,255,0.9)" }}>
+                &ldquo;{votd.verse_text}&rdquo;
+              </p>
+            )}
+            <p className="mt-2 text-xs" style={{ color: "rgba(255,255,255,0.65)" }}>
+              Picked by {votd.picks} {votd.picks === 1 ? "person" : "people"} today
+            </p>
           </div>
         )}
 
