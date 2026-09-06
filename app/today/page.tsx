@@ -36,10 +36,10 @@ export default async function TodayPage() {
   return (
     <>
       <Nav />
-      <main className="max-w-3xl mx-auto px-6 py-8">
+      <main data-surface="reading" className="max-w-3xl mx-auto px-6 py-8">
         <NudgeBanner completed={!!existing} day={day} />
         {/* Progress */}
-        <div className="mb-8">
+        <div className="mb-10">
           <div className="flex items-center justify-between text-sm">
             <span className="kicker">Your progress</span>
             <span className="text-rog-muted">Day {day} of 90</span>
@@ -53,28 +53,30 @@ export default async function TodayPage() {
         </div>
 
         <p className="kicker">Today&rsquo;s Reading</p>
-        <h1 className="mt-1 text-4xl font-bold text-rog-purple">Day {day}</h1>
+        <h1 className="mt-2 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight">
+          Day {day}
+        </h1>
 
-        {/* Reading cards linking to /read */}
+        {/* Reading tiles — Level 1 (soft plate). These are navigation, not objects. */}
         <div className="mt-6 grid md:grid-cols-2 gap-4">
-          <Link href="/read?t=ot" className="card block hover:border-rog-purple transition group">
+          <Link href="/read?t=ot" className="surface-soft block hover:border-rog-purple group">
             <p className="kicker !text-rog-blue">Old Testament</p>
-            <p className="mt-2 text-lg font-semibold text-rog-ink">{otRef}</p>
-            <p className="mt-3 text-xs text-rog-pink font-semibold uppercase tracking-wider group-hover:underline">
-              Read now &rarr;
+            <p className="mt-2 font-serif text-lg text-rog-ink">{otRef}</p>
+            <p className="mt-3 text-xs text-rog-muted font-semibold uppercase tracking-[0.18em] group-hover:text-rog-purple transition-colors">
+              Read &rarr;
             </p>
           </Link>
-          <Link href="/read?t=nt" className="card block hover:border-rog-purple transition group">
+          <Link href="/read?t=nt" className="surface-soft block hover:border-rog-purple group">
             <p className="kicker !text-rog-blue">New Testament</p>
-            <p className="mt-2 text-lg font-semibold text-rog-ink">{ntRef}</p>
-            <p className="mt-3 text-xs text-rog-pink font-semibold uppercase tracking-wider group-hover:underline">
-              Read now &rarr;
+            <p className="mt-2 font-serif text-lg text-rog-ink">{ntRef}</p>
+            <p className="mt-3 text-xs text-rog-muted font-semibold uppercase tracking-[0.18em] group-hover:text-rog-purple transition-colors">
+              Read &rarr;
             </p>
           </Link>
         </div>
 
         {/* Reflection */}
-        <div className="mt-8">
+        <div className="mt-10">
           <ReflectionForm
             dayNumber={day}
             existing={existing ?? null}

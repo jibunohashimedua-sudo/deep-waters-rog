@@ -49,7 +49,7 @@ export default async function ReadPage({
   return (
     <>
       <Nav />
-      <main className="max-w-3xl mx-auto px-6 py-8">
+      <main data-surface="reading" className="max-w-3xl mx-auto px-6 py-8">
         <Link href="/today" className="text-sm text-rog-muted hover:text-rog-purple">
           &larr; Back to Day {day}
         </Link>

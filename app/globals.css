@@ -30,11 +30,16 @@
   --chip-bg: rgba(255, 255, 255, 0.55);
   --chip-border: rgba(255, 255, 255, 0.7);
 
+  /* Elevation 1 — soft plate. Sits flat on the page, no shadow, no blur. */
+  --soft-bg: rgba(255, 253, 249, 0.55);
+  --soft-border: rgba(15, 15, 15, 0.07);
+
   --accent: #3B1E6E;    /* deep purple */
   --accent-strong: #2E4FD1;
   --pink: #E85D9E;
 
-  --grain-opacity: 0.35;
+  /* Ambient strength — dimmed on reading surfaces via [data-surface="reading"] */
+  --orb-opacity: 1;
 
   color-scheme: light;
 }
@@ -60,11 +65,12 @@
   --chip-bg: rgba(255, 255, 255, 0.08);
   --chip-border: rgba(255, 255, 255, 0.14);
 
+  --soft-bg: rgba(255, 255, 255, 0.035);
+  --soft-border: rgba(255, 255, 255, 0.09);
+
   --accent: #B79FE8;
   --accent-strong: #8AA5FF;
   --pink: #FF7EB6;
-
-  --grain-opacity: 0.5;
 
   color-scheme: dark;
 }
@@ -87,14 +93,20 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Ambient blurred colour orbs, tinted for each theme */
+/* Ambient blurred colour orbs, tinted for each theme. Strength is controlled
+   by --orb-opacity, which reading surfaces dim via [data-surface="reading"]. */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -2;
   pointer-events: none;
-  transition: opacity 0.4s ease;
+  opacity: var(--orb-opacity);
+  transition: opacity 0.5s ease;
+}
+
+body:has([data-surface="reading"]) {
+  --orb-opacity: 0.25;
 }
 
 :root body::before {
@@ -113,19 +125,6 @@ body::before {
     radial-gradient(500px 400px at 92% 88%, rgba(255, 126, 182, 0.15), transparent 60%);
 }
 
-/* Film grain, inline SVG turbulence. Sits above the orbs, under content. */
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  opacity: var(--grain-opacity);
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0.9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-  background-size: 240px 240px;
-}
-
 /* =========================================================
    BUTTONS
    ========================================================= */
@@ -135,15 +134,15 @@ body::after {
 }
 
 .btn-primary {
-  @apply btn text-white px-6 py-3 shadow-lg;
+  @apply btn text-white px-6 py-3;
   background-color: #3B1E6E;
-  box-shadow: 0 10px 30px -10px rgba(59, 30, 110, 0.5);
+  box-shadow: 0 6px 20px -12px rgba(59, 30, 110, 0.4);
 }
 .btn-primary:hover { background-color: #2E4FD1; }
 
 [data-theme="dark"] .btn-primary {
   background-color: #6A45C7;
-  box-shadow: 0 10px 30px -8px rgba(138, 90, 255, 0.55);
+  box-shadow: 0 6px 20px -10px rgba(138, 90, 255, 0.45);
 }
 [data-theme="dark"] .btn-primary:hover { background-color: #8AA5FF; color: #0B0716; }
 
@@ -154,7 +153,6 @@ body::after {
   backdrop-filter: blur(12px) saturate(180%);
   -webkit-backdrop-filter: blur(12px) saturate(180%);
   border: 1px solid var(--chip-border);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 .btn-secondary:hover {
   background: var(--input-bg-focus);
@@ -162,9 +160,9 @@ body::after {
 }
 
 .btn-pink {
-  @apply btn text-white px-6 py-3 hover:opacity-90 shadow-lg;
+  @apply btn text-white px-6 py-3 hover:opacity-90;
   background-color: #E85D9E;
-  box-shadow: 0 10px 30px -10px rgba(232, 93, 158, 0.5);
+  box-shadow: 0 6px 20px -12px rgba(232, 93, 158, 0.4);
 }
 
 /* =========================================================
@@ -181,6 +179,15 @@ body::after {
     0 8px 32px var(--card-shadow),
     inset 0 1px 0 var(--card-highlight),
     inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Elevation 1 — a warm plate lying flat on the page.
+   For grouping content without lifting it. No shadow, no blur. */
+.surface-soft {
+  @apply rounded-3xl p-6;
+  background: var(--soft-bg);
+  border: 1px solid var(--soft-border);
+  transition: border-color 0.15s ease;
 }
 
 .glass-dark {
