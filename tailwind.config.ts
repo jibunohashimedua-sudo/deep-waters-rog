@@ -18,7 +18,14 @@ export default {
       },
       fontFamily: {
         sans: ["Poppins", "system-ui", "sans-serif"],
-        display: ["Poppins", "system-ui", "sans-serif"]
+        display: ["Poppins", "system-ui", "sans-serif"],
+        serif: [
+          '"Source Serif 4"',
+          '"Iowan Old Style"',
+          '"Charter"',
+          "Georgia",
+          "serif"
+        ]
       }
     }
   },

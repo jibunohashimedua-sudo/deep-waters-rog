@@ -53,32 +53,37 @@ export default async function ReadPage({
         <Link href="/today" className="text-sm text-rog-muted hover:text-rog-purple">
           &larr; Back to Day {day}
         </Link>
-        <p className="mt-4 kicker">Day {day} &bull; {label}</p>
-        <h1 className="mt-1 text-3xl font-bold text-rog-purple">{reference}</h1>
+        <p className="mt-6 chapter-mark">Day {day} &middot; {label}</p>
+        <h1 className="mt-3 font-serif text-3xl md:text-4xl font-normal text-rog-ink leading-tight">
+          {reference}
+        </h1>
 
         {note?.body && testament === "ot" && (
-          <div className="mt-6 card border-rog-pink border-2 bg-white">
+          <div className="mt-8 card border-rog-pink border-2 bg-white">
             <p className="kicker">Study note</p>
             {note.title && <p className="mt-1 font-bold text-rog-purple text-lg">{note.title}</p>}
             <p className="mt-2 text-sm leading-relaxed whitespace-pre-wrap">{note.body}</p>
           </div>
         )}
 
-        <div className="mt-8 space-y-6">
-          {chapterContent.map((c) => (
-            <article key={c.reference} className="card">
-              <h2 className="text-lg font-bold text-rog-purple mb-3">
-                {c.reference}
-              </h2>
+        <div className="mt-14 space-y-14">
+          {chapterContent.map((c, i) => (
+            <article key={c.reference}>
+              <p className="chapter-mark mb-5">{c.reference}</p>
               <div
-                className="bible-content prose prose-sm max-w-none"
+                className="bible-content"
                 dangerouslySetInnerHTML={{ __html: c.content }}
               />
+              {i < chapterContent.length - 1 && (
+                <div className="mt-14 flex justify-center" aria-hidden="true">
+                  <span className="block h-px w-16 bg-rog-line/70" />
+                </div>
+              )}
             </article>
           ))}
         </div>
 
-        <div className="mt-8 flex gap-3">
+        <div className="mt-16 flex gap-3">
           <Link href={`/read?t=${otherT}`} className="btn-secondary flex-1">
             Read {otherLabel}
           </Link>

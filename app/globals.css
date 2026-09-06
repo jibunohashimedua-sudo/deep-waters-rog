@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -215,14 +215,52 @@ body::after {
   color: var(--pink);
 }
 
-.bible-content p {
-  @apply mb-3 leading-relaxed;
-  color: var(--text);
+/* =========================================================
+   SCRIPTURE READING
+   The passage sits on the page ground itself, not in a card.
+   Source Serif 4 at 18/19 px, ~62 ch measure, quiet verse markers.
+   Every choice here is about getting out of the way of the words.
+   ========================================================= */
+
+.chapter-mark {
+  font-family: "Poppins", system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
+.bible-content {
+  font-family: "Source Serif 4", "Iowan Old Style", "Charter", Georgia, serif;
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 1.65;
+  color: var(--text);
+  max-width: 38rem;
+  font-variant-numeric: oldstyle-nums;
+  font-feature-settings: "kern", "liga", "onum";
+  text-rendering: optimizeLegibility;
+}
+@media (min-width: 640px) {
+  .bible-content { font-size: 19px; }
+}
+.bible-content p {
+  margin: 0 0 0.9em;
+}
+.bible-content p:last-child {
+  margin-bottom: 0;
+}
 .bible-content .v {
-  @apply text-xs align-super font-semibold mr-1;
-  color: var(--pink);
+  font-family: "Source Serif 4", serif;
+  font-weight: 400;
+  font-size: 0.72em;
+  vertical-align: super;
+  color: var(--muted);
+  margin-right: 0.18em;
+  letter-spacing: 0;
+  font-variant-numeric: oldstyle-nums;
 }
 
 /* =========================================================
