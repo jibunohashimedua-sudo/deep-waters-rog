@@ -70,17 +70,15 @@
      recess and the selection tint and turned to mud. None of the five is
      green, so sonar keeps its exclusive job.
 
-     Named for the sounding instrument the mark comes from. The token keys
-     are the legacy database values (see lib/highlights.ts for why).
-       amber = Shoal   sky = Current   rose = Coral
-       lavender = Fathom   mint = Silt
+     Named for the sounding instrument the mark comes from, and named the
+     same way all the way down — the database stores 'shoal' too.
      Ink stays at full strength on every one: measured, the worst of the ten
      is 12.87:1, against a 7:1 floor. */
-  --hl-amber-ground:    #F0E4CE;  --hl-amber-rule:    #C9A45E;
-  --hl-sky-ground:      #D8E4F4;  --hl-sky-rule:      #1E5AA8;
-  --hl-rose-ground:     #F5DCDC;  --hl-rose-rule:     #B23A1F;
-  --hl-lavender-ground: #E2DCF6;  --hl-lavender-rule: #3B23B8;
-  --hl-mint-ground:     #E4E2DC;  --hl-mint-rule:     #565E6D;
+  --hl-shoal-ground:   #F0E4CE;  --hl-shoal-rule:   #C9A45E;
+  --hl-current-ground: #D8E4F4;  --hl-current-rule: #1E5AA8;
+  --hl-coral-ground:   #F5DCDC;  --hl-coral-rule:   #B23A1F;
+  --hl-fathom-ground:  #E2DCF6;  --hl-fathom-rule:  #3B23B8;
+  --hl-silt-ground:    #E4E2DC;  --hl-silt-rule:    #565E6D;
 
   /* =========================================================
      SPACING SCALE — 7 named steps, each with a job.
@@ -151,11 +149,11 @@
      of the same colour rather than the light one at low alpha — a pale
      wash over violet-black glows, and glow is decoration. The left rule
      brightens instead, because it is the part doing the identifying. */
-  --hl-amber-ground:    #2A2114;  --hl-amber-rule:    #C9A45E;
-  --hl-sky-ground:      #14203A;  --hl-sky-rule:      #6FA8E8;
-  --hl-rose-ground:     #2E1618;  --hl-rose-rule:     #E8735A;
-  --hl-lavender-ground: #221A3E;  --hl-lavender-rule: #A78BFF;
-  --hl-mint-ground:     #1E1D22;  --hl-mint-rule:     #8B87A3;
+  --hl-shoal-ground:   #2A2114;  --hl-shoal-rule:   #C9A45E;
+  --hl-current-ground: #14203A;  --hl-current-rule: #6FA8E8;
+  --hl-coral-ground:   #2E1618;  --hl-coral-rule:   #E8735A;
+  --hl-fathom-ground:  #221A3E;  --hl-fathom-rule:  #A78BFF;
+  --hl-silt-ground:    #1E1D22;  --hl-silt-rule:    #8B87A3;
 
   color-scheme: dark;
 }
@@ -564,11 +562,11 @@ body {
   background-color: var(--hl-ground);
   box-shadow: inset 2px 0 0 var(--hl-rule);
 }
-.dw-verse[data-hl="amber"]    { --hl-ground: var(--hl-amber-ground);    --hl-rule: var(--hl-amber-rule); }
-.dw-verse[data-hl="sky"]      { --hl-ground: var(--hl-sky-ground);      --hl-rule: var(--hl-sky-rule); }
-.dw-verse[data-hl="rose"]     { --hl-ground: var(--hl-rose-ground);     --hl-rule: var(--hl-rose-rule); }
-.dw-verse[data-hl="lavender"] { --hl-ground: var(--hl-lavender-ground); --hl-rule: var(--hl-lavender-rule); }
-.dw-verse[data-hl="mint"]     { --hl-ground: var(--hl-mint-ground);     --hl-rule: var(--hl-mint-rule); }
+.dw-verse[data-hl="shoal"]   { --hl-ground: var(--hl-shoal-ground);    --hl-rule: var(--hl-shoal-rule); }
+.dw-verse[data-hl="current"] { --hl-ground: var(--hl-current-ground);  --hl-rule: var(--hl-current-rule); }
+.dw-verse[data-hl="coral"]   { --hl-ground: var(--hl-coral-ground);    --hl-rule: var(--hl-coral-rule); }
+.dw-verse[data-hl="fathom"]  { --hl-ground: var(--hl-fathom-ground);   --hl-rule: var(--hl-fathom-rule); }
+.dw-verse[data-hl="silt"]    { --hl-ground: var(--hl-silt-ground);     --hl-rule: var(--hl-silt-rule); }
 
 /* Selected. Sonar is right here and nowhere near decoration: this is
    live state, the app reporting where your thumb has been. It wins over
@@ -1394,11 +1392,11 @@ select:focus-visible {
   border-color: var(--text);
   border-left-color: var(--hl-rule);
 }
-.hl-swatch[data-c="amber"]    { --hl-ground: var(--hl-amber-ground);    --hl-rule: var(--hl-amber-rule); }
-.hl-swatch[data-c="sky"]      { --hl-ground: var(--hl-sky-ground);      --hl-rule: var(--hl-sky-rule); }
-.hl-swatch[data-c="rose"]     { --hl-ground: var(--hl-rose-ground);     --hl-rule: var(--hl-rose-rule); }
-.hl-swatch[data-c="lavender"] { --hl-ground: var(--hl-lavender-ground); --hl-rule: var(--hl-lavender-rule); }
-.hl-swatch[data-c="mint"]     { --hl-ground: var(--hl-mint-ground);     --hl-rule: var(--hl-mint-rule); }
+.hl-swatch[data-c="shoal"]   { --hl-ground: var(--hl-shoal-ground);    --hl-rule: var(--hl-shoal-rule); }
+.hl-swatch[data-c="current"] { --hl-ground: var(--hl-current-ground);  --hl-rule: var(--hl-current-rule); }
+.hl-swatch[data-c="coral"]   { --hl-ground: var(--hl-coral-ground);    --hl-rule: var(--hl-coral-rule); }
+.hl-swatch[data-c="fathom"]  { --hl-ground: var(--hl-fathom-ground);   --hl-rule: var(--hl-fathom-rule); }
+.hl-swatch[data-c="silt"]    { --hl-ground: var(--hl-silt-ground);     --hl-rule: var(--hl-silt-rule); }
 
 /* =========================================================
    SEGMENTED CONTROL — three ways
@@ -1429,11 +1427,11 @@ select:focus-visible {
   transition: background-color 0.12s ease;
 }
 .mark-row:hover { background-color: var(--soft-bg); }
-.mark-row[data-c="amber"]    { --hl-rule: var(--hl-amber-rule); }
-.mark-row[data-c="sky"]      { --hl-rule: var(--hl-sky-rule); }
-.mark-row[data-c="rose"]     { --hl-rule: var(--hl-rose-rule); }
-.mark-row[data-c="lavender"] { --hl-rule: var(--hl-lavender-rule); }
-.mark-row[data-c="mint"]     { --hl-rule: var(--hl-mint-rule); }
+.mark-row[data-c="shoal"]   { --hl-rule: var(--hl-shoal-rule); }
+.mark-row[data-c="current"] { --hl-rule: var(--hl-current-rule); }
+.mark-row[data-c="coral"]   { --hl-rule: var(--hl-coral-rule); }
+.mark-row[data-c="fathom"]  { --hl-rule: var(--hl-fathom-rule); }
+.mark-row[data-c="silt"]    { --hl-rule: var(--hl-silt-rule); }
 
 /* The verse itself, in the reading serif at reading size. It is
    scripture wherever it appears. Clamped to three lines until tapped,

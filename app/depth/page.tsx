@@ -10,7 +10,11 @@ import { requireProfile } from "@/lib/auth";
 import { BADGES, BADGE_ORDER } from "@/lib/badges";
 import { currentDayNumber } from "@/lib/plan";
 import { bookByName } from "@/lib/bibleBooks";
-import { isHighlightColour, type Highlight, type VerseNote } from "@/lib/highlights";
+import {
+  normaliseHighlightColour,
+  type Highlight,
+  type VerseNote
+} from "@/lib/highlights";
 import { fetchVerseText, spanKey } from "@/lib/verseText";
 
 export const metadata = { title: "Depth · Deep Waters" };
@@ -107,10 +111,23 @@ export default async function DepthPage() {
   const earned = new Map(badges.map((b) => [b.badge, b.earned_at]));
   const doneDays = new Set(completions.map((c) => c.day_number));
 
-  // Rows written by an older build, or by hand, could carry a colour the
-  // palette doesn't know. They are kept and shown in the neutral, rather
-  // than dropped — a highlight nobody can see is a highlight that's gone.
-  const usable = rawHighlights.filter((h) => isHighlightColour(h.colour));
+  // A highlight written by the previous build, in the minutes between the
+  // colour migration running and this deploy going live, arrives carrying a
+  // retired name. It is translated rather than dropped: the reader chose a
+  // colour, and a mark nobody can see is a mark that has gone.
+  //
+  // Anything the palette has never known at all is counted and reported,
+  // not silently painted the wrong colour.
+  const usable = rawHighlights
+    .map((h) => ({ ...h, colour: normaliseHighlightColour(h.colour) }))
+    .filter((h): h is Highlight => h.colour !== null);
+
+  const unknown = rawHighlights.length - usable.length;
+  if (unknown > 0) {
+    console.error(
+      `[deep-waters] depth: ${unknown} highlight(s) carry a colour the palette doesn't know`
+    );
+  }
 
   const { text: verseText, error: verseTextError } = await fetchVerseText(
     usable,

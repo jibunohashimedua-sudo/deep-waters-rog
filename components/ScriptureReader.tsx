@@ -5,6 +5,7 @@ import { friendlyError } from "@/lib/errors";
 import {
   formatVerseList,
   formatVerseReference,
+  normaliseHighlightColour,
   type Highlight,
   type HighlightColour,
   type VerseNote
@@ -118,8 +119,14 @@ export default function ScriptureReader({
       if (hErr) showToast(friendlyError(hErr.message));
       if (nErr) showToast(friendlyError(nErr.message));
       const chapterSet = new Set(chapterKeys.map((c) => `${c.book}|${c.chapter}`));
+      // Colours come back through the palette on the way in, so a row
+      // written by the previous build during the deploy still paints. See
+      // normaliseHighlightColour, and the colour-rename migration.
       setHighlights(
-        (hData ?? []).filter((h) => chapterSet.has(`${h.book}|${h.chapter}`)) as Highlight[]
+        (hData ?? [])
+          .filter((h) => chapterSet.has(`${h.book}|${h.chapter}`))
+          .map((h) => ({ ...h, colour: normaliseHighlightColour(h.colour) }))
+          .filter((h): h is Highlight => h.colour !== null)
       );
       setNotes(
         (nData ?? []).filter((n) => chapterSet.has(`${n.book}|${n.chapter}`)) as VerseNote[]

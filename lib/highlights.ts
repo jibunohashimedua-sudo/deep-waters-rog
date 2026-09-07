@@ -6,63 +6,107 @@
 // the verse sits on, a 2px coloured rule down its left edge, square corners,
 // no shadow, no glow. None of the five is green, so sonar keeps its one job.
 //
-// The colours are named for the sounding instrument the mark comes from:
-// Shoal, Current, Coral, Fathom, Silt.
+// They are named for the sounding instrument the mark comes from, and those
+// names go all the way down: the database stores 'shoal', not 'amber'. The
+// old names were marker-pen names, and one of them — mint, for what is now
+// a neutral grey — had stopped being true at all.
 //
-// ── on the stored values ────────────────────────────────────────────────
-// The `colour` column carries a CHECK constraint written when the palette
-// was amber/mint/sky/rose/lavender, so those five strings are still what
-// goes in and out of the database. Renaming them would mean a hand-run
-// migration, and until it ran every new highlight would be rejected by the
-// constraint. So the stored key stays legacy and the palette below gives it
-// its Fathom name and colours. Nothing a reader sees says "amber".
-// ────────────────────────────────────────────────────────────────────────
+// See supabase/migrations/2026_09_07_highlight_colour_names.sql.
 
-/** What the database stores. Do not change without migrating the CHECK. */
-export type HighlightColour = "amber" | "sky" | "rose" | "lavender" | "mint";
+/** What the database stores, and what a reader is shown. */
+export type HighlightColour = "shoal" | "current" | "coral" | "fathom" | "silt";
 
 export type HighlightPaint = {
-  /** Fathom name, shown to the reader. */
+  /** The name, shown to the reader. */
   name: string;
-  /** Tinted ground the verse sits on. */
-  ground: string;
-  /** 2px rule down the left edge, identifying the colour. */
-  rule: string;
+  /** Tinted ground the verse sits on, and the 2px rule down its left edge. */
+  light: { ground: string; rule: string };
+  dark: { ground: string; rule: string };
 };
 
 /** Display order, as the palette is written down. */
 export const HIGHLIGHT_COLOURS: HighlightColour[] = [
-  "amber",    // Shoal
-  "sky",      // Current
-  "rose",     // Coral
-  "lavender", // Fathom
-  "mint"      // Silt
+  "shoal",
+  "current",
+  "coral",
+  "fathom",
+  "silt"
 ];
 
-export const HIGHLIGHT_LIGHT: Record<HighlightColour, HighlightPaint> = {
-  amber:    { name: "Shoal",   ground: "#F0E4CE", rule: "#C9A45E" },
-  sky:      { name: "Current", ground: "#D8E4F4", rule: "#1E5AA8" },
-  rose:     { name: "Coral",   ground: "#F5DCDC", rule: "#B23A1F" },
-  lavender: { name: "Fathom",  ground: "#E2DCF6", rule: "#3B23B8" },
-  mint:     { name: "Silt",    ground: "#E4E2DC", rule: "#565E6D" }
+/**
+ * The palette of record.
+ *
+ * globals.css carries the same ten values as custom properties, because the
+ * painting is done in CSS — an attribute selector per colour, so a verse
+ * changes colour without a style attribute being written to it. These are
+ * here so the values live somewhere legible next to their names, and so the
+ * two can be checked against each other by eye.
+ *
+ * Ink stays at full strength on every one. Measured: the worst of the ten
+ * is Shoal in dark at 12.87:1, against a 7:1 floor.
+ */
+export const HIGHLIGHT_PAINT: Record<HighlightColour, HighlightPaint> = {
+  shoal: {
+    name: "Shoal",
+    light: { ground: "#F0E4CE", rule: "#C9A45E" },
+    dark:  { ground: "#2A2114", rule: "#C9A45E" }
+  },
+  current: {
+    name: "Current",
+    light: { ground: "#D8E4F4", rule: "#1E5AA8" },
+    dark:  { ground: "#14203A", rule: "#6FA8E8" }
+  },
+  coral: {
+    name: "Coral",
+    light: { ground: "#F5DCDC", rule: "#B23A1F" },
+    dark:  { ground: "#2E1618", rule: "#E8735A" }
+  },
+  fathom: {
+    name: "Fathom",
+    light: { ground: "#E2DCF6", rule: "#3B23B8" },
+    dark:  { ground: "#221A3E", rule: "#A78BFF" }
+  },
+  silt: {
+    name: "Silt",
+    light: { ground: "#E4E2DC", rule: "#565E6D" },
+    dark:  { ground: "#1E1D22", rule: "#8B87A3" }
+  }
 };
 
-export const HIGHLIGHT_DARK: Record<HighlightColour, HighlightPaint> = {
-  amber:    { name: "Shoal",   ground: "#2A2114", rule: "#C9A45E" },
-  sky:      { name: "Current", ground: "#14203A", rule: "#6FA8E8" },
-  rose:     { name: "Coral",   ground: "#2E1618", rule: "#E8735A" },
-  lavender: { name: "Fathom",  ground: "#221A3E", rule: "#A78BFF" },
-  mint:     { name: "Silt",    ground: "#1E1D22", rule: "#8B87A3" }
-};
-
-/** The reader-facing name for a stored colour. */
+/** The reader-facing name for a colour. */
 export function highlightName(colour: HighlightColour): string {
-  return HIGHLIGHT_LIGHT[colour]?.name ?? "Highlight";
+  return HIGHLIGHT_PAINT[colour]?.name ?? "Highlight";
 }
 
-/** True for a value the palette knows. Guards rows written by older builds. */
-export function isHighlightColour(v: unknown): v is HighlightColour {
-  return typeof v === "string" && v in HIGHLIGHT_LIGHT;
+/**
+ * What the retired names meant.
+ *
+ * The migration renames every row, so in a settled database nothing here is
+ * ever hit. It stays because a database migration and a deploy are two
+ * events and not one: a highlight written by the previous build in the
+ * minutes between them arrives carrying an old name, and the honest thing
+ * to do with it is show it in the colour the reader actually chose rather
+ * than drop it on the floor.
+ */
+const RETIRED: Record<string, HighlightColour> = {
+  amber: "shoal",
+  sky: "current",
+  rose: "coral",
+  lavender: "fathom",
+  mint: "silt"
+};
+
+/**
+ * Read a stored colour, whatever vintage it is.
+ *
+ * Returns null for anything the palette has never known, so a row written
+ * by hand or by some future build can be counted and reported rather than
+ * silently painted the wrong colour.
+ */
+export function normaliseHighlightColour(v: unknown): HighlightColour | null {
+  if (typeof v !== "string") return null;
+  if (v in HIGHLIGHT_PAINT) return v as HighlightColour;
+  return RETIRED[v] ?? null;
 }
 
 export type Highlight = {

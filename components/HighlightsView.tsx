@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   HIGHLIGHT_COLOURS,
-  HIGHLIGHT_LIGHT,
+  highlightName,
   type HighlightColour
 } from "@/lib/highlights";
 
@@ -149,8 +149,8 @@ export default function HighlightsView({ rows, textError }: Props) {
             data-c={c}
             data-on={colour === c ? "true" : undefined}
             aria-pressed={colour === c}
-            aria-label={HIGHLIGHT_LIGHT[c].name}
-            title={HIGHLIGHT_LIGHT[c].name}
+            aria-label={highlightName(c)}
+            title={highlightName(c)}
             onClick={() => setColour((prev) => (prev === c ? "all" : c))}
           />
         ))}

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import {
   HIGHLIGHT_COLOURS,
-  HIGHLIGHT_LIGHT,
+  highlightName,
   type HighlightColour
 } from "@/lib/highlights";
 
@@ -139,8 +139,8 @@ export default function VerseToolbar({
               data-c={c}
               data-on={currentColour === c ? "true" : undefined}
               aria-pressed={currentColour === c}
-              aria-label={HIGHLIGHT_LIGHT[c].name}
-              title={HIGHLIGHT_LIGHT[c].name}
+              aria-label={highlightName(c)}
+              title={highlightName(c)}
               onClick={() => onHighlight(c)}
             />
           ))}
