@@ -59,9 +59,9 @@ export default async function AdminReportsPage() {
   return (
     <>
       <Nav />
-      <main className="max-w-4xl mx-auto px-6 py-8">
+      <main className="max-w-4xl mx-auto px-6 py-10">
         <p className="kicker">Admin</p>
-        <h1 className="mt-1 text-3xl font-bold text-rog-purple">Reports</h1>
+        <h1 className="mt-3 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight">Reports</h1>
 
         <div className="mt-6 space-y-3">
           {enriched.length === 0 ? (
@@ -70,7 +70,7 @@ export default async function AdminReportsPage() {
             enriched.map((r) => (
               <div key={r.id} className={`card ${r.resolved ? "opacity-50" : ""}`}>
                 <div className="flex items-center justify-between">
-                  <p className="text-xs uppercase tracking-wider text-rog-pink font-semibold">
+                  <p className="text-xs uppercase tracking-[0.2em] text-rog-muted font-medium">
                     {r.target_type} by {r.author}
                   </p>
                   <p className="text-xs text-rog-muted">

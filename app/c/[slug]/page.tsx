@@ -98,7 +98,7 @@ export default async function CohortLandingPage({
             </Link>
           )}
         </div>
-        <div className="h-2 bg-rog-blue" />
+        <div className="h-px bg-white/20" />
       </section>
 
       <section className="max-w-2xl mx-auto px-6 py-12 space-y-6">

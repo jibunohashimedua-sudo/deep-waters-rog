@@ -11,10 +11,10 @@ export default async function FinishersPage() {
   return (
     <>
       <Nav />
-      <main className="max-w-4xl mx-auto px-6 py-8">
+      <main className="max-w-4xl mx-auto px-6 py-10">
         <ProgressTabs />
         <p className="kicker">Day 90</p>
-        <h1 className="mt-1 text-4xl font-bold text-rog-purple">Finishers</h1>
+        <h1 className="mt-3 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight">Finishers</h1>
         <p className="mt-2 text-sm text-rog-muted">
           Every name here read the whole Bible in 90 days.
         </p>

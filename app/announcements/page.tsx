@@ -29,9 +29,9 @@ export default async function AnnouncementsPage() {
   return (
     <>
       <Nav />
-      <main className="max-w-2xl mx-auto px-6 py-8">
+      <main className="max-w-2xl mx-auto px-6 py-10">
         <p className="kicker">From the team</p>
-        <h1 className="mt-1 text-3xl font-bold text-rog-purple">Announcements</h1>
+        <h1 className="mt-3 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight">Announcements</h1>
 
         <div className="mt-6 space-y-3">
           {(items ?? []).length === 0 ? (
@@ -42,7 +42,7 @@ export default async function AnnouncementsPage() {
           ) : (
             (items ?? []).map((a: any) => (
               <div key={a.id} className="card">
-                <p className="text-[10px] uppercase tracking-wider text-rog-pink font-semibold">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-rog-muted font-medium">
                   {a.cohort_id ? a.cohorts?.name : "Everyone"}
                 </p>
                 {a.title && <p className="mt-1 font-bold text-rog-purple">{a.title}</p>}

@@ -104,7 +104,7 @@ export default function EditProfilePage() {
     return (
       <>
         <Nav />
-        <main className="max-w-lg mx-auto px-6 py-8 text-rog-muted">Loading...</main>
+        <main className="max-w-lg mx-auto px-6 py-10 text-rog-muted">Loading...</main>
       </>
     );
   }
@@ -114,9 +114,9 @@ export default function EditProfilePage() {
   return (
     <>
       <Nav />
-      <main className="max-w-lg mx-auto px-6 py-8">
+      <main className="max-w-lg mx-auto px-6 py-10">
         <p className="kicker">Profile</p>
-        <h1 className="mt-1 text-3xl font-bold text-rog-purple">Edit your profile</h1>
+        <h1 className="mt-3 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight">Edit your profile</h1>
 
         <form onSubmit={handleSave} className="mt-8 space-y-6">
           <div className="flex flex-col items-center">

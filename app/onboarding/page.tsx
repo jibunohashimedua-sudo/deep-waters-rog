@@ -119,17 +119,17 @@ function OnboardingPageInner() {
     <main className="min-h-screen flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-md">
         <p className="kicker text-center">Welcome</p>
-        <h1 className="mt-2 text-3xl font-bold text-rog-purple text-center">
+        <h1 className="mt-3 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight text-center">
           Set up your profile
         </h1>
-        <p className="mt-2 text-center text-rog-muted text-sm">
+        <p className="mt-3 text-center text-rog-muted text-sm">
           This is how you&rsquo;ll show up in Deep Waters.
         </p>
 
         {cohortName && (
-          <div className="mt-6 card border-rog-pink border-2 text-center">
+          <div className="mt-6 surface-soft text-center">
             <p className="kicker">Joining cohort</p>
-            <p className="mt-1 font-bold text-rog-purple">{cohortName}</p>
+            <p className="mt-3 font-serif text-lg font-medium text-rog-purple">{cohortName}</p>
           </div>
         )}
 

@@ -39,7 +39,7 @@ function SignupPageInner() {
         <div className="mx-auto mb-6 flex justify-center">
           <Mark size={64} />
         </div>
-        <h1 className="text-3xl font-bold text-rog-purple text-center">Join Deep Waters</h1>
+        <h1 className="font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight text-center">Join Deep Waters</h1>
         <p className="mt-2 text-center text-rog-muted text-sm">
           Enter your email to get started.
         </p>

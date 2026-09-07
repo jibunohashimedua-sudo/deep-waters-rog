@@ -34,7 +34,7 @@ export default async function MePage() {
   return (
     <>
       <Nav />
-      <main className="max-w-3xl mx-auto px-6 py-8">
+      <main className="max-w-3xl mx-auto px-6 py-10">
         <ProgressTabs />
         {/* Header */}
         <div className="card flex items-center gap-5">
@@ -52,7 +52,7 @@ export default async function MePage() {
             </div>
           )}
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-rog-purple">{profile.name}</h1>
+            <h1 className="font-serif text-2xl md:text-3xl font-medium text-rog-ink leading-tight">{profile.name}</h1>
             {profile.bio && <p className="text-sm text-rog-muted mt-1">{profile.bio}</p>}
             <p className="text-xs text-rog-muted mt-1">
               Day {day} of 90 &bull; {lb?.days_completed ?? 0} completed &bull;{" "}

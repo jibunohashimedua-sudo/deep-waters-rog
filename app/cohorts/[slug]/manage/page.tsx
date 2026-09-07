@@ -60,12 +60,12 @@ export default async function CohortManagePage({
   return (
     <>
       <Nav />
-      <main className="max-w-4xl mx-auto px-6 py-8">
+      <main className="max-w-4xl mx-auto px-6 py-10">
         <Link href={`/c/${cohort.slug}`} className="text-sm text-rog-muted hover:text-rog-purple">
           &larr; Back to {cohort.name}
         </Link>
         <p className="mt-4 kicker">Manage</p>
-        <h1 className="mt-1 text-3xl font-bold text-rog-purple">{cohort.name}</h1>
+        <h1 className="mt-3 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight">{cohort.name}</h1>
 
         {/* Dashboard */}
         <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -146,7 +146,7 @@ export default async function CohortManagePage({
                     <p className="font-semibold text-rog-ink">
                       {m.profiles?.name}{" "}
                       {m.role === "leader" && (
-                        <span className="text-[10px] uppercase tracking-wider text-rog-pink ml-1">Leader</span>
+                        <span className="text-[10px] uppercase tracking-[0.2em] text-rog-purple font-medium ml-1">Leader</span>
                       )}
                     </p>
                     <p className="text-xs text-rog-muted">

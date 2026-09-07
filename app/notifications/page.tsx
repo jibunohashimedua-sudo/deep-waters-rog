@@ -55,11 +55,11 @@ export default function NotificationsPage() {
   return (
     <>
       <Nav />
-      <main className="max-w-2xl mx-auto px-6 py-8">
+      <main className="max-w-2xl mx-auto px-6 py-10">
         <div className="flex items-center justify-between">
           <div>
             <p className="kicker">Inbox</p>
-            <h1 className="mt-1 text-3xl font-bold text-rog-purple">Notifications</h1>
+            <h1 className="mt-3 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight">Notifications</h1>
           </div>
           {items.some((n) => !n.read) && (
             <button onClick={markAllRead} className="text-xs text-rog-purple underline">
@@ -76,7 +76,7 @@ export default function NotificationsPage() {
           ) : (
             items.map((n) => {
               const inner = (
-                <div className={`card flex gap-3 ${n.read ? "opacity-60" : "border-rog-pink"}`}>
+                <div className={`card flex gap-3 ${n.read ? "opacity-60" : "border-rog-purple"}`}>
                   <div className="text-xl w-8 text-center">{ICON[n.kind] ?? "•"}</div>
                   <div className="flex-1">
                     <p className="font-semibold text-rog-ink text-sm">{n.title}</p>

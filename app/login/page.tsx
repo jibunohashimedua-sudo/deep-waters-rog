@@ -38,7 +38,7 @@ function LoginPageInner() {
         <div className="mx-auto mb-6 flex justify-center">
           <Mark size={64} />
         </div>
-        <h1 className="text-3xl font-bold text-rog-purple text-center">Sign in</h1>
+        <h1 className="font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight text-center">Sign in</h1>
         <p className="mt-2 text-center text-rog-muted text-sm">
           We&rsquo;ll email you a magic link.
         </p>

@@ -203,9 +203,9 @@ export default function PrayerPage() {
   return (
     <>
       <Nav />
-      <main className="max-w-3xl mx-auto px-6 py-8">
+      <main className="max-w-3xl mx-auto px-6 py-10">
         <p className="kicker">Bear one another&rsquo;s burdens</p>
-        <h1 className="mt-1 text-4xl font-bold text-rog-purple">Prayer</h1>
+        <h1 className="mt-3 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight">Prayer</h1>
 
         <form onSubmit={post} className="mt-6 card">
           <textarea

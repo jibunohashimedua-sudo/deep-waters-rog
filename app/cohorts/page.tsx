@@ -9,11 +9,11 @@ export default async function CohortsPage() {
   return (
     <>
       <Nav />
-      <main className="max-w-3xl mx-auto px-6 py-8">
+      <main className="max-w-3xl mx-auto px-6 py-10">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <p className="kicker">Groups</p>
-            <h1 className="mt-1 text-4xl font-bold text-rog-purple">Cohorts</h1>
+            <h1 className="mt-3 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight">Cohorts</h1>
             <p className="mt-2 text-sm text-rog-muted">
               Groups starting Deep Waters together. Share a link to invite.
             </p>
@@ -63,7 +63,7 @@ export default async function CohortsPage() {
                         {c.member_count === 1 ? "" : "s"}
                       </p>
                     </div>
-                    <div className="text-xs text-rog-pink font-semibold uppercase tracking-wider">
+                    <div className="text-xs text-rog-muted font-medium uppercase tracking-[0.2em]">
                       View &rarr;
                     </div>
                   </div>

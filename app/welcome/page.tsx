@@ -34,21 +34,21 @@ const STEPS: Step[] = [
     title: "Share what stood out",
     body: "After you read, drop the verse that hit you and a short reflection. It shows up on the community feed. Amen someone. Comment. Tag with @name.",
     emoji: "💬",
-    gradient: "from-rog-pink via-[#D24A8A] to-rog-purple"
+    gradient: "from-[#7A4AA8] via-[#5B3A9E] to-rog-purple"
   },
   {
     kicker: "You are not alone",
     title: "Prayer, cohorts, and support",
     body: "Post prayer requests. See who is praying with you. Join a cohort to walk with a smaller group. Everyone is reading the same day.",
     emoji: "🙏",
-    gradient: "from-rog-purple via-[#5B3A9E] to-rog-pink"
+    gradient: "from-rog-purple via-[#5B3A9E] to-[#8560D8]"
   },
   {
     kicker: "Track your journey",
     title: "Progress, badges, finisher wall",
     body: "See your 90 day grid fill up. Earn badges for streaks and milestones. Hit day 90 and land on the finisher wall.",
     emoji: "🏆",
-    gradient: "from-rog-blue via-rog-purple to-rog-pink"
+    gradient: "from-rog-blue via-rog-purple to-[#8560D8]"
   }
 ];
 

@@ -49,9 +49,9 @@ export default async function AdminPage() {
   return (
     <>
       <Nav />
-      <main className="max-w-4xl mx-auto px-6 py-8">
+      <main className="max-w-4xl mx-auto px-6 py-10">
         <p className="kicker">Admin</p>
-        <h1 className="mt-1 text-3xl font-bold text-rog-purple">Dashboard</h1>
+        <h1 className="mt-3 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight">Dashboard</h1>
 
         <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
           {stat("Total users", totalUsers, "/admin/users")}
@@ -65,11 +65,11 @@ export default async function AdminPage() {
         </div>
 
         {(pendingUsers ?? 0) > 0 && (
-          <div className="mt-4 card border-rog-pink border-2">
+          <div className="mt-4 card">
             <p className="font-semibold text-rog-purple">
               {pendingUsers} user{pendingUsers === 1 ? "" : "s"} awaiting approval
             </p>
-            <Link href="/admin/users?filter=pending" className="text-sm text-rog-pink underline">
+            <Link href="/admin/users?filter=pending" className="text-sm text-rog-purple underline">
               Review now
             </Link>
           </div>

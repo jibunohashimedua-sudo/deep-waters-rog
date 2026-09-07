@@ -6,8 +6,8 @@ export default function LandingPage() {
       {/* Purple hero block */}
       <section className="bg-rog-purple text-white relative overflow-hidden">
         {/* subtle blurred glass orbs for depth */}
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-rog-pink/30 rounded-full blur-3xl" />
-        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-rog-blue/30 rounded-full blur-3xl" />
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-white/15 rounded-full blur-3xl" />
+        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
 
         <div className="relative max-w-4xl mx-auto px-6 pt-20 pb-20 text-center">
           <img
@@ -36,7 +36,7 @@ export default function LandingPage() {
             </Link>
           </div>
         </div>
-        <div className="h-2 bg-rog-blue relative" />
+        <div className="h-px bg-white/20 relative" />
       </section>
 
       {/* Verse card */}
@@ -53,7 +53,7 @@ export default function LandingPage() {
       <section className="py-16 px-6">
         <div className="max-w-5xl mx-auto">
           <p className="kicker text-center">How it works</p>
-          <h2 className="mt-4 text-4xl font-bold text-rog-purple text-center">
+          <h2 className="mt-4 font-serif text-3xl md:text-4xl font-medium text-rog-ink text-center leading-tight">
             Read. Reflect. Share. Finish.
           </h2>
           <div className="grid md:grid-cols-4 gap-4 mt-12">
@@ -64,7 +64,7 @@ export default function LandingPage() {
               { n: "04", t: "Finish at day 90", d: "Get on the finisher wall. Get your card." }
             ].map((s) => (
               <div key={s.n} className="card">
-                <p className="text-rog-pink text-sm font-semibold">{s.n}</p>
+                <p className="text-rog-muted text-xs font-medium tracking-[0.2em] uppercase">{s.n}</p>
                 <h3 className="mt-2 font-bold text-lg text-rog-purple">{s.t}</h3>
                 <p className="mt-1 text-sm text-rog-muted">{s.d}</p>
               </div>
@@ -73,7 +73,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <footer className="bg-rog-pink text-white text-center py-8 text-sm tracking-[0.2em] uppercase">
+      <footer className="bg-rog-purple text-white text-center py-8 text-sm tracking-[0.2em] uppercase">
         Deep Waters
       </footer>
     </main>
