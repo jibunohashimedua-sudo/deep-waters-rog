@@ -50,10 +50,10 @@ export default async function LandingPage() {
       {/* Verse card */}
       <section className="py-20 px-6">
         <div className="max-w-2xl mx-auto card text-center">
-          <p className="italic text-xl text-rog-ink">
+          <p className="font-serif italic text-xl md:text-2xl leading-relaxed text-rog-ink">
             &ldquo;With joy shall ye draw water out of the wells of salvation.&rdquo;
           </p>
-          <p className="mt-3 kicker">Isaiah 12:3</p>
+          <p className="mt-4 kicker">Isaiah 12:3</p>
         </div>
       </section>
 
@@ -73,8 +73,8 @@ export default async function LandingPage() {
             ].map((s) => (
               <div key={s.n} className="card">
                 <p className="text-rog-muted text-xs font-medium tracking-[0.2em] uppercase">{s.n}</p>
-                <h3 className="mt-2 font-bold text-lg text-rog-purple">{s.t}</h3>
-                <p className="mt-1 text-sm text-rog-muted">{s.d}</p>
+                <h3 className="mt-3 font-serif text-xl font-medium text-rog-ink leading-tight">{s.t}</h3>
+                <p className="mt-2 text-sm text-rog-muted leading-relaxed">{s.d}</p>
               </div>
             ))}
           </div>
