@@ -44,6 +44,11 @@ export async function middleware(request: NextRequest) {
 
   const publicPaths = [
     "/",
+    // The landing page's main call to action points here, and it's the intro
+    // carousel that hands off to /signup on its last slide — so it has to be
+    // reachable signed out. It wasn't, which bounced every new arrival to the
+    // login page instead of letting them join.
+    "/welcome",
     "/login",
     "/signup",
     "/forgot-password",
