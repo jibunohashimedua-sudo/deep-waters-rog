@@ -49,37 +49,41 @@ export default async function ReadPage({
   return (
     <>
       <Nav />
-      <main data-surface="reading" className="max-w-3xl mx-auto px-6 py-8">
+      <main data-surface="reading" className="max-w-3xl mx-auto px-6 py-10">
         <Link href="/today" className="text-sm text-rog-muted hover:text-rog-purple">
           &larr; Back to Day {day}
         </Link>
-        <p className="mt-6 chapter-mark">Day {day} &middot; {label}</p>
+        <p className="mt-10 chapter-mark">Day {day} &middot; {label}</p>
         <h1 className="mt-3 font-serif text-3xl md:text-4xl font-normal text-rog-ink leading-tight">
           {reference}
         </h1>
 
         {note?.body && testament === "ot" && (
-          <div className="mt-8 card border-rog-pink border-2 bg-white">
+          <div className="mt-10 card border-rog-pink border-2 bg-white">
             <p className="kicker">Study note</p>
-            {note.title && <p className="mt-1 font-bold text-rog-purple text-lg">{note.title}</p>}
+            {note.title && <p className="mt-3 font-bold text-rog-purple text-lg">{note.title}</p>}
             <p className="mt-2 text-sm leading-relaxed whitespace-pre-wrap">{note.body}</p>
           </div>
         )}
 
-        <div className="mt-14 space-y-14">
+        {/* Scripture. Each chapter is separated by a single step-7 gap
+            with a centered hairline at its midpoint. */}
+        <div className="mt-16">
           {chapterContent.map((c, i) => (
-            <article key={c.reference}>
-              <p className="chapter-mark mb-5">{c.reference}</p>
-              <div
-                className="bible-content"
-                dangerouslySetInnerHTML={{ __html: c.content }}
-              />
-              {i < chapterContent.length - 1 && (
-                <div className="mt-14 flex justify-center" aria-hidden="true">
+            <div key={c.reference}>
+              {i > 0 && (
+                <div className="my-12 flex justify-center" aria-hidden="true">
                   <span className="block h-px w-16 bg-rog-line/70" />
                 </div>
               )}
-            </article>
+              <article>
+                <p className="chapter-mark mb-4">{c.reference}</p>
+                <div
+                  className="bible-content"
+                  dangerouslySetInnerHTML={{ __html: c.content }}
+                />
+              </article>
+            </div>
           ))}
         </div>
 

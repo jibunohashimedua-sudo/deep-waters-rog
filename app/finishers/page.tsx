@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Nav from "@/components/Nav";
+import ProgressTabs from "@/components/ProgressTabs";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function FinishersPage() {
@@ -11,6 +12,7 @@ export default async function FinishersPage() {
     <>
       <Nav />
       <main className="max-w-4xl mx-auto px-6 py-8">
+        <ProgressTabs />
         <p className="kicker">Day 90</p>
         <h1 className="mt-1 text-4xl font-bold text-rog-purple">Finishers</h1>
         <p className="mt-2 text-sm text-rog-muted">

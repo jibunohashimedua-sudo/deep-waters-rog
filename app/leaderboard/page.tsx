@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import Nav from "@/components/Nav";
+import ProgressTabs from "@/components/ProgressTabs";
 import { createClient } from "@/lib/supabase/client";
 
 type Row = {
@@ -71,6 +72,7 @@ export default function LeaderboardPage() {
     <>
       <Nav />
       <main className="max-w-3xl mx-auto px-6 py-8">
+        <ProgressTabs />
         <p className="kicker">Live</p>
         <h1 className="mt-1 text-4xl font-bold text-rog-purple">Leaderboard</h1>
         <p className="mt-2 text-sm text-rog-muted">

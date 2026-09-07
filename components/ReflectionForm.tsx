@@ -58,9 +58,9 @@ export default function ReflectionForm({
           {done ? "Today's reflection is kept" : "Today's reflection"}
         </h2>
 
-        <form onSubmit={handleSubmit} className="mt-6">
+        <form onSubmit={handleSubmit} className="mt-10">
           {/* Verse info zone — a quieter grouping */}
-          <div className="pb-6 border-b border-dashed border-rog-line/70 space-y-5">
+          <div className="pb-10 border-b border-dashed border-rog-line/70 space-y-6">
             <div>
               <label className="block text-sm font-medium mb-2 text-rog-ink">
                 The verse that stood out
@@ -90,7 +90,7 @@ export default function ReflectionForm({
           </div>
 
           {/* Reflection zone — the writing surface, generous */}
-          <div className="pt-6">
+          <div className="pt-10">
             <label className="block text-sm font-medium text-rog-ink">
               What it stirred
             </label>
@@ -106,7 +106,7 @@ export default function ReflectionForm({
             />
           </div>
 
-          <button type="submit" disabled={loading} className="btn-primary w-full mt-6 disabled:opacity-50">
+          <button type="submit" disabled={loading} className="btn-primary w-full mt-10 disabled:opacity-50">
             {loading ? "Saving..." : done ? "Save changes" : "Save today"}
           </button>
         </form>
@@ -114,9 +114,9 @@ export default function ReflectionForm({
 
       {/* Level 2 — the completion reveal, mounted like a Polaroid on card stock */}
       {done && cardUrl && (
-        <section className="card mt-6">
+        <section className="card mt-10">
           <p className="chapter-mark">Today, as a card</p>
-          <div className="reveal-mat mt-4">
+          <div className="reveal-mat mt-6">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={cardUrl}
@@ -124,7 +124,7 @@ export default function ReflectionForm({
               className="w-full block rounded-lg"
             />
           </div>
-          <p className="mt-4 text-sm text-rog-muted">
+          <p className="mt-6 text-sm text-rog-muted">
             Save it to your camera roll, or share it in your feed.
           </p>
           <button

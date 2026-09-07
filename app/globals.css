@@ -41,6 +41,27 @@
   /* Ambient strength — dimmed on reading surfaces via [data-surface="reading"] */
   --orb-opacity: 1;
 
+  /* =========================================================
+     SPACING SCALE — 7 named steps, each with a job.
+     Every gap in the app is one of these. Tailwind classes map
+     one-to-one, so JSX reaches for mt-1/2/3/6/10/16/24 and
+     nothing in between.
+       1 · hair     4  · mt-1  · label ↔ helper
+       2 · tight    8  · mt-2  · helper ↔ input, small breath
+       3 · close   12  · mt-3  · kicker ↔ title
+       4 · interior 24 · mt-6  · card padding, siblings in a group
+       5 · major   40  · mt-10 · between grouped sections
+       6 · page    64  · mt-16 · between page sections
+       7 · world   96  · mt-24 · page top/bottom, chapter breaks
+     ========================================================= */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 24px;
+  --sp-5: 40px;
+  --sp-6: 64px;
+  --sp-7: 96px;
+
   color-scheme: light;
 }
 
@@ -91,6 +112,15 @@ body {
   min-height: 100dvh;
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Reserve room at the bottom on mobile whenever the bottom tab bar is
+   present. The nav itself is fixed; this padding keeps the last item on
+   the page from being hidden behind it. */
+@media (max-width: 767px) {
+  body:has(#bottom-nav) main {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 84px);
+  }
 }
 
 /* Ambient blurred colour orbs, tinted for each theme. Strength is controlled

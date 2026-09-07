@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import Nav from "@/components/Nav";
+import ProgressTabs from "@/components/ProgressTabs";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { BADGES, BADGE_ORDER } from "@/lib/badges";
@@ -34,6 +35,7 @@ export default async function MePage() {
     <>
       <Nav />
       <main className="max-w-3xl mx-auto px-6 py-8">
+        <ProgressTabs />
         {/* Header */}
         <div className="card flex items-center gap-5">
           {profile.photo_url ? (
