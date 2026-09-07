@@ -24,7 +24,10 @@ export default async function AdminTestimonialsPage() {
 
         <div className="mt-6 space-y-3">
           {(items ?? []).length === 0 ? (
-            <p className="text-rog-muted">No testimonials yet.</p>
+            <div className="empty-state">
+              <p className="empty-body">No testimonies to review yet.</p>
+              <p className="empty-hint">They will appear here when people submit them.</p>
+            </div>
           ) : (
             (items ?? []).map((t: any) => (
               <div key={t.id} className={`card ${t.approved ? "" : "border-amber-300"}`}>

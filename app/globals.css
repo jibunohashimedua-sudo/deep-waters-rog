@@ -36,6 +36,7 @@
 
   --accent: #3B1E6E;    /* deep purple */
   --accent-strong: #2E4FD1;
+  --accent-soft: rgba(59, 30, 110, 0.08);
   --pink: #E85D9E;
 
   /* Ambient strength — dimmed on reading surfaces via [data-surface="reading"] */
@@ -91,6 +92,7 @@
 
   --accent: #B79FE8;
   --accent-strong: #8AA5FF;
+  --accent-soft: rgba(183, 159, 232, 0.14);
   --pink: #FF7EB6;
 
   color-scheme: dark;
@@ -218,6 +220,53 @@ body:has([data-surface="reading"]) {
   background: var(--soft-bg);
   border: 1px solid var(--soft-border);
   transition: border-color 0.15s ease;
+}
+
+/* Empty states — hold the moment. A small mark, a serif line, a
+   sans hint. Used on the prayer wall, finishers, leaderboard, etc. */
+.empty-state {
+  padding: 40px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+.empty-state .empty-mark {
+  color: var(--muted);
+  opacity: 0.55;
+  line-height: 0;
+}
+.empty-state .empty-body {
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--text);
+  max-width: 34ch;
+  margin: 0;
+}
+.empty-state .empty-hint {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--muted);
+  max-width: 42ch;
+  margin: 0;
+}
+
+/* Done-today affirmation chip. Small, muted-accent, quiet — a nod,
+   not a trophy. Shows only when today is saved. */
+.kept-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 10px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-family: "Poppins", system-ui, sans-serif;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
 }
 
 /* Mat for the completion share-card. A small piece of off-white
@@ -358,10 +407,24 @@ input, textarea, select {
 }
 input:focus, textarea:focus, select:focus {
   background: var(--input-bg-focus) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  outline: none;
 }
 input::placeholder, textarea::placeholder {
   color: var(--muted);
   opacity: 0.7;
+}
+
+/* Keyboard focus outline for interactive elements that aren't form
+   controls. Only shows on keyboard nav (not mouse click). */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+button:focus-visible, a:focus-visible {
+  outline-offset: 3px;
 }
 
 /* =========================================================

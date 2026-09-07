@@ -38,17 +38,29 @@ export default async function TodayPage() {
       <Nav />
       <main data-surface="reading" className="max-w-3xl mx-auto px-6 py-10">
         <NudgeBanner completed={!!existing} day={day} />
-        {/* Progress */}
+        {/* Progress. The dot marks today; only shows when the day is saved. */}
         <div className="mb-10">
           <div className="flex items-center justify-between text-sm">
             <span className="kicker">Your progress</span>
             <span className="text-rog-muted">Day {day} of 90</span>
           </div>
-          <div className="mt-2 h-2 bg-rog-line rounded-full overflow-hidden">
-            <div
-              className="h-full bg-rog-purple"
-              style={{ width: `${(day / 90) * 100}%` }}
-            />
+          <div className="mt-2 relative h-2">
+            <div className="absolute inset-0 bg-rog-line rounded-full overflow-hidden">
+              <div
+                className="h-full bg-rog-purple"
+                style={{ width: `${(day / 90) * 100}%` }}
+              />
+            </div>
+            {existing && (
+              <div
+                className="absolute w-3 h-3 rounded-full bg-rog-purple -top-0.5"
+                style={{
+                  left: `calc(${(day / 90) * 100}% - 6px)`,
+                  border: "2px solid var(--bg)"
+                }}
+                aria-hidden
+              />
+            )}
           </div>
         </div>
 
@@ -56,6 +68,16 @@ export default async function TodayPage() {
         <h1 className="mt-3 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight">
           Day {day}
         </h1>
+        {existing && (
+          <div className="mt-3">
+            <span className="kept-chip" aria-label="Reflection saved for today">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+                <path d="M3 7.5L6 10.5L11 4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Kept for today
+            </span>
+          </div>
+        )}
 
         {/* Reading tiles — Level 1 (soft plate). These are navigation, not objects. */}
         <div className="mt-10 grid md:grid-cols-2 gap-4">

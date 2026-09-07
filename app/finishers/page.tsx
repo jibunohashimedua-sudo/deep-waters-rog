@@ -20,11 +20,16 @@ export default async function FinishersPage() {
         </p>
 
         {finishers.length === 0 ? (
-          <div className="mt-10 card text-center py-16">
-            <p className="text-xl font-semibold text-rog-purple">
-              No finishers yet. The wall is waiting.
-            </p>
-            <p className="mt-2 text-rog-muted">Be the first name on it.</p>
+          <div className="mt-10 empty-state">
+            <span className="empty-mark" aria-hidden>
+              <svg width="60" height="20" viewBox="0 0 60 20" fill="none">
+                <line x1="4" y1="10" x2="56" y2="10" stroke="currentColor" strokeWidth="1.2" strokeDasharray="2 3" />
+                <circle cx="4" cy="10" r="1.6" fill="currentColor" />
+                <circle cx="56" cy="10" r="1.6" fill="currentColor" />
+              </svg>
+            </span>
+            <p className="empty-body">Nobody has crossed day 90 yet.</p>
+            <p className="empty-hint">The wall is here for when they do.</p>
           </div>
         ) : (
           <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4">

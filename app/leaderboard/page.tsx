@@ -121,16 +121,26 @@ export default function LeaderboardPage() {
 
         <div className="mt-6 space-y-2">
           {loading ? (
-            <p className="text-rog-muted">Loading...</p>
+            <p className="text-rog-muted text-center py-8">Loading…</p>
           ) : filtered.length === 0 ? (
-            <p className="text-rog-muted">No completions yet. Be the first.</p>
+            <div className="empty-state">
+              <span className="empty-mark" aria-hidden>
+                <svg width="40" height="16" viewBox="0 0 40 16" fill="none">
+                  <rect x="2" y="8" width="8" height="6" rx="1" stroke="currentColor" strokeWidth="1.2" fill="none" />
+                  <rect x="14" y="6" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="1.2" fill="none" />
+                  <rect x="26" y="4" width="8" height="10" rx="1" stroke="currentColor" strokeWidth="1.2" fill="none" />
+                </svg>
+              </span>
+              <p className="empty-body">The board is still empty.</p>
+              <p className="empty-hint">It will fill as people save their first day.</p>
+            </div>
           ) : (
             filtered.map((row, i) => (
               <div key={row.user_id} className="card flex items-center gap-4">
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
                     i === 0
-                      ? "bg-rog-pink text-white"
+                      ? "bg-rog-purple text-white ring-2 ring-rog-purple/30 ring-offset-2 ring-offset-transparent"
                       : i < 3
                       ? "bg-rog-purple text-white"
                       : "bg-rog-cream text-rog-purple"

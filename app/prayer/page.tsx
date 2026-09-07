@@ -5,6 +5,7 @@ import Nav from "@/components/Nav";
 import MentionText from "@/components/MentionText";
 import ReportButton from "@/components/ReportButton";
 import { createClient } from "@/lib/supabase/client";
+import { friendlyError } from "@/lib/errors";
 
 type Prayer = {
   id: string;
@@ -46,8 +47,7 @@ export default function PrayerPage() {
       .limit(100);
 
     if (pErr) {
-      console.error("prayer load error:", pErr);
-      setError("Could not load prayers: " + pErr.message);
+      setError(friendlyError(pErr.message));
       setLoading(false);
       return;
     }
@@ -152,7 +152,7 @@ export default function PrayerPage() {
       if (!res.ok) {
         setItems((prev) => prev.filter((p) => p.id !== tempId));
         setDraft(text);
-        setError(j.error || "Could not post prayer request");
+        setError(friendlyError(j.error));
       } else {
         setItems((prev) => prev.map((p) => (p.id === tempId ? { ...p, id: j.id } : p)));
         await load();
@@ -160,7 +160,7 @@ export default function PrayerPage() {
     } catch (err: any) {
       setItems((prev) => prev.filter((p) => p.id !== tempId));
       setDraft(text);
-      setError(err?.message || "Network error");
+      setError(friendlyError(err?.message));
     } finally {
       setPosting(false);
     }
@@ -232,9 +232,25 @@ export default function PrayerPage() {
 
         <div className="mt-4 space-y-3">
           {loading ? (
-            <p className="text-rog-muted">Loading...</p>
+            <p className="text-rog-muted text-center py-8">Loading…</p>
           ) : shown.length === 0 ? (
-            <p className="text-rog-muted">{tab === "open" ? "No open requests yet. Post the first one." : "No answered prayers yet."}</p>
+            <div className="empty-state">
+              <span className="empty-mark" aria-hidden>
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                  <path d="M12 26c0-4.5 3.5-8 8-8s8 3.5 8 8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                  <line x1="20" y1="12" x2="20" y2="16" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                  <line x1="20" y1="30" x2="20" y2="34" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                </svg>
+              </span>
+              <p className="empty-body">
+                {tab === "open" ? "The wall is quiet." : "No answered prayers here yet."}
+              </p>
+              <p className="empty-hint">
+                {tab === "open"
+                  ? "When someone shares a request, it will show here."
+                  : "When someone marks a prayer answered, it moves here."}
+              </p>
+            </div>
           ) : (
             shown.map((p) => {
               const prayedByMe = !!me && p.prayed_by.includes(me);

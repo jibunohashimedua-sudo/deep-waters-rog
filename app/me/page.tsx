@@ -81,10 +81,10 @@ export default async function MePage() {
                     done
                       ? "bg-rog-purple text-white"
                       : isToday
-                      ? "bg-rog-pink text-white ring-2 ring-rog-pink/40"
+                      ? "bg-white border-2 border-rog-purple text-rog-purple ring-2 ring-rog-purple/20"
                       : future
                       ? "bg-white border border-rog-line text-rog-muted/50"
-                      : "bg-rog-peach text-rog-purple"
+                      : "bg-rog-peach/60 text-rog-purple/70 border border-dashed border-rog-purple/20"
                   }`}
                 >
                   {d}
@@ -92,10 +92,10 @@ export default async function MePage() {
               );
             })}
           </div>
-          <div className="mt-3 flex gap-4 text-xs text-rog-muted">
-            <span><span className="inline-block w-3 h-3 rounded bg-rog-purple align-middle mr-1" /> Done</span>
-            <span><span className="inline-block w-3 h-3 rounded bg-rog-peach align-middle mr-1" /> Missed</span>
-            <span><span className="inline-block w-3 h-3 rounded bg-rog-pink align-middle mr-1" /> Today</span>
+          <div className="mt-3 flex gap-4 text-xs text-rog-muted flex-wrap">
+            <span><span className="inline-block w-3 h-3 rounded bg-rog-purple align-middle mr-1" /> Kept</span>
+            <span><span className="inline-block w-3 h-3 rounded bg-rog-peach/60 border border-dashed border-rog-purple/40 align-middle mr-1" /> Not yet</span>
+            <span><span className="inline-block w-3 h-3 rounded bg-white border-2 border-rog-purple align-middle mr-1" /> Today</span>
           </div>
         </section>
 
@@ -110,7 +110,7 @@ export default async function MePage() {
               return (
                 <div
                   key={key}
-                  className={`card text-center p-3 ${has ? "" : "opacity-40 grayscale"}`}
+                  className={`card text-center p-3 ${has ? "" : "opacity-60"}`}
                 >
                   <div className="text-3xl">{b.emoji}</div>
                   <p className="mt-1 text-xs font-bold text-rog-purple">{b.label}</p>
@@ -138,7 +138,7 @@ export default async function MePage() {
                       {cm.role === "leader" ? "Leader" : "Member"}
                     </p>
                   </div>
-                  <span className="text-rog-pink text-xs font-semibold">&rarr;</span>
+                  <span className="text-rog-purple text-xs font-semibold">&rarr;</span>
                 </Link>
               ))}
             </div>
@@ -151,7 +151,10 @@ export default async function MePage() {
           <h2 className="mt-1 text-xl font-bold text-rog-purple">Your reflections</h2>
           <div className="mt-4 space-y-3">
             {!completions || completions.length === 0 ? (
-              <p className="text-rog-muted text-sm">Nothing yet. Complete Day 1.</p>
+              <div className="empty-state">
+                <p className="empty-body">Your reflections will collect here.</p>
+                <p className="empty-hint">Save your first day to begin.</p>
+              </div>
             ) : (
               completions.map((c) => (
                 <div key={c.id} className="card">

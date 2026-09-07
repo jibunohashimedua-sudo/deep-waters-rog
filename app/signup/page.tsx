@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { friendlyError } from "@/lib/errors";
 
 function SignupPageInner() {
   const [email, setEmail] = useState("");
@@ -27,7 +28,7 @@ function SignupPageInner() {
       }
     });
     setLoading(false);
-    if (error) setError(error.message);
+    if (error) setError(friendlyError(error.message));
     else setSent(true);
   }
 
