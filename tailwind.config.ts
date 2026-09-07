@@ -8,22 +8,29 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Fathom. Light-mode values live here; dark mode is handled by the
+        // token overrides in globals.css, which patch these same utilities.
+        // `pink` and `peach` are retired as colours — the app has one accent
+        // and one state colour — but the names survive so the call sites
+        // still asking for them resolve to something sensible.
         rog: {
-          purple: "#3B1E6E",
-          blue: "#2E4FD1",
-          pink: "#E85D9E",
-          cream: "#F7F1EA",
-          peach: "#F0D5C4",
-          ink: "#0F0F0F",
-          muted: "#5B5560",
-          line: "#E4DED6"
+          purple: "#3B23B8",
+          blue: "#2A1B8C",
+          pink: "#3B23B8",
+          cream: "#EDEFF2",
+          peach: "#E3E6EB",
+          ink: "#0C0F16",
+          muted: "#565E6D",
+          line: "#CFD4DC",
+          sonar: "#067A5A"
         }
       },
       fontFamily: {
-        sans: ["Poppins", "system-ui", "sans-serif"],
-        display: ["Poppins", "system-ui", "sans-serif"],
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        display: ["var(--font-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
         serif: [
-          '"Source Serif 4"',
+          "var(--font-serif)",
           '"Iowan Old Style"',
           '"Charter"',
           "Georgia",

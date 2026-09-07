@@ -28,7 +28,7 @@ export default async function EditNotePage({ params }: { params: { day: string }
           &larr; All notes
         </Link>
         <p className="mt-4 kicker">Study note</p>
-        <h1 className="mt-3 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight">Day {day}</h1>
+        <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Day {day}</h1>
         <p className="mt-2 text-sm text-rog-muted">
           OT: {formatReading(reading.ot)}
           <br />

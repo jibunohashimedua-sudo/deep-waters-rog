@@ -7,10 +7,12 @@ import ThemeToggle from "./ThemeToggle";
 import BottomNav from "./BottomNav";
 import Mark from "./Mark";
 
+// Mirrors the mobile tab bar: Prayer is a view inside Community now, so it
+// isn't a separate destination here either.
 const links = [
   { href: "/today", label: "Today" },
+  { href: "/bible", label: "Bible" },
   { href: "/community", label: "Community" },
-  { href: "/prayer", label: "Prayer" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/cohorts", label: "Cohorts" },
   { href: "/finishers", label: "Finishers" }
@@ -76,7 +78,7 @@ export default function Nav() {
 
   // Main tab routes never show a back button. Everything else (sub-pages
   // like /me/edit, /admin/notes, /c/slug, /read) shows one.
-  const mainRoutes = ["/today", "/community", "/prayer", "/leaderboard", "/cohorts", "/finishers", "/me", "/admin", "/notifications"];
+  const mainRoutes = ["/today", "/bible", "/community", "/leaderboard", "/cohorts", "/finishers", "/me", "/admin", "/notifications"];
   const showBack = !mainRoutes.includes(pathname);
 
   return (
@@ -116,7 +118,12 @@ export default function Nav() {
 
             {/* Notifications bell — always visible */}
             <Link href="/notifications" className="tap-target relative p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10" aria-label="Notifications">
-              <span className="text-lg">🔔</span>
+              {/* Drawn, not set in emoji — an emoji is whatever the phone
+                  decides it is, and it never matches the rest of the icons. */}
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M18 8.5a6 6 0 1 0-12 0c0 5-2 6.5-2 6.5h16s-2-1.5-2-6.5Z" />
+                <path d="M10.4 19a1.9 1.9 0 0 0 3.2 0" />
+              </svg>
               {unread > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 bg-red-600 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
                   {unread > 9 ? "9+" : unread}

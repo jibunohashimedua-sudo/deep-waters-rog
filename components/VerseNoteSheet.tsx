@@ -104,7 +104,7 @@ export default function VerseNoteSheet({
             rows={6}
             placeholder="What did this stir? What are you carrying?"
             autoFocus
-            className="w-full rounded-xl border border-rog-line bg-white px-4 py-3 font-serif text-[15px] leading-relaxed focus:border-rog-purple focus:outline-none"
+            className="w-full border border-rog-line bg-white px-4 py-3 font-serif text-[15px] leading-relaxed focus:border-rog-purple focus:outline-none"
           />
 
           <div className="mt-5 flex gap-3">

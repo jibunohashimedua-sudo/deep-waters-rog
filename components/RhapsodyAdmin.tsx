@@ -365,7 +365,7 @@ export default function RhapsodyAdmin({
                   setUploadTitle(monthLabel(`${e.target.value}-01`));
                 }
               }}
-              className="w-full rounded-xl border border-rog-line px-4 py-2.5 text-left focus:border-rog-purple focus:outline-none"
+              className="w-full border border-rog-line px-4 py-2.5 text-left focus:border-rog-purple focus:outline-none"
             />
           </div>
           <div className="min-w-0">
@@ -374,7 +374,7 @@ export default function RhapsodyAdmin({
               value={uploadTitle}
               onChange={(e) => setUploadTitle(e.target.value)}
               placeholder="September 2026"
-              className="w-full rounded-xl border border-rog-line px-4 py-2.5 text-left focus:border-rog-purple focus:outline-none"
+              className="w-full border border-rog-line px-4 py-2.5 text-left focus:border-rog-purple focus:outline-none"
             />
           </div>
         </div>
@@ -384,7 +384,7 @@ export default function RhapsodyAdmin({
             ref={fileRef}
             type="file"
             accept="application/pdf,.pdf"
-            className="w-full text-sm rounded-2xl border border-rog-line px-4 py-2.5 file:mr-3 file:rounded-full file:border-0 file:bg-rog-purple file:px-4 file:py-1.5 file:text-white file:text-sm"
+            className="w-full text-sm border border-rog-line px-4 py-2.5 file:mr-3 file:rounded-full file:border-0 file:bg-rog-purple file:px-4 file:py-1.5 file:text-white file:text-sm"
           />
         </div>
         <button
@@ -503,7 +503,7 @@ export default function RhapsodyAdmin({
                     inputMode="numeric"
                     value={startPage}
                     onChange={(e) => setStartPage(e.target.value)}
-                    className="w-full rounded-xl border border-rog-line px-4 py-2 text-sm focus:border-rog-purple focus:outline-none"
+                    className="w-full border border-rog-line px-4 py-2 text-sm focus:border-rog-purple focus:outline-none"
                   />
                 </div>
                 <div className="min-w-0">
@@ -512,7 +512,7 @@ export default function RhapsodyAdmin({
                     inputMode="numeric"
                     value={pagesPer}
                     onChange={(e) => setPagesPer(e.target.value)}
-                    className="w-full rounded-xl border border-rog-line px-4 py-2 text-sm focus:border-rog-purple focus:outline-none"
+                    className="w-full border border-rog-line px-4 py-2 text-sm focus:border-rog-purple focus:outline-none"
                   />
                 </div>
               </div>
@@ -525,7 +525,7 @@ export default function RhapsodyAdmin({
                   onChange={(e) => setTitleList(e.target.value)}
                   rows={4}
                   placeholder={"The Name That Rules Heaven And Earth\nFulfil Your Purpose To His Glory\n..."}
-                  className="w-full rounded-2xl border border-rog-line px-4 py-2.5 text-sm focus:border-rog-purple focus:outline-none"
+                  className="w-full border border-rog-line px-4 py-2.5 text-sm focus:border-rog-purple focus:outline-none"
                 />
               </div>
               <div className="flex flex-wrap gap-2">
@@ -558,7 +558,7 @@ export default function RhapsodyAdmin({
                   <li key={d} className="space-y-2">
                     <div className="flex items-center gap-2">
                       <div
-                        className={`w-11 shrink-0 rounded-2xl py-2 text-center leading-tight ${
+                        className={`w-11 shrink-0  py-2 text-center leading-tight ${
                           set ? "bg-rog-purple text-white" : "bg-rog-cream text-rog-muted"
                         }`}
                       >
@@ -571,7 +571,7 @@ export default function RhapsodyAdmin({
                         value={draft.title}
                         onChange={(e) => edit({ title: e.target.value })}
                         placeholder="Article title"
-                        className="flex-1 min-w-0 rounded-xl border border-rog-line px-4 py-2 text-sm focus:border-rog-purple focus:outline-none"
+                        className="flex-1 min-w-0 border border-rog-line px-4 py-2 text-sm focus:border-rog-purple focus:outline-none"
                       />
                       <input
                         value={draft.page}
@@ -579,7 +579,7 @@ export default function RhapsodyAdmin({
                         inputMode="numeric"
                         placeholder="pg"
                         aria-label={`Page number for ${d}`}
-                        className="w-16 shrink-0 rounded-xl border border-rog-line px-3 py-2 text-sm text-center focus:border-rog-purple focus:outline-none"
+                        className="w-16 shrink-0 border border-rog-line px-3 py-2 text-sm text-center focus:border-rog-purple focus:outline-none"
                       />
                       <button
                         type="button"
@@ -603,7 +603,7 @@ export default function RhapsodyAdmin({
                             value={draft.verse}
                             onChange={(e) => edit({ verse: e.target.value })}
                             rows={3}
-                            className="w-full rounded-2xl border border-rog-line px-4 py-2.5 text-sm focus:border-rog-purple focus:outline-none"
+                            className="w-full border border-rog-line px-4 py-2.5 text-sm focus:border-rog-purple focus:outline-none"
                           />
                         </div>
                         <div>
@@ -614,7 +614,7 @@ export default function RhapsodyAdmin({
                             value={draft.body}
                             onChange={(e) => edit({ body: e.target.value })}
                             rows={12}
-                            className="w-full rounded-2xl border border-rog-line px-4 py-2.5 text-sm leading-relaxed focus:border-rog-purple focus:outline-none"
+                            className="w-full border border-rog-line px-4 py-2.5 text-sm leading-relaxed focus:border-rog-purple focus:outline-none"
                           />
                           <p className="mt-1 text-xs text-rog-muted">{draft.body.length} characters</p>
                         </div>
@@ -625,7 +625,7 @@ export default function RhapsodyAdmin({
                               value={draft.prayerLabel}
                               onChange={(e) => edit({ prayerLabel: e.target.value })}
                               placeholder="PRAYER"
-                              className="w-full rounded-xl border border-rog-line px-4 py-2 text-sm focus:border-rog-purple focus:outline-none"
+                              className="w-full border border-rog-line px-4 py-2 text-sm focus:border-rog-purple focus:outline-none"
                             />
                           </div>
                           <div className="min-w-0">
@@ -634,7 +634,7 @@ export default function RhapsodyAdmin({
                               value={draft.prayer}
                               onChange={(e) => edit({ prayer: e.target.value })}
                               rows={4}
-                              className="w-full rounded-2xl border border-rog-line px-4 py-2.5 text-sm focus:border-rog-purple focus:outline-none"
+                              className="w-full border border-rog-line px-4 py-2.5 text-sm focus:border-rog-purple focus:outline-none"
                             />
                           </div>
                         </div>

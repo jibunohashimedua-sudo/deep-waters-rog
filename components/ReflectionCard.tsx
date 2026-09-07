@@ -111,34 +111,54 @@ export default function ReflectionCard({
       <div className="flex items-center gap-3">
         <Avatar name={item.name} photoUrl={item.photo_url} size="md" decorative />
         <div className="flex-1">
-          <p className="font-semibold text-rog-ink">{item.name}</p>
-          <p className="text-xs text-rog-muted">
-            Day {item.day_number} &bull; {new Date(item.completed_at).toLocaleDateString("en-GB")}
+          <p className="text-[14px] font-semibold text-rog-ink leading-tight">{item.name}</p>
+          <p className="kicker mt-1">
+            Day {item.day_number} &middot;{" "}
+            {new Date(item.completed_at).toLocaleDateString("en-GB")}
           </p>
         </div>
       </div>
 
-      {item.verse_reference && <p className="mt-4 font-semibold text-rog-purple">{item.verse_reference}</p>}
-      {item.verse_text && <p className="selectable mt-1 italic text-rog-ink">&ldquo;{item.verse_text}&rdquo;</p>}
+      {/* The verse they kept. A rule down the left says "this is quoted"
+          more quietly than quotation marks and an italic ever did. */}
+      {item.verse_text ? (
+        <div className="quoted mt-4">
+          <p className="selectable font-serif text-[15px] leading-[1.62] text-rog-ink">
+            {item.verse_text}
+          </p>
+          {item.verse_reference && <p className="kicker mt-1.5">{item.verse_reference}</p>}
+        </div>
+      ) : (
+        item.verse_reference && <p className="kicker mt-4">{item.verse_reference}</p>
+      )}
       {item.reflection && (
-        <p className="selectable mt-3 text-rog-ink">
+        <p className="selectable mt-3 text-[14.5px] leading-[1.55] text-rog-ink">
           <MentionText text={item.reflection} />
         </p>
       )}
 
       {/* Actions */}
-      <div className="mt-4 flex items-center gap-4 text-sm">
+      {/* Actions read as a footer, not a button bar: metadata-sized, no
+          fills, and drawn rather than set in emoji. Amen goes sonar when
+          it's yours — the same green that marks today on the gauge. */}
+      <div className="mt-4 flex items-center gap-5 kicker">
         <button
           onClick={amen}
           disabled={!currentUserId}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition ${
-            reacted ? "bg-rog-purple text-white" : "bg-rog-cream text-rog-purple hover:bg-rog-peach"
-          }`}
+          className="act"
+          data-on={reacted ? "true" : undefined}
+          aria-pressed={reacted}
         >
-          <span aria-hidden>🙏</span> <span className="font-semibold">Amen</span> {amens > 0 && <span>{amens}</span>}
+          <svg viewBox="0 0 24 24" aria-hidden strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 20.5S3.5 15.4 3.5 9.6A4.6 4.6 0 0 1 12 7a4.6 4.6 0 0 1 8.5 2.6c0 5.8-8.5 10.9-8.5 10.9Z" />
+          </svg>
+          <span>Amen{amens > 0 ? ` ${amens}` : ""}</span>
         </button>
-        <button onClick={toggleComments} className="text-rog-muted hover:text-rog-purple">
-          <span aria-hidden>💬</span> {commentCount > 0 ? commentCount : ""} {commentCount === 1 ? "comment" : "comments"}
+        <button onClick={toggleComments} className="act">
+          <svg viewBox="0 0 24 24" aria-hidden strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20.5 12.2c0 3.8-3.8 6.9-8.5 6.9a10 10 0 0 1-2.7-.4L4 20.5l1.6-3.7a6.4 6.4 0 0 1-2.1-4.6c0-3.8 3.8-6.9 8.5-6.9s8.5 3.1 8.5 6.9Z" />
+          </svg>
+          <span>{commentCount > 0 ? `Reply ${commentCount}` : "Reply"}</span>
         </button>
         <div className="ml-auto">
           {currentUserId !== item.user_id && (
@@ -158,11 +178,11 @@ export default function ReflectionCard({
           {comments.map((c) => (
             <div key={c.id} className="flex gap-2">
               <Avatar name={c.profiles?.name ?? "?"} photoUrl={c.profiles?.photo_url} size="xs" decorative />
-              <div className="flex-1 bg-rog-cream rounded-2xl px-3 py-2">
-                <p className="text-xs font-semibold text-rog-purple">{c.profiles?.name}</p>
-                <p className="selectable text-sm text-rog-ink"><MentionText text={c.body} /></p>
-                <div className="flex gap-3 mt-1">
-                  <p className="text-[10px] text-rog-muted">{new Date(c.created_at).toLocaleString("en-GB")}</p>
+              <div className="flex-1 surface-soft !p-3">
+                <p className="text-[13px] font-semibold text-rog-ink">{c.profiles?.name}</p>
+                <p className="selectable text-[14px] leading-[1.5] text-rog-ink"><MentionText text={c.body} /></p>
+                <div className="flex gap-3 mt-1.5">
+                  <p className="kicker">{new Date(c.created_at).toLocaleString("en-GB")}</p>
                   {(c.user_id === currentUserId || isAdmin) && (
                     <button onClick={() => deleteComment(c.id)} className="text-[10px] text-rog-muted hover:text-danger">Delete</button>
                   )}
@@ -177,9 +197,9 @@ export default function ReflectionCard({
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 placeholder="Add a comment... use @name to mention"
-                className="flex-1 rounded-full border border-rog-line bg-white px-4 py-2 text-sm focus:border-rog-purple focus:outline-none"
+                className="flex-1 border border-rog-line px-3 py-2 text-[14px] focus:border-rog-purple focus:outline-none"
               />
-              <button type="submit" disabled={posting || !draft.trim()} className="btn-primary text-sm px-4 py-2 disabled:opacity-50">
+              <button type="submit" disabled={posting || !draft.trim()} className="btn-primary !text-[13px] px-4 py-2 disabled:opacity-50">
                 Post
               </button>
             </form>

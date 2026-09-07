@@ -70,7 +70,7 @@ export default function CohortSettingsForm({
           onChange={(e) => setDescription(e.target.value)}
           rows={2}
           placeholder="Shown on the join page"
-          className="w-full rounded-2xl border border-rog-line bg-white px-5 py-2.5 focus:border-rog-purple focus:outline-none"
+          className="w-full border border-rog-line bg-white px-5 py-2.5 focus:border-rog-purple focus:outline-none"
         />
       </div>
       <div>
@@ -80,7 +80,7 @@ export default function CohortSettingsForm({
           onChange={(e) => setWelcome(e.target.value)}
           rows={3}
           placeholder="Shown to members after they join"
-          className="w-full rounded-2xl border border-rog-line bg-white px-5 py-2.5 focus:border-rog-purple focus:outline-none"
+          className="w-full border border-rog-line bg-white px-5 py-2.5 focus:border-rog-purple focus:outline-none"
         />
       </div>
       <div>

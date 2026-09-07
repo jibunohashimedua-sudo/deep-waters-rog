@@ -13,7 +13,7 @@ export default async function CohortsPage() {
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <p className="kicker">Groups</p>
-            <h1 className="mt-3 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight">Cohorts</h1>
+            <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Cohorts</h1>
             <p className="mt-2 text-sm text-rog-muted">
               Groups starting Deep Waters together. Share a link to invite.
             </p>

@@ -13,6 +13,9 @@ export type Profile = {
   email_reminders: boolean;
   push_reminders: boolean;
   reminder_hour: number;
+  /** Optional until the bible_cache/translations migration has been run —
+      translationById() falls back to the KJV when it's absent. */
+  preferred_bible_id?: string | null;
 };
 
 /** Get the current user + profile, or redirect to login/onboarding. */

@@ -59,7 +59,7 @@ export default function NotificationsPage() {
         <div className="flex items-center justify-between">
           <div>
             <p className="kicker">Inbox</p>
-            <h1 className="mt-3 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight">Notifications</h1>
+            <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Notifications</h1>
           </div>
           {items.some((n) => !n.read) && (
             <button onClick={markAllRead} className="text-xs text-rog-purple underline">

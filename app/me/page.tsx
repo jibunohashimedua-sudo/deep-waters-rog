@@ -54,7 +54,7 @@ export default async function MePage() {
           <div className="flex items-center gap-4">
             <Avatar name={profile.name} photoUrl={profile.photo_url} size="xl" />
             <div className="flex-1 min-w-0">
-              <h1 className="font-serif text-2xl md:text-3xl font-medium text-rog-ink leading-tight break-words">
+              <h1 className="text-[24px] md:text-[28px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight break-words">
                 {profile.name}
               </h1>
               {profile.bio && <p className="text-sm text-rog-muted mt-1 break-words">{profile.bio}</p>}
@@ -74,8 +74,7 @@ export default async function MePage() {
 
         {/* Progress grid */}
         <section className="mt-8">
-          <p className="kicker">Progress</p>
-          <h2 className="mt-1 text-xl font-bold text-rog-purple">90 days</h2>
+          <h2 className="text-[20px] font-semibold tracking-[-0.02em] text-rog-ink">90 days</h2>
           <div className="mt-4 grid grid-cols-10 gap-1.5">
             {Array.from({ length: 90 }, (_, i) => i + 1).map((d) => {
               const done = doneDays.has(d);
@@ -85,7 +84,7 @@ export default async function MePage() {
                 <div
                   key={d}
                   title={`Day ${d}`}
-                  className={`aspect-square rounded-md text-[10px] flex items-center justify-center font-semibold ${
+                  className={`aspect-square  text-[10px] flex items-center justify-center font-semibold ${
                     done
                       ? "bg-rog-purple text-white"
                       : isToday
@@ -109,8 +108,7 @@ export default async function MePage() {
 
         {/* Badges */}
         <section className="mt-8">
-          <p className="kicker">Badges</p>
-          <h2 className="mt-1 text-xl font-bold text-rog-purple">Milestones</h2>
+          <h2 className="text-[20px] font-semibold tracking-[-0.02em] text-rog-ink">Milestones</h2>
           <div className="mt-4 grid grid-cols-3 md:grid-cols-6 gap-3">
             {BADGE_ORDER.map((key) => {
               const b = BADGES[key];
@@ -121,7 +119,7 @@ export default async function MePage() {
                   className={`card text-center !p-3 ${has ? "" : "opacity-60"}`}
                 >
                   <div className="text-3xl">{b.emoji}</div>
-                  <p className="mt-1 text-xs font-bold text-rog-purple">{b.label}</p>
+                  <p className="mt-1 text-xs font-semibold text-rog-ink">{b.label}</p>
                   <p className="text-[10px] text-rog-muted">{b.description}</p>
                 </div>
               );
@@ -141,7 +139,7 @@ export default async function MePage() {
                   className="card block hover:border-rog-purple transition flex items-center justify-between"
                 >
                   <div>
-                    <p className="font-semibold text-rog-purple">{cm.cohorts.name}</p>
+                    <p className="font-semibold text-rog-ink">{cm.cohorts.name}</p>
                     <p className="text-xs text-rog-muted">
                       {cm.role === "leader" ? "Leader" : "Member"}
                     </p>
@@ -155,8 +153,7 @@ export default async function MePage() {
 
         {/* Verse notes */}
         <section className="mt-8">
-          <p className="kicker">Notes</p>
-          <h2 className="mt-1 text-xl font-bold text-rog-purple">Verse notes</h2>
+          <h2 className="text-[20px] font-semibold tracking-[-0.02em] text-rog-ink">Verse notes</h2>
           <div className="mt-4 space-y-3">
             {!verseNotes || verseNotes.length === 0 ? (
               <div className="empty-state">
@@ -180,7 +177,7 @@ export default async function MePage() {
                     className="card block hover:border-rog-purple transition"
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <p className="font-serif font-medium text-rog-purple">{ref}</p>
+                      <p className="font-serif font-medium text-rog-ink">{ref}</p>
                       <p className="text-xs text-rog-muted shrink-0">
                         {new Date(n.updated_at).toLocaleDateString("en-GB")}
                       </p>
@@ -197,8 +194,7 @@ export default async function MePage() {
 
         {/* History */}
         <section className="mt-8">
-          <p className="kicker">History</p>
-          <h2 className="mt-1 text-xl font-bold text-rog-purple">Your reflections</h2>
+          <h2 className="text-[20px] font-semibold tracking-[-0.02em] text-rog-ink">Your reflections</h2>
           <div className="mt-4 space-y-3">
             {!completions || completions.length === 0 ? (
               <div className="empty-state">
@@ -209,7 +205,7 @@ export default async function MePage() {
               completions.map((c) => (
                 <div key={c.id} className="card">
                   <div className="flex items-center justify-between">
-                    <p className="font-bold text-rog-purple">Day {c.day_number}</p>
+                    <p className="kicker kicker-strong">Day {c.day_number}</p>
                     <p className="text-xs text-rog-muted">
                       {new Date(c.completed_at).toLocaleDateString("en-GB")}
                     </p>

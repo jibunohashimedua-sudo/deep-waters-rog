@@ -11,7 +11,6 @@ type Step = {
   emoji: string;
   /** Path in /public — shown in place of `emoji` when set. Use for the brand slide. */
   mark?: string;
-  gradient: string; // from/to tailwind classes on a hero
 };
 
 const STEPS: Step[] = [
@@ -20,36 +19,31 @@ const STEPS: Step[] = [
     title: "Deep Waters",
     body: "A 90 day journey through the Bible together. Old Testament and New Testament, every single day. You will finish at day 90.",
     emoji: "🌊",
-    mark: "/deep-waters-mark-cream.png",
-    gradient: "from-rog-purple via-[#4A2A85] to-rog-blue"
+    mark: "/deep-waters-mark-cream.png"
   },
   {
     kicker: "Every day",
     title: "Read together",
     body: "Roughly 13 chapters a day, split between OT and NT. Tap the reading cards to open the KJV text right in the app. No jumping between tabs.",
-    emoji: "📖",
-    gradient: "from-rog-blue via-[#4A5FD8] to-rog-purple"
+    emoji: "📖"
   },
   {
     kicker: "One verse. One thought.",
     title: "Share what stood out",
     body: "After you read, drop the verse that hit you and a short reflection. It shows up on the community feed. Amen someone. Comment. Tag with @name.",
-    emoji: "💬",
-    gradient: "from-[#7A4AA8] via-[#5B3A9E] to-rog-purple"
+    emoji: "💬"
   },
   {
     kicker: "You are not alone",
     title: "Prayer, cohorts, and support",
     body: "Post prayer requests. See who is praying with you. Join a cohort to walk with a smaller group. Everyone is reading the same day.",
-    emoji: "🙏",
-    gradient: "from-rog-purple via-[#5B3A9E] to-[#8560D8]"
+    emoji: "🙏"
   },
   {
     kicker: "Track your journey",
     title: "Progress, badges, finisher wall",
     body: "See your 90 day grid fill up. Earn badges for streaks and milestones. Hit day 90 and land on the finisher wall.",
-    emoji: "🏆",
-    gradient: "from-rog-blue via-rog-purple to-[#8560D8]"
+    emoji: "🏆"
   }
 ];
 
@@ -94,7 +88,7 @@ export default function WelcomePage() {
 
   return (
     <main
-      className="min-h-screen flex flex-col"
+      className="main-plain min-h-screen flex flex-col"
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
@@ -112,13 +106,13 @@ export default function WelcomePage() {
       {/* Hero card */}
       <section className="flex-1 flex items-center justify-center px-6 py-4">
         <div className="w-full max-w-xl">
+          {/* One ground for all five steps, and it's the same violet-black
+              the splash rises out of. Five different purple gradients made
+              onboarding feel like five different apps. */}
           <div
-            className={`relative rounded-[2rem] overflow-hidden bg-gradient-to-br ${step.gradient} text-white p-8 md:p-12 text-center shadow-2xl`}
+            className="relative overflow-hidden p-8 md:p-12 text-center"
+            style={{ background: "#0C0A18", color: "#E9E6F2" }}
           >
-            {/* Soft glows */}
-            <div className="absolute -top-24 -left-24 w-72 h-72 bg-white/20 rounded-full blur-3xl" />
-            <div className="absolute -bottom-32 -right-24 w-80 h-80 bg-white/15 rounded-full blur-3xl" />
-
             <div className="relative">
               {step.mark ? (
                 <div className="mb-6 flex justify-center">
@@ -127,11 +121,13 @@ export default function WelcomePage() {
               ) : (
                 <div className="text-6xl md:text-7xl mb-6">{step.emoji}</div>
               )}
-              <p className="kicker !text-white/85">{step.kicker}</p>
-              <h1 className="mt-4 text-3xl md:text-4xl font-bold leading-tight">
+              <p className="kicker" style={{ color: "#8B87A3" }}>
+                {step.kicker}
+              </p>
+              <h1 className="mt-4 text-[30px] md:text-4xl font-semibold tracking-[-0.03em] leading-tight">
                 {step.title}
               </h1>
-              <p className="mt-5 text-white/90 leading-relaxed">
+              <p className="mt-5 leading-relaxed text-[15px]" style={{ color: "#B9B4C9" }}>
                 {step.body}
               </p>
             </div>
@@ -144,8 +140,8 @@ export default function WelcomePage() {
                 key={idx}
                 onClick={() => setI(idx)}
                 aria-label={`Step ${idx + 1}`}
-                className={`h-1.5 rounded-full transition-all ${
-                  idx === i ? "w-8 bg-rog-purple" : "w-1.5 bg-rog-purple/30 hover:bg-rog-purple/60"
+                className={`h-[3px] transition-all ${
+                  idx === i ? "w-8 bg-rog-purple" : "w-2 bg-rog-line hover:bg-rog-muted"
                 }`}
               />
             ))}

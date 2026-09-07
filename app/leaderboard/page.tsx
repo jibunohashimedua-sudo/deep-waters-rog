@@ -77,7 +77,7 @@ export default function LeaderboardPage() {
       <main className="max-w-3xl mx-auto px-6 py-10">
         <ProgressTabs />
         <p className="kicker">Live</p>
-        <h1 className="mt-3 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight">Leaderboard</h1>
+        <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Leaderboard</h1>
         <p className="mt-2 text-sm text-rog-muted">
           Ranked by days completed, then current streak. Updates in real time.
         </p>

@@ -147,3 +147,49 @@ export function currentDayNumber(startDate: string | Date): number {
   const diff = Math.floor((today.getTime() - start.getTime()) / 86400000);
   return Math.max(1, Math.min(90, diff + 1));
 }
+
+// ---------------------------------------------------------------------------
+// Chapter → plan day
+//
+// Every chapter of all 66 books appears in the 90-day plan exactly once, so
+// any chapter can be traced back to the day it belongs to. The free Bible
+// browser uses this to file a highlight or a verse note under the same day
+// it would have had if it had been made on /read — same rows, same shape,
+// nothing special-cased.
+//
+// It does NOT make the day complete. Completions are written only by the
+// "mark day complete" flow; reading and highlighting never touch that table.
+// ---------------------------------------------------------------------------
+
+const CHAPTER_TO_DAY = new Map<string, { day: number; testament: "ot" | "nt" }>();
+for (let i = 0; i < 90; i++) {
+  for (const c of otPerDay[i]) {
+    CHAPTER_TO_DAY.set(`${c.book}|${c.chapter}`, { day: i + 1, testament: "ot" });
+  }
+  for (const c of ntPerDay[i]) {
+    CHAPTER_TO_DAY.set(`${c.book}|${c.chapter}`, { day: i + 1, testament: "nt" });
+  }
+}
+
+export function planDayForChapter(
+  book: string,
+  chapter: number
+): { day: number; testament: "ot" | "nt" } | null {
+  return CHAPTER_TO_DAY.get(`${book}|${chapter}`) ?? null;
+}
+
+/**
+ * Which chapters of one book fall on days the reader has already completed.
+ * Used to mark chapters quietly on the chapter picker.
+ */
+export function readChaptersForBook(book: string, completedDays: Iterable<number>): Set<number> {
+  const out = new Set<number>();
+  for (const day of completedDays) {
+    const reading = READING_PLAN[day - 1];
+    if (!reading) continue;
+    for (const c of [...reading.ot, ...reading.nt]) {
+      if (c.book === book) out.add(c.chapter);
+    }
+  }
+  return out;
+}
