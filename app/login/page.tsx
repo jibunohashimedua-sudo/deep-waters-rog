@@ -33,6 +33,13 @@ function LoginPageInner() {
   return (
     <main className="min-h-screen flex items-center justify-center px-6">
       <div className="w-full max-w-md">
+        <img
+          src="/deep-waters-mark-purple.png"
+          alt=""
+          width={72}
+          height={72}
+          className="mx-auto mb-6 w-16"
+        />
         <h1 className="text-3xl font-bold text-rog-purple text-center">Sign in</h1>
         <p className="mt-2 text-center text-rog-muted text-sm">
           We&rsquo;ll email you a magic link.

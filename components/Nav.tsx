@@ -134,21 +134,23 @@ export default function Nav() {
   );
 }
 
+// The Deep Waters mark. Uses currentColor so a single component works in both
+// themes: deep purple in light mode, warm cream in dark.
 function HeartLogo() {
   return (
     <svg
       width="22"
       height="22"
-      viewBox="0 0 24 24"
-      fill="none"
+      viewBox="0 0 100 100"
+      fill="currentColor"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden
-      className="text-rog-purple"
+      className="dw-mark"
     >
-      <path
-        d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10Z"
-        fill="currentColor"
-      />
+      <rect x="18" y="24" width="64" height="11" rx="5.5" />
+      <rect x="26" y="42" width="48" height="11" rx="5.5" />
+      <rect x="34" y="60" width="32" height="11" rx="5.5" />
+      <rect x="42" y="78" width="16" height="11" rx="5.5" />
     </svg>
   );
 }

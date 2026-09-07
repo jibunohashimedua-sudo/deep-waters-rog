@@ -8,6 +8,8 @@ type Step = {
   title: string;
   body: string;
   emoji: string;
+  /** Path in /public — shown in place of `emoji` when set. Use for the brand slide. */
+  mark?: string;
   gradient: string; // from/to tailwind classes on a hero
 };
 
@@ -17,6 +19,7 @@ const STEPS: Step[] = [
     title: "Deep Waters",
     body: "A 90 day journey through the Bible together. Old Testament and New Testament, every single day. You will finish at day 90.",
     emoji: "🌊",
+    mark: "/deep-waters-mark-cream.png",
     gradient: "from-rog-purple via-[#4A2A85] to-rog-blue"
   },
   {
@@ -116,7 +119,17 @@ export default function WelcomePage() {
             <div className="absolute -bottom-32 -right-24 w-80 h-80 bg-white/15 rounded-full blur-3xl" />
 
             <div className="relative">
-              <div className="text-6xl md:text-7xl mb-6">{step.emoji}</div>
+              {step.mark ? (
+                <img
+                  src={step.mark}
+                  alt=""
+                  width={96}
+                  height={96}
+                  className="mx-auto mb-6 w-20 md:w-24"
+                />
+              ) : (
+                <div className="text-6xl md:text-7xl mb-6">{step.emoji}</div>
+              )}
               <p className="kicker !text-white/85">{step.kicker}</p>
               <h1 className="mt-4 text-3xl md:text-4xl font-bold leading-tight">
                 {step.title}

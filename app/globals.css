@@ -379,6 +379,11 @@ input::placeholder, textarea::placeholder {
 [data-theme="dark"] .border-rog-line { border-color: var(--line); }
 [data-theme="dark"] .border-rog-pink\/40 { border-color: rgba(255, 126, 182, 0.4); }
 
+/* Deep Waters mark — purple in light mode, warm cream in dark.
+   Its own class so the global .text-rog-purple override doesn't win. */
+.dw-mark { color: var(--accent); }
+[data-theme="dark"] .dw-mark { color: #F3EDE4; }
+
 /* Hover surfaces used in nav */
 [data-theme="dark"] .hover\:bg-rog-cream:hover { background-color: rgba(255, 255, 255, 0.08); }
 [data-theme="dark"] .hover\:bg-rog-peach:hover { background-color: rgba(255, 200, 175, 0.12); }

@@ -4,15 +4,20 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Deep Waters",
   description: "A 90 day Bible reading plan.",
-  manifest: "/manifest.webmanifest",
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     title: "Deep Waters",
     statusBarStyle: "black-translucent"
   },
   icons: {
-    icon: "/logo.png",
-    apple: "/logo.png"
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" }
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }]
   }
 };
 

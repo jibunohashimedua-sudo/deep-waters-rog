@@ -77,6 +77,13 @@ export default async function CohortLandingPage({
           </div>
         )}
         <div className="max-w-3xl mx-auto px-6 py-16 text-center">
+          <img
+            src="/deep-waters-mark-cream.png"
+            alt=""
+            width={72}
+            height={72}
+            className="mx-auto mb-4 w-14"
+          />
           <p className="kicker !text-white/70">Deep Waters</p>
           <h1 className="mt-3 text-5xl md:text-6xl font-bold tracking-tight">{cohort.name}</h1>
           {cohort.description && (

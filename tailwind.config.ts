@@ -2,6 +2,9 @@ import type { Config } from "tailwindcss";
 
 export default {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
+  // The app toggles dark via a data-attribute on <html>, not via
+  // prefers-color-scheme. This tells Tailwind's `dark:` variant to match that.
+  darkMode: ["selector", '[data-theme="dark"]'],
   theme: {
     extend: {
       colors: {

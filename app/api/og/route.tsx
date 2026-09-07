@@ -23,12 +23,13 @@ async function loadFont(url: string): Promise<ArrayBuffer | null> {
 }
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
+  const { searchParams, origin } = new URL(req.url);
   const day = searchParams.get("day") ?? "1";
   const name = searchParams.get("name") ?? "Reader";
   const verse = searchParams.get("verse") ?? "";
   const text = searchParams.get("text") ?? "";
   const photo = searchParams.get("photo") ?? "";
+  const markUrl = `${origin}/deep-waters-mark-cream.png`;
 
   // Stable TTF sources. If both fail, we render with the system font.
   const [fontBold, fontRegular] = await Promise.all([
@@ -55,35 +56,40 @@ export async function GET(req: NextRequest) {
           position: "relative"
         }}
       >
-        {/* Purple top */}
+        {/* Purple top with the mark */}
         <div
           style={{
             display: "flex",
-            flexDirection: "column",
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 40,
             background: "#3B1E6E",
             padding: "60px 80px 80px",
             color: "white"
           }}
         >
-          <div
-            style={{
-              fontSize: 22,
-              letterSpacing: 6,
-              color: "#E85D9E",
-              fontWeight: 500
-            }}
-          >
-            90 DAYS
-          </div>
-          <div
-            style={{
-              fontSize: 110,
-              fontWeight: 700,
-              lineHeight: 1,
-              marginTop: 12
-            }}
-          >
-            DEEP WATERS
+          <img src={markUrl} width={140} height={140} alt="" />
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <div
+              style={{
+                fontSize: 22,
+                letterSpacing: 6,
+                color: "#E85D9E",
+                fontWeight: 500
+              }}
+            >
+              90 DAYS
+            </div>
+            <div
+              style={{
+                fontSize: 110,
+                fontWeight: 700,
+                lineHeight: 1,
+                marginTop: 12
+              }}
+            >
+              DEEP WATERS
+            </div>
           </div>
         </div>
         {/* Blue bar */}

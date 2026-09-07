@@ -10,6 +10,13 @@ export default function LandingPage() {
         <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-rog-blue/30 rounded-full blur-3xl" />
 
         <div className="relative max-w-4xl mx-auto px-6 pt-20 pb-20 text-center">
+          <img
+            src="/deep-waters-mark-cream.png"
+            alt=""
+            width={112}
+            height={112}
+            className="mx-auto mb-8 w-24 md:w-28"
+          />
           <h1 className="text-6xl md:text-8xl font-bold tracking-tight">
             DEEP WATERS
           </h1>
