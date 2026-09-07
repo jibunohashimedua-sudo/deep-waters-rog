@@ -6,6 +6,7 @@ import { todayISO } from "@/lib/rhapsody";
 import Nav from "@/components/Nav";
 import ReflectionForm from "@/components/ReflectionForm";
 import NudgeBanner from "@/components/NudgeBanner";
+import Greeting from "@/components/Greeting";
 
 export default async function TodayPage() {
   const supabase = createClient();
@@ -24,12 +25,32 @@ export default async function TodayPage() {
   const day = currentDayNumber(profile.start_date);
   const reading = READING_PLAN[day - 1];
 
-  const { data: existing } = await supabase
+  // Widened from "just today's row" to every completed day number. Still one
+  // query and at most 90 tiny rows, but it also gives the greeting a streak
+  // and a sense of whether someone is returning after a gap, with no extra
+  // round trip.
+  const { data: completions, error: completionsError } = await supabase
     .from("completions")
-    .select("verse_reference, verse_text, reflection")
+    .select("day_number, verse_reference, verse_text, reflection")
     .eq("user_id", user.id)
-    .eq("day_number", day)
-    .maybeSingle();
+    .order("day_number", { ascending: false });
+  if (completionsError) {
+    console.error("[deep-waters] completions lookup:", completionsError.message);
+  }
+
+  const doneDays = new Set((completions ?? []).map((c) => c.day_number));
+  const existing = (completions ?? []).find((c) => c.day_number === day) ?? null;
+
+  // Count back from today, or from yesterday when today isn't saved yet, so a
+  // run isn't reported as broken just because the day is still in progress.
+  let streak = 0;
+  for (let d = doneDays.has(day) ? day : day - 1; d >= 1 && doneDays.has(d); d--) {
+    streak++;
+  }
+
+  // Has history, but nothing recent. Used only to say hello more warmly —
+  // the size of the gap is never surfaced.
+  const returning = doneDays.size > 0 && !doneDays.has(day) && !doneDays.has(day - 1);
 
   const otRef = formatReading(reading.ot);
   const ntRef = formatReading(reading.nt);
@@ -51,6 +72,13 @@ export default async function TodayPage() {
     <>
       <Nav />
       <main data-surface="reading" className="max-w-3xl mx-auto px-6 py-10">
+        <Greeting
+          name={profile.name}
+          day={day}
+          completedToday={!!existing}
+          streak={streak}
+          returning={returning}
+        />
         <NudgeBanner completed={!!existing} day={day} />
         {/* Progress. The dot marks today; only shows when the day is saved. */}
         <div className="mb-10">
