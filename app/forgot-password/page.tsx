@@ -18,10 +18,13 @@ function ForgotPasswordInner() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    // Route the link through the existing callback so the recovery code is
-    // exchanged for a session before they land on the set-password screen.
+    // Point straight at the reset page — no server callback hop. The server
+    // route can only read a ?code= query param, which goes missing both when
+    // Supabase appends it to a URL that already has a query string and when
+    // the link is opened in a different browser than requested it. The reset
+    // page handles every arrival shape on the client instead.
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/reset-password")}`
+      redirectTo: `${window.location.origin}/reset-password`
     });
     setLoading(false);
     if (error) setError(friendlyError(error.message));

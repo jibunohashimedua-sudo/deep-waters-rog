@@ -7,18 +7,74 @@ import Mark from "@/components/Mark";
 
 const MIN_PASSWORD = 8;
 
+type Status = "checking" | "ready" | "expired";
+
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [ready, setReady] = useState<boolean | null>(null);
+  const [status, setStatus] = useState<Status>("checking");
+  const [linkError, setLinkError] = useState<string | null>(null);
   const supabase = createClient();
 
-  // Arriving from the emailed link, /auth/callback has already exchanged the
-  // recovery code for a session. No session means the link was stale or was
-  // opened in a different browser than the one that requested it.
+  // A recovery link can hand us a session in more than one shape, and which
+  // one depends on the Supabase flow config and on whether the link opened in
+  // the same browser that requested it. Rather than assume, try each in turn.
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setReady(!!data.session));
+    let cancelled = false;
+
+    (async () => {
+      const url = new URL(window.location.href);
+      const hash = new URLSearchParams(url.hash.replace(/^#/, ""));
+
+      // Supabase reports a dead link via error params, in the query or hash.
+      const errDesc =
+        url.searchParams.get("error_description") ?? hash.get("error_description");
+      const errCode = url.searchParams.get("error") ?? hash.get("error");
+      if (errDesc || errCode) {
+        if (!cancelled) {
+          setLinkError(errDesc ?? errCode);
+          setStatus("expired");
+        }
+        return;
+      }
+
+      // 1. Tokens in the hash (implicit flow). Handle these explicitly rather
+      //    than racing the client's own detectSessionInUrl.
+      const access_token = hash.get("access_token");
+      const refresh_token = hash.get("refresh_token");
+      if (access_token && refresh_token) {
+        const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+        if (!cancelled && !error) {
+          // Drop the tokens out of the address bar once they're banked.
+          window.history.replaceState({}, "", "/reset-password");
+          setStatus("ready");
+          return;
+        }
+      }
+
+      // 2. A PKCE code in the query string. Exchanged here on the client,
+      //    where the verifier lives, instead of on the server.
+      const code = url.searchParams.get("code");
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (!cancelled && !error) {
+          window.history.replaceState({}, "", "/reset-password");
+          setStatus("ready");
+          return;
+        }
+      }
+
+      // 3. A session already in place — either detectSessionInUrl got there
+      //    first, or they're signed in and changing their password.
+      const { data } = await supabase.auth.getSession();
+      if (cancelled) return;
+      setStatus(data.session ? "ready" : "expired");
+    })();
+
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -36,6 +92,7 @@ export default function ResetPasswordPage() {
       setError(friendlyError(error.message));
       return;
     }
+    // Full navigation so the server picks up the session cookie.
     window.location.href = "/today";
   }
 
@@ -49,20 +106,27 @@ export default function ResetPasswordPage() {
           Choose a password
         </h1>
 
-        {ready === false ? (
+        {status === "checking" && (
+          <p className="mt-8 text-center text-rog-muted text-sm">Checking your link…</p>
+        )}
+
+        {status === "expired" && (
           <div className="mt-8 card text-center">
-            <p className="text-rog-purple font-semibold">This link has expired</p>
+            <p className="text-rog-purple font-semibold">This link didn&rsquo;t work</p>
             <p className="mt-2 text-sm text-rog-muted">
-              Password links only work once, and only in the browser that asked for them. Request a
-              fresh one and open it on this device.
+              Reset links only work once and they expire after an hour. Send yourself a fresh one
+              and open it as soon as it arrives.
             </p>
             <Link href="/forgot-password" className="btn-primary mt-6 inline-block">
               Send a new link
             </Link>
+            {linkError && (
+              <p className="mt-4 text-xs text-rog-muted/70">Reason: {linkError}</p>
+            )}
           </div>
-        ) : ready === null ? (
-          <p className="mt-8 text-center text-rog-muted text-sm">Checking your link…</p>
-        ) : (
+        )}
+
+        {status === "ready" && (
           <>
             <p className="mt-2 text-center text-rog-muted text-sm">
               Pick something you&rsquo;ll remember. You&rsquo;ll use it every time you sign in.
