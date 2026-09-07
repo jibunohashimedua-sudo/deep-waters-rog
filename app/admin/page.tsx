@@ -80,6 +80,10 @@ export default async function AdminPage() {
             <p className="font-bold text-rog-purple">Study notes</p>
             <p className="text-xs text-rog-muted mt-1">Write daily notes for all 90 days</p>
           </Link>
+          <Link href="/admin/rhapsody" className="card hover:border-rog-purple transition">
+            <p className="font-bold text-rog-purple">Rhapsody of Realities</p>
+            <p className="text-xs text-rog-muted mt-1">Upload the month&rsquo;s PDF and map each date</p>
+          </Link>
           <Link href="/admin/users" className="card hover:border-rog-purple transition">
             <p className="font-bold text-rog-purple">Users</p>
             <p className="text-xs text-rog-muted mt-1">Approve, promote to admin, remove</p>

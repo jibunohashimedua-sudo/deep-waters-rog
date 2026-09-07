@@ -222,6 +222,16 @@ body:has([data-surface="reading"]) {
   transition: border-color 0.15s ease;
 }
 
+/* Rhapsody tile — the third daily tile, same plate as Old and New
+   Testament so the three read as one set. Only the accent changes:
+   pink instead of purple, taken from the theme token so it tracks
+   light and dark like every other accent. */
+.accent-pink,
+.kicker.accent-pink,
+.chapter-mark.accent-pink { color: var(--pink); }
+.tile-pink:hover { border-color: var(--pink); }
+.group:hover .group-accent-pink { color: var(--pink); }
+
 /* Empty states — hold the moment. A small mark, a serif line, a
    sans hint. Used on the prayer wall, finishers, leaderboard, etc. */
 .empty-state {
