@@ -3,7 +3,24 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Nav from "@/components/Nav";
-import PhotoCropper from "@/components/PhotoCropper";
+import dynamic from "next/dynamic";
+
+// react-easy-crop is the heaviest thing this page can reach, and nobody
+// touches it unless they pick a photo. Loading it on demand keeps it out
+// of the bundle everyone downloads just to change their reminder time.
+const PhotoCropper = dynamic(() => import("@/components/PhotoCropper"), {
+  ssr: false,
+  loading: () => (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ background: "rgba(0,0,0,0.6)" }}
+      role="status"
+      aria-label="Opening the photo editor"
+    >
+      <div className="skeleton h-64 w-64" />
+    </div>
+  )
+});
 import { createClient } from "@/lib/supabase/client";
 import {
   DEFAULT_BIBLE_ID,
