@@ -1,6 +1,17 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  // Signed-in people never want the sales pitch. Without this, anyone who
+  // opens the app from their home screen or a stale bookmark lands on the
+  // "Join Deep Waters" page and reads it as having been logged out.
+  const supabase = createClient();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+  if (user) redirect("/today");
+
   return (
     <main className="min-h-screen">
       {/* Purple hero block */}

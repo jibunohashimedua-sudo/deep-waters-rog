@@ -2,7 +2,7 @@
   "name": "Deep Waters",
   "short_name": "Deep Waters",
   "description": "A 90 day Bible reading plan.",
-  "start_url": "/",
+  "start_url": "/today",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

@@ -25,9 +25,22 @@ export async function middleware(request: NextRequest) {
     }
   );
 
+  // Refreshing here rotates the refresh token: the old one stops working the
+  // moment this call succeeds. The new pair is written onto `response`, so any
+  // reply that isn't `response` has to carry those cookies over or the browser
+  // keeps a refresh token that's already dead — and the next visit signs them
+  // out. That's what this helper is for; never plain `NextResponse.redirect`.
   const {
     data: { user }
   } = await supabase.auth.getUser();
+
+  const redirectTo = (pathname: string) => {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname;
+    const redirect = NextResponse.redirect(url);
+    response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+    return redirect;
+  };
 
   const publicPaths = [
     "/",
@@ -44,9 +57,7 @@ export async function middleware(request: NextRequest) {
   );
 
   if (!user && !isPublic) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+    return redirectTo("/login");
   }
 
   // Check for profile completion
@@ -57,9 +68,7 @@ export async function middleware(request: NextRequest) {
       .eq("id", user.id)
       .maybeSingle();
     if (!profile) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/onboarding";
-      return NextResponse.redirect(url);
+      return redirectTo("/onboarding");
     }
   }
 
