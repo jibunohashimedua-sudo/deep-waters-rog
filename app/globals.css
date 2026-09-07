@@ -730,10 +730,18 @@ select:focus-visible {
 /* =========================================================
    OPENING SPLASH — "Rise From the Deep"
    Four bars rise out of the dark, smallest first, then the
-   wordmark, then the whole stage dissolves. Purely decorative:
+   wordmark, then the whole stage dissolves. Plays on every full
+   page load, never on internal navigation. Purely decorative:
    the app renders underneath from the first paint and nothing
    waits on this. Only transform and opacity are animated so it
    stays on the compositor on older phones.
+
+   The timing is built around a hold. The first cut dissolved the
+   stage at 1040ms while the wordmark was still arriving at 1300ms,
+   so the finished lockup peaked at 19% opacity and was never once
+   seen whole — it read as hurried rather than calm. Now the mark
+   settles, the wordmark lands at 1500ms, the whole thing sits at
+   full strength for 300ms, and only then does it dissolve.
 
    NOTE: the bar stack is .dw-launch-mark, not .dw-mark — that
    name is already the colour rule for the <Mark> logo svg.
@@ -741,7 +749,7 @@ select:focus-visible {
 
 @keyframes dw-rise-bar {
   0%   { opacity: 0; transform: translate3d(0, 26px, 0) scale(.92); }
-  60%  { opacity: 1; transform: translate3d(0,  0,   0) scale(1); }
+  72%  { opacity: 1; transform: translate3d(0,  0,   0) scale(1); }
   100% { opacity: 1; transform: translate3d(0,  0,   0) scale(1); }
 }
 @keyframes dw-word-rise {
@@ -751,10 +759,6 @@ select:focus-visible {
 @keyframes dw-stage-out { to { opacity: 0; } }
 @keyframes dw-fade { from { opacity: 0; } to { opacity: 1; } }
 
-/* Set by the inline gate script in SplashScreen before React hydrates, so a
-   reload later in the session never flashes the overlay on its way out. */
-[data-dw-splash="skip"] .dw-launch { display: none; }
-
 .dw-launch {
   position: fixed;
   inset: 0;
@@ -763,7 +767,7 @@ select:focus-visible {
   align-items: center;
   justify-content: center;
   background: #0B0716;
-  animation: dw-stage-out 320ms cubic-bezier(.4, 0, .2, 1) 1040ms both;
+  animation: dw-stage-out 420ms cubic-bezier(.4, 0, .2, 1) 1800ms both;
 }
 
 .dw-launch-inner {
@@ -785,18 +789,18 @@ select:focus-visible {
   background: #F7F1EA;
   opacity: 0;
   will-change: transform, opacity;
-  animation: dw-rise-bar 720ms cubic-bezier(.16, .68, .30, 1) both;
+  animation: dw-rise-bar 820ms cubic-bezier(.16, .68, .30, 1) both;
 }
-.dw-bar1 { width: 96px; animation-delay: 400ms; }
-.dw-bar2 { width: 72px; animation-delay: 280ms; }
-.dw-bar3 { width: 48px; animation-delay: 160ms; }
+.dw-bar1 { width: 96px; animation-delay: 460ms; }
+.dw-bar2 { width: 72px; animation-delay: 320ms; }
+.dw-bar3 { width: 48px; animation-delay: 180ms; }
 .dw-bar4 { width: 24px; animation-delay:  40ms; }
 
 .dw-word {
   margin-top: 24px;
   text-align: center;
   opacity: 0;
-  animation: dw-word-rise 520ms cubic-bezier(.22, .61, .36, 1) 780ms both;
+  animation: dw-word-rise 580ms cubic-bezier(.22, .61, .36, 1) 920ms both;
 }
 .dw-word .d {
   font: 700 34px/1 Poppins, sans-serif;
@@ -813,6 +817,6 @@ select:focus-visible {
 
 @media (prefers-reduced-motion: reduce) {
   .dw-bar   { animation: none; opacity: 1; transform: none; }
-  .dw-word  { animation: dw-fade 320ms ease-out both; }
-  .dw-launch { animation: dw-stage-out 320ms ease-out 640ms both; }
+  .dw-word  { animation: dw-fade 360ms ease-out both; }
+  .dw-launch { animation: dw-stage-out 380ms ease-out 800ms both; }
 }

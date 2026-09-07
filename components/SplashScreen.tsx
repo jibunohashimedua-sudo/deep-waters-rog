@@ -2,42 +2,25 @@
 
 import { useEffect, useRef, useState } from "react";
 
-// Runs while the HTML is still parsing, before React hydrates — the same trick
-// layout.tsx uses for the theme. It decides once per tab whether the splash is
-// owed, and stamps <html> so CSS can hide the overlay instantly on later loads.
-// Deciding in an effect instead would flash the whole animation for as long as
-// hydration takes, every time someone reloaded.
-const gateScript = `
-(function() {
-  var seen = false;
-  try {
-    seen = sessionStorage.getItem('dw:launched') === '1';
-    sessionStorage.setItem('dw:launched', '1');
-  } catch (e) {}
-  document.documentElement.dataset.dwSplash = seen ? 'skip' : 'show';
-})();
-`;
-
 /**
  * The opening animation. A fixed overlay, nothing more — the app renders and
  * hydrates underneath it from the first paint, and no fetch, route or render
  * is gated on it. It covers load; it never creates it.
  *
- * Shows on the first load of a tab only, not on client-side navigation (this
- * sits in the root layout, which App Router never remounts between routes).
+ * Shows on a full page load only, never on internal navigation: this sits in
+ * the root layout, which App Router does not remount when you move between
+ * routes, so the component simply never mounts a second time.
+ *
+ * There is deliberately no "have I played before?" flag. Suppressing the
+ * splash on a reload would need sessionStorage, which this project doesn't
+ * use — and a reload is a load, which is precisely what the animation is
+ * here to cover.
  */
 export default function SplashScreen() {
   const [visible, setVisible] = useState(true);
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Already launched this session: drop the overlay on the same tick that
-    // CSS has already hidden it.
-    if (document.documentElement.dataset.dwSplash === "skip") {
-      setVisible(false);
-      return;
-    }
-
     let cancelled = false;
     const done = () => {
       if (!cancelled) setVisible(false);
@@ -56,8 +39,9 @@ export default function SplashScreen() {
 
     // Failsafe for anything neither path covers — no getAnimations, a
     // stylesheet that never arrived, a tab restored mid-flight. It can only
-    // remove the overlay, never hold it: the stage-out is over by 1360ms.
-    const failsafe = window.setTimeout(done, 2500);
+    // remove the overlay, never hold it: the stage-out is over by 2220ms, and
+    // this sits far enough past that it can't clip the end of the animation.
+    const failsafe = window.setTimeout(done, 3200);
     return () => {
       cancelled = true;
       window.clearTimeout(failsafe);
@@ -66,7 +50,6 @@ export default function SplashScreen() {
 
   return (
     <>
-      <script dangerouslySetInnerHTML={{ __html: gateScript }} />
       {visible && (
         <div
           ref={rootRef}
