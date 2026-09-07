@@ -103,12 +103,12 @@ export default function CohortSettingsForm({
           <button
             type="button"
             onClick={() => setConfirmDelete(true)}
-            className="btn-secondary text-red-600 border-red-200"
+            className="btn-danger"
           >
             Delete cohort
           </button>
         ) : (
-          <button type="button" onClick={del} className="btn bg-red-600 text-white px-6 py-3">
+          <button type="button" onClick={del} className="btn-danger">
             Confirm delete
           </button>
         )}

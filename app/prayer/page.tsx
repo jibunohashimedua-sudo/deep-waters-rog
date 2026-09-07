@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import Image from "next/image";
+import Avatar from "@/components/Avatar";
 import Nav from "@/components/Nav";
 import MentionText from "@/components/MentionText";
 import ReportButton from "@/components/ReportButton";
@@ -218,7 +218,7 @@ export default function PrayerPage() {
           <button type="submit" disabled={posting || !draft.trim()} className="btn-primary w-full mt-3 disabled:opacity-50">
             {posting ? "Posting..." : "Post prayer request"}
           </button>
-          {error && <p className="mt-2 text-sm text-red-600 text-center">{error}</p>}
+          {error && <p className="mt-2 text-sm text-danger text-center">{error}</p>}
         </form>
 
         <div className="mt-6 flex gap-2">
@@ -232,7 +232,19 @@ export default function PrayerPage() {
 
         <div className="mt-4 space-y-3">
           {loading ? (
-            <p className="text-rog-muted text-center py-8">Loading…</p>
+            <div className="space-y-3" aria-busy="true" aria-live="polite">
+              <span className="sr-only">Loading the prayer wall</span>
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="card">
+                  <div className="flex items-center gap-3">
+                    <div className="skeleton w-9 h-9 !rounded-full" />
+                    <div className="skeleton h-3 w-32" />
+                  </div>
+                  <div className="skeleton mt-4 h-3 w-full" />
+                  <div className="skeleton mt-2 h-3 w-3/4" />
+                </div>
+              ))}
+            </div>
           ) : shown.length === 0 ? (
             <div className="empty-state">
               <span className="empty-mark" aria-hidden>
@@ -256,25 +268,19 @@ export default function PrayerPage() {
               const prayedByMe = !!me && p.prayed_by.includes(me);
               const count = p.prayed_by.length;
               return (
-                <div key={p.id} className={`card ${p.is_answered ? "border-green-300" : ""}`}>
+                <div key={p.id} className={`card ${p.is_answered ? "border-success" : ""}`}>
                   <div className="flex items-center gap-3">
-                    {p.photo_url ? (
-                      <Image src={p.photo_url} alt="" width={36} height={36} className="rounded-full object-cover w-9 h-9" />
-                    ) : (
-                      <div className="w-9 h-9 rounded-full bg-rog-peach flex items-center justify-center font-bold text-rog-purple text-sm">
-                        {p.name.charAt(0).toUpperCase()}
-                      </div>
-                    )}
+                    <Avatar name={p.name} photoUrl={p.photo_url} size="sm" decorative />
                     <div className="flex-1">
                       <p className="font-semibold text-rog-ink text-sm">{p.name}</p>
                       <p className="text-[11px] text-rog-muted">{new Date(p.created_at).toLocaleString("en-GB")}</p>
                     </div>
-                    {p.is_answered && <span className="text-xs text-green-700 font-semibold">Answered &#10003;</span>}
+                    {p.is_answered && <span className="text-xs text-success font-semibold">Answered &#10003;</span>}
                   </div>
-                  <p className="mt-3 text-rog-ink"><MentionText text={p.body} /></p>
+                  <p className="selectable mt-3 text-rog-ink"><MentionText text={p.body} /></p>
                   {p.is_answered && p.answered_note && (
                     <div className="mt-3 p-3 bg-white rounded-xl border border-green-200">
-                      <p className="text-[10px] uppercase tracking-wider text-green-700 font-semibold">Testimony</p>
+                      <p className="text-[10px] uppercase tracking-wider text-success font-semibold">Testimony</p>
                       <p className="text-sm mt-1">{p.answered_note}</p>
                     </div>
                   )}
@@ -294,16 +300,16 @@ export default function PrayerPage() {
                             placeholder="How was it answered? (optional)"
                             className="flex-1 rounded-full border border-rog-line px-3 py-1.5 text-xs"
                           />
-                          <button onClick={() => markAnswered(p.id)} className="text-xs text-green-700 font-semibold">Save</button>
+                          <button onClick={() => markAnswered(p.id)} className="text-xs text-success font-semibold">Save</button>
                           <button onClick={() => setAnswering(null)} className="text-xs text-rog-muted">Cancel</button>
                         </div>
                       ) : (
-                        <button onClick={() => setAnswering(p.id)} className="text-xs text-green-700 font-medium">Mark answered</button>
+                        <button onClick={() => setAnswering(p.id)} className="text-xs text-success font-medium">Mark answered</button>
                       )
                     )}
                     <div className="ml-auto flex gap-3">
                       {(p.user_id === me || isAdmin) && (
-                        <button onClick={() => del(p.id)} className="text-[11px] text-rog-muted hover:text-red-600">Delete</button>
+                        <button onClick={() => del(p.id)} className="text-[11px] text-rog-muted hover:text-danger">Delete</button>
                       )}
                       {p.user_id !== me && !p.id.startsWith("temp-") && <ReportButton targetType="prayer" targetId={p.id} />}
                     </div>

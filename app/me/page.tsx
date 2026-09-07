@@ -1,6 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
 import Nav from "@/components/Nav";
+import Avatar from "@/components/Avatar";
 import ProgressTabs from "@/components/ProgressTabs";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
@@ -37,30 +37,25 @@ export default async function MePage() {
       <main className="max-w-3xl mx-auto px-6 py-10">
         <ProgressTabs />
         {/* Header */}
-        <div className="card flex items-center gap-5">
-          {profile.photo_url ? (
-            <Image
-              src={profile.photo_url}
-              alt={profile.name}
-              width={80}
-              height={80}
-              className="rounded-full object-cover w-20 h-20"
-            />
-          ) : (
-            <div className="w-20 h-20 rounded-full bg-rog-peach flex items-center justify-center font-bold text-2xl text-rog-purple">
-              {profile.name.charAt(0).toUpperCase()}
+        <div className="card">
+          <div className="flex items-center gap-4">
+            <Avatar name={profile.name} photoUrl={profile.photo_url} size="xl" />
+            <div className="flex-1 min-w-0">
+              <h1 className="font-serif text-2xl md:text-3xl font-medium text-rog-ink leading-tight break-words">
+                {profile.name}
+              </h1>
+              {profile.bio && <p className="text-sm text-rog-muted mt-1 break-words">{profile.bio}</p>}
             </div>
-          )}
-          <div className="flex-1">
-            <h1 className="font-serif text-2xl md:text-3xl font-medium text-rog-ink leading-tight">{profile.name}</h1>
-            {profile.bio && <p className="text-sm text-rog-muted mt-1">{profile.bio}</p>}
-            <p className="text-xs text-rog-muted mt-1">
-              Day {day} of 90 &bull; {lb?.days_completed ?? 0} completed &bull;{" "}
-              {lb?.current_streak ?? 0} day streak
-            </p>
+            <Link href="/me/edit" className="btn-secondary text-sm hidden sm:inline-flex shrink-0">
+              Edit
+            </Link>
           </div>
-          <Link href="/me/edit" className="btn-secondary text-sm">
-            Edit
+          <p className="text-xs text-rog-muted mt-3">
+            Day {day} of 90 &bull; {lb?.days_completed ?? 0} completed &bull;{" "}
+            {lb?.current_streak ?? 0} day streak
+          </p>
+          <Link href="/me/edit" className="btn-secondary text-sm mt-4 w-full sm:hidden">
+            Edit profile
           </Link>
         </div>
 
@@ -110,7 +105,7 @@ export default async function MePage() {
               return (
                 <div
                   key={key}
-                  className={`card text-center p-3 ${has ? "" : "opacity-60"}`}
+                  className={`card text-center !p-3 ${has ? "" : "opacity-60"}`}
                 >
                   <div className="text-3xl">{b.emoji}</div>
                   <p className="mt-1 text-xs font-bold text-rog-purple">{b.label}</p>
@@ -168,10 +163,10 @@ export default async function MePage() {
                     <p className="mt-2 font-semibold text-rog-ink">{c.verse_reference}</p>
                   )}
                   {c.verse_text && (
-                    <p className="mt-1 italic text-rog-ink text-sm">&ldquo;{c.verse_text}&rdquo;</p>
+                    <p className="selectable mt-1 italic text-rog-ink text-sm">&ldquo;{c.verse_text}&rdquo;</p>
                   )}
                   {c.reflection && (
-                    <p className="mt-2 text-sm text-rog-ink whitespace-pre-wrap">{c.reflection}</p>
+                    <p className="selectable mt-2 text-sm text-rog-ink whitespace-pre-wrap">{c.reflection}</p>
                   )}
                 </div>
               ))

@@ -39,6 +39,15 @@
   --accent-soft: rgba(59, 30, 110, 0.08);
   --pink: #E85D9E;
 
+  /* Semantic states. Without these every error line and every "approved"
+     label was a bare Tailwind red-600/green-700 that stayed dark on the
+     dark ground. */
+  --danger: #C2321F;
+  --danger-soft: rgba(194, 50, 31, 0.12);
+  --success: #15803D;
+  --success-soft: rgba(21, 128, 61, 0.12);
+  --warning: #A16207;
+
   /* Ambient strength — dimmed on reading surfaces via [data-surface="reading"] */
   --orb-opacity: 1;
 
@@ -95,6 +104,12 @@
   --accent-soft: rgba(183, 159, 232, 0.14);
   --pink: #FF7EB6;
 
+  --danger: #FF8A7A;
+  --danger-soft: rgba(255, 138, 122, 0.16);
+  --success: #6EE7A8;
+  --success-soft: rgba(110, 231, 168, 0.16);
+  --warning: #E3B341;
+
   color-scheme: dark;
 }
 
@@ -107,6 +122,44 @@ html, body {
   max-width: 100vw;
   overflow-x: hidden;
   overscroll-behavior-y: none;
+}
+
+/* =========================================================
+   APP-LIKE FEEL
+   A long-press on a heading or a button should do nothing, the way
+   it does in a native app. Selection is switched off by default and
+   switched back on only where copying text is genuinely the point.
+   ========================================================= */
+
+html, body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Opt back in where copying is genuinely useful: scripture, anything
+   someone typed, and the .selectable class we put on user-written
+   content (reflections, comments, prayers, testimonies, notes, links). */
+.selectable,
+.selectable *,
+input, textarea,
+.bible-content,
+.bible-content *,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
+/* Images shouldn't offer the browser's save/drag affordances — that's
+   the tell that gives away a web page. The cropper drives its own
+   pointer events, so suppressing the *native* drag here helps it
+   rather than hurting it, and file inputs are untouched. */
+img {
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 body {
@@ -464,4 +517,144 @@ button:focus-visible, a:focus-visible {
 /* Nav pill active state */
 [data-theme="dark"] .bg-rog-purple.text-white {
   background-color: #6A45C7;
+}
+
+/* =========================================================
+   SEMANTIC STATE HELPERS
+   Replace bare Tailwind red-600 / green-700, which never adapted
+   to dark mode because nothing patched them.
+   ========================================================= */
+
+.text-danger  { color: var(--danger); }
+.text-success { color: var(--success); }
+.text-warning { color: var(--warning); }
+
+.border-danger  { border-color: var(--danger) !important; }
+.border-success { border-color: var(--success) !important; }
+.border-warning { border-color: var(--warning) !important; }
+
+/* Destructive action. Reads as dangerous in both themes, unlike
+   `btn-secondary text-red-600`, whose colour .btn-secondary overrode. */
+.btn-danger {
+  @apply btn px-6 py-3;
+  color: var(--danger);
+  background: var(--danger-soft);
+  border: 1px solid var(--danger);
+}
+.btn-danger:hover { background: var(--danger); color: var(--bg); }
+
+/* =========================================================
+   LOADING SKELETONS
+   Reserve the shape of what's coming so nothing jumps when it
+   arrives. Replaces bare "Loading..." text.
+   ========================================================= */
+
+.skeleton {
+  border-radius: 12px;
+  background: linear-gradient(
+    90deg,
+    var(--soft-bg) 25%,
+    color-mix(in oklab, var(--soft-bg) 55%, var(--muted) 45%) 37%,
+    var(--soft-bg) 63%
+  );
+  background-size: 400% 100%;
+  animation: skeleton-sweep 1.4s ease-in-out infinite;
+}
+@keyframes skeleton-sweep {
+  0%   { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+/* A moving gradient is exactly the kind of motion that triggers
+   vestibular discomfort — hold it still when asked. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+}
+
+/* =========================================================
+   DARK-MODE GAPS
+   These utilities carry a fixed colour and had no dark override, so
+   they stayed light-theme on the dark ground.
+   ========================================================= */
+
+/* Progress-bar track on /today, and the overflow-avatar chip. */
+[data-theme="dark"] .bg-rog-line { background-color: rgba(255, 255, 255, 0.10); }
+
+/* Opacity modifiers are separate selectors, so the plain overrides
+   above never reached them. These are the variants actually in use. */
+[data-theme="dark"] .bg-rog-peach\/60   { background-color: rgba(255, 200, 175, 0.10); }
+[data-theme="dark"] .text-rog-purple\/70 { color: var(--accent); }
+[data-theme="dark"] .text-rog-muted\/50  { color: rgba(169, 160, 187, 0.5); }
+[data-theme="dark"] .text-rog-muted\/70  { color: rgba(169, 160, 187, 0.7); }
+[data-theme="dark"] .border-rog-purple\/20 { border-color: rgba(183, 159, 232, 0.25); }
+[data-theme="dark"] .border-rog-purple\/40 { border-color: rgba(183, 159, 232, 0.45); }
+[data-theme="dark"] .border-rog-line\/70   { border-color: rgba(255, 255, 255, 0.10); }
+[data-theme="dark"] .bg-rog-line\/70       { background-color: rgba(255, 255, 255, 0.10); }
+[data-theme="dark"] .bg-rog-purple\/30     { background-color: rgba(183, 159, 232, 0.30); }
+[data-theme="dark"] .ring-rog-purple\/20   { --tw-ring-color: rgba(183, 159, 232, 0.25); }
+[data-theme="dark"] .ring-rog-purple\/30   { --tw-ring-color: rgba(183, 159, 232, 0.35); }
+
+/* Avatar rings on the cohort page hardcode white. */
+[data-theme="dark"] .border-white { border-color: rgba(255, 255, 255, 0.16); }
+
+/* Bare .bg-rog-purple (progress-bar fill, legend swatches, active dots).
+   Only `.bg-rog-purple.text-white` was patched, so these stayed near-black
+   on the dark ground. The pill rule above is more specific and still wins. */
+[data-theme="dark"] .bg-rog-purple { background-color: #6A45C7; }
+[data-theme="dark"] .file\:bg-rog-purple::file-selector-button { background-color: #6A45C7; }
+
+/* Verse of the day. Was hand-rolled with three inline hex values, one of
+   which was the dark-theme pink pinned into light mode. */
+.votd {
+  background: linear-gradient(135deg, var(--accent) 0%, #4A2A85 55%, var(--accent-strong) 100%);
+  box-shadow: 0 10px 32px -12px var(--card-shadow);
+  color: #FFFFFF;
+}
+[data-theme="dark"] .votd {
+  background: linear-gradient(135deg, #33215C 0%, #3B2A70 55%, #26356F 100%);
+  box-shadow: 0 10px 32px -12px rgba(0, 0, 0, 0.6);
+}
+.votd-kicker { color: var(--pink); }
+.votd-body   { color: rgba(255, 255, 255, 0.9); }
+.votd-meta   { color: rgba(255, 255, 255, 0.65); }
+
+/* =========================================================
+   FOCUS & TAP TARGETS
+   Turning off -webkit-tap-highlight-color for the app feel removes the
+   only affordance some users had, so keyboard focus has to be obvious.
+   :focus-visible means pointer users never see a ring they didn't ask for.
+   ========================================================= */
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+/* Inputs already draw their own focus ring via the form rules above. */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+}
+
+/* Small icon-only controls still need a 44px touch area. The visual size
+   is unchanged — the target is grown with a transparent pseudo-element so
+   nothing shifts in the layout. */
+.tap-target {
+  position: relative;
+}
+.tap-target::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+}
+
+/* Long words — a pasted URL, a very long name — should wrap rather than
+   push the layout sideways. */
+.selectable,
+.bible-content {
+  overflow-wrap: anywhere;
 }

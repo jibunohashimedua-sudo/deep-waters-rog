@@ -22,6 +22,7 @@ export default function Nav() {
   const supabase = createClient();
   const [unread, setUnread] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [hasUser, setHasUser] = useState(false);
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
@@ -30,7 +31,9 @@ export default function Nav() {
       const {
         data: { user }
       } = await supabase.auth.getUser();
-      if (!user || cancelled) return;
+      if (cancelled) return;
+      setHasUser(!!user);
+      if (!user) return;
       const { data: p } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
       if (cancelled) return;
       setIsAdmin(p?.role === "admin");
@@ -112,7 +115,7 @@ export default function Nav() {
             </div>
 
             {/* Notifications bell — always visible */}
-            <Link href="/notifications" className="relative p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10" aria-label="Notifications">
+            <Link href="/notifications" className="tap-target relative p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10" aria-label="Notifications">
               <span className="text-lg">🔔</span>
               {unread > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 bg-red-600 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
@@ -130,7 +133,7 @@ export default function Nav() {
         </div>
       </header>
 
-      <BottomNav />
+      <BottomNav isAdmin={isAdmin} hasUser={hasUser} />
     </>
   );
 }

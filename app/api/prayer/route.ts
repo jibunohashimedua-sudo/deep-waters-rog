@@ -38,12 +38,28 @@ export async function PATCH(request: Request) {
 
   const { id, action, note } = await request.json();
   if (action === "pray") {
-    const { data: ex } = await supabase.from("prayer_prayed").select("prayer_id").eq("prayer_id", id).eq("user_id", user.id).maybeSingle();
+    const { data: ex, error: readError } = await supabase
+      .from("prayer_prayed")
+      .select("prayer_id")
+      .eq("prayer_id", id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (readError) return NextResponse.json({ error: readError.message }, { status: 500 });
+
     if (ex) {
-      await supabase.from("prayer_prayed").delete().eq("prayer_id", id).eq("user_id", user.id);
+      const { error } = await supabase
+        .from("prayer_prayed")
+        .delete()
+        .eq("prayer_id", id)
+        .eq("user_id", user.id);
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       return NextResponse.json({ ok: true, prayed: false });
     }
-    await supabase.from("prayer_prayed").insert({ prayer_id: id, user_id: user.id });
+
+    const { error } = await supabase
+      .from("prayer_prayed")
+      .insert({ prayer_id: id, user_id: user.id });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ ok: true, prayed: true });
   }
   if (action === "answered") {

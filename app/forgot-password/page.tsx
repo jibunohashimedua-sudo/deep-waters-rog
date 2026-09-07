@@ -66,7 +66,7 @@ function ForgotPasswordInner() {
             <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-50">
               {loading ? "Sending…" : "Send the link"}
             </button>
-            {error && <p className="text-sm text-red-600 text-center">{error}</p>}
+            {error && <p className="text-sm text-danger text-center">{error}</p>}
           </form>
         )}
 

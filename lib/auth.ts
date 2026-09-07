@@ -22,11 +22,21 @@ export async function requireProfile(): Promise<{ userId: string; profile: Profi
     data: { user }
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  const { data: profile } = await supabase
+  const { data: profile, error } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", user.id)
     .maybeSingle();
+
+  // Distinguish "this account has no profile yet" from "the lookup failed".
+  // Treating them the same sent established members back through onboarding
+  // on any transient Supabase blip. A real fetch failure should surface, not
+  // quietly rewrite where someone is in the app.
+  if (error) {
+    // eslint-disable-next-line no-console
+    console.error("[deep-waters] profile lookup failed:", error.message);
+    throw new Error("Could not load your profile. Refresh to try again.");
+  }
   if (!profile) redirect("/onboarding");
   return { userId: user.id, profile: profile as Profile };
 }

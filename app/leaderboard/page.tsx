@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import Image from "next/image";
 import Nav from "@/components/Nav";
+import Avatar from "@/components/Avatar";
 import ProgressTabs from "@/components/ProgressTabs";
 import { createClient } from "@/lib/supabase/client";
 
@@ -48,8 +48,11 @@ export default function LeaderboardPage() {
           });
       }
     });
+    // Unique per mount, like the other channels in the app. A fixed topic name
+    // means a remount's cleanup can tear down the subscription the new mount
+    // just opened, and the board silently stops updating.
     const channel = supabase
-      .channel("leaderboard-live")
+      .channel(`leaderboard-live-${Math.random().toString(36).slice(2, 8)}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "completions" },
@@ -121,7 +124,19 @@ export default function LeaderboardPage() {
 
         <div className="mt-6 space-y-2">
           {loading ? (
-            <p className="text-rog-muted text-center py-8">Loading…</p>
+            <div className="space-y-2" aria-busy="true" aria-live="polite">
+              <span className="sr-only">Loading the leaderboard</span>
+              {[0, 1, 2, 3, 4].map((i) => (
+                <div key={i} className="card flex items-center gap-4">
+                  <div className="skeleton w-10 h-10 !rounded-full" />
+                  <div className="skeleton w-12 h-12 !rounded-full" />
+                  <div className="flex-1">
+                    <div className="skeleton h-3 w-32" />
+                    <div className="skeleton mt-2 h-3 w-24" />
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : filtered.length === 0 ? (
             <div className="empty-state">
               <span className="empty-mark" aria-hidden>
@@ -148,19 +163,7 @@ export default function LeaderboardPage() {
                 >
                   {i + 1}
                 </div>
-                {row.photo_url ? (
-                  <Image
-                    src={row.photo_url}
-                    alt={row.name}
-                    width={48}
-                    height={48}
-                    className="rounded-full object-cover w-12 h-12"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-rog-peach flex items-center justify-center font-bold text-rog-purple">
-                    {row.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
+                <Avatar name={row.name} photoUrl={row.photo_url} size="lg" />
                 <div className="flex-1">
                   <p className="font-semibold text-rog-ink">{row.name}</p>
                   <p className="text-xs text-rog-muted">

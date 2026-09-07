@@ -43,7 +43,7 @@ export default function ReportActions({
       <button disabled={busy} onClick={dismiss} className="btn-secondary text-xs px-4 py-2">
         Dismiss
       </button>
-      <button disabled={busy} onClick={removeContent} className="btn bg-red-600 text-white text-xs px-4 py-2">
+      <button disabled={busy} onClick={removeContent} className="btn-danger text-xs">
         Remove content
       </button>
     </div>

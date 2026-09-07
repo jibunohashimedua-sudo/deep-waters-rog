@@ -38,7 +38,7 @@ export default function UserAdminControls({
   return (
     <div className="flex gap-2 items-center text-xs">
       {!approved && (
-        <button disabled={busy} onClick={() => update({ approved: true })} className="text-green-700 font-semibold">
+        <button disabled={busy} onClick={() => update({ approved: true })} className="text-success font-semibold">
           Approve
         </button>
       )}
@@ -52,12 +52,12 @@ export default function UserAdminControls({
         </button>
       )}
       {!confirmDel ? (
-        <button disabled={busy} onClick={() => setConfirmDel(true)} className="text-rog-muted hover:text-red-600">
+        <button disabled={busy} onClick={() => setConfirmDel(true)} className="text-rog-muted hover:text-danger">
           Remove
         </button>
       ) : (
         <>
-          <button disabled={busy} onClick={del} className="text-red-600 font-semibold">Confirm</button>
+          <button disabled={busy} onClick={del} className="text-danger font-semibold">Confirm</button>
           <button onClick={() => setConfirmDel(false)} className="text-rog-muted">Cancel</button>
         </>
       )}

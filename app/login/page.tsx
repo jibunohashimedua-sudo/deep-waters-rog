@@ -67,7 +67,7 @@ function LoginPageInner() {
           <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-50">
             {loading ? "Signing in…" : "Sign in"}
           </button>
-          {error && <p className="text-sm text-red-600 text-center">{error}</p>}
+          {error && <p className="text-sm text-danger text-center">{error}</p>}
         </form>
 
         <p className="mt-4 text-center text-sm">

@@ -56,7 +56,7 @@ export default function TestimonialPage() {
             <button type="submit" disabled={saving || !body.trim()} className="btn-primary w-full disabled:opacity-50">
               {saving ? "Sending..." : "Submit testimony"}
             </button>
-            {error && <p className="text-sm text-red-600 text-center">{error}</p>}
+            {error && <p className="text-sm text-danger text-center">{error}</p>}
           </form>
         )}
       </main>

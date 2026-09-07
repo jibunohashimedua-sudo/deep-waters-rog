@@ -46,7 +46,7 @@ export default async function AnnouncementsPage() {
                   {a.cohort_id ? a.cohorts?.name : "Everyone"}
                 </p>
                 {a.title && <p className="mt-1 font-bold text-rog-purple">{a.title}</p>}
-                <p className="mt-1 text-sm whitespace-pre-wrap">{a.body}</p>
+                <p className="selectable mt-1 text-sm whitespace-pre-wrap">{a.body}</p>
                 <p className="mt-2 text-xs text-rog-muted">
                   {new Date(a.created_at).toLocaleString("en-GB")}
                 </p>

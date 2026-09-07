@@ -35,7 +35,7 @@ export default function TestimonialAdminControls({
           {featured ? "Unfeature" : "Feature"}
         </button>
       )}
-      <button onClick={del} className="text-red-600 px-2">Delete</button>
+      <button onClick={del} className="text-danger px-2">Delete</button>
     </div>
   );
 }

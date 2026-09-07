@@ -43,7 +43,7 @@ export default function ThemeToggle() {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10"
+        className="tap-target p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10"
         aria-label="Theme"
         title={`Theme: ${choice}`}
       >

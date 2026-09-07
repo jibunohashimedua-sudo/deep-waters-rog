@@ -28,8 +28,8 @@ export default async function AdminNotesPage() {
               <Link
                 key={d.day}
                 href={`/admin/notes/${d.day}`}
-                className={`card hover:border-rog-purple transition flex items-center gap-3 py-3 ${
-                  has ? "" : "border-dashed"
+                className={`card hover:border-rog-purple transition flex items-center gap-3 !py-3 ${
+                  has ? "" : "!border-dashed"
                 }`}
               >
                 <div

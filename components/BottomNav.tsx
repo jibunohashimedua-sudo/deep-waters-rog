@@ -1,8 +1,7 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import MoreSheet from "./MoreSheet";
 
 type Tab = {
@@ -75,30 +74,16 @@ const moreIcon = (
   </svg>
 );
 
-export default function BottomNav() {
-  const pathname = usePathname();
-  const supabase = createClient();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [hasUser, setHasUser] = useState(false);
-  const [sheetOpen, setSheetOpen] = useState(false);
+type Props = {
+  /** Both come from Nav, which has already looked them up. Fetching them again
+      here cost a second getUser + profiles round trip on every page load. */
+  isAdmin: boolean;
+  hasUser: boolean;
+};
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
-      if (cancelled) return;
-      setHasUser(!!user);
-      if (!user) return;
-      const { data: p } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
-      if (!cancelled) setIsAdmin(p?.role === "admin");
-    })();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+export default function BottomNav({ isAdmin, hasUser }: Props) {
+  const pathname = usePathname();
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   // Don't render on public/auth pages
   const hidden =

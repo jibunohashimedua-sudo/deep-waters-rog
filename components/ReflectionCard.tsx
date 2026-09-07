@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import Image from "next/image";
+import Avatar from "./Avatar";
 import { createClient } from "@/lib/supabase/client";
 import MentionText from "./MentionText";
 import ReportButton from "./ReportButton";
@@ -109,13 +109,7 @@ export default function ReflectionCard({
   return (
     <article id={item.id} className="card">
       <div className="flex items-center gap-3">
-        {item.photo_url ? (
-          <Image src={item.photo_url} alt={item.name} width={40} height={40} className="rounded-full object-cover w-10 h-10" />
-        ) : (
-          <div className="w-10 h-10 rounded-full bg-rog-peach flex items-center justify-center font-bold text-rog-purple">
-            {item.name.charAt(0).toUpperCase()}
-          </div>
-        )}
+        <Avatar name={item.name} photoUrl={item.photo_url} size="md" decorative />
         <div className="flex-1">
           <p className="font-semibold text-rog-ink">{item.name}</p>
           <p className="text-xs text-rog-muted">
@@ -125,9 +119,9 @@ export default function ReflectionCard({
       </div>
 
       {item.verse_reference && <p className="mt-4 font-semibold text-rog-purple">{item.verse_reference}</p>}
-      {item.verse_text && <p className="mt-1 italic text-rog-ink">&ldquo;{item.verse_text}&rdquo;</p>}
+      {item.verse_text && <p className="selectable mt-1 italic text-rog-ink">&ldquo;{item.verse_text}&rdquo;</p>}
       {item.reflection && (
-        <p className="mt-3 text-rog-ink">
+        <p className="selectable mt-3 text-rog-ink">
           <MentionText text={item.reflection} />
         </p>
       )}
@@ -141,10 +135,10 @@ export default function ReflectionCard({
             reacted ? "bg-rog-purple text-white" : "bg-rog-cream text-rog-purple hover:bg-rog-peach"
           }`}
         >
-          🙏 <span className="font-semibold">Amen</span> {amens > 0 && <span>{amens}</span>}
+          <span aria-hidden>🙏</span> <span className="font-semibold">Amen</span> {amens > 0 && <span>{amens}</span>}
         </button>
         <button onClick={toggleComments} className="text-rog-muted hover:text-rog-purple">
-          💬 {commentCount > 0 ? commentCount : ""} {commentCount === 1 ? "comment" : "comments"}
+          <span aria-hidden>💬</span> {commentCount > 0 ? commentCount : ""} {commentCount === 1 ? "comment" : "comments"}
         </button>
         <div className="ml-auto">
           {currentUserId !== item.user_id && (
@@ -156,22 +150,21 @@ export default function ReflectionCard({
       {/* Comments */}
       {showComments && (
         <div className="mt-4 border-t border-rog-line pt-4 space-y-3">
+          {comments.length === 0 && (
+            <p className="text-xs text-rog-muted py-2">
+              No comments yet. Be the first to say something.
+            </p>
+          )}
           {comments.map((c) => (
             <div key={c.id} className="flex gap-2">
-              {c.profiles?.photo_url ? (
-                <Image src={c.profiles.photo_url} alt="" width={28} height={28} className="rounded-full object-cover w-7 h-7 shrink-0" />
-              ) : (
-                <div className="w-7 h-7 rounded-full bg-rog-peach flex items-center justify-center text-xs font-bold text-rog-purple shrink-0">
-                  {c.profiles?.name?.charAt(0).toUpperCase()}
-                </div>
-              )}
+              <Avatar name={c.profiles?.name ?? "?"} photoUrl={c.profiles?.photo_url} size="xs" decorative />
               <div className="flex-1 bg-rog-cream rounded-2xl px-3 py-2">
                 <p className="text-xs font-semibold text-rog-purple">{c.profiles?.name}</p>
-                <p className="text-sm text-rog-ink"><MentionText text={c.body} /></p>
+                <p className="selectable text-sm text-rog-ink"><MentionText text={c.body} /></p>
                 <div className="flex gap-3 mt-1">
                   <p className="text-[10px] text-rog-muted">{new Date(c.created_at).toLocaleString("en-GB")}</p>
                   {(c.user_id === currentUserId || isAdmin) && (
-                    <button onClick={() => deleteComment(c.id)} className="text-[10px] text-rog-muted hover:text-red-600">Delete</button>
+                    <button onClick={() => deleteComment(c.id)} className="text-[10px] text-rog-muted hover:text-danger">Delete</button>
                   )}
                   {c.user_id !== currentUserId && <ReportButton targetType="comment" targetId={c.id} />}
                 </div>

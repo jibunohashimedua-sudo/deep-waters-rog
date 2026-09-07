@@ -23,8 +23,8 @@ export default function ResetMyData() {
 
   if (done) {
     return (
-      <div className="card border-green-300">
-        <p className="text-sm text-green-700 font-semibold">Your activity has been cleared.</p>
+      <div className="card border-success">
+        <p className="text-sm text-success font-semibold">Your activity has been cleared.</p>
         <p className="text-xs text-rog-muted mt-1">
           Days, reflections, comments, amens, prayers, and badges are reset. Refresh to see it.
         </p>
@@ -33,7 +33,7 @@ export default function ResetMyData() {
   }
 
   return (
-    <div className="card border-dashed">
+    <div className="card !border-dashed">
       <p className="font-bold text-rog-purple">Reset my activity</p>
       <p className="text-xs text-rog-muted mt-1">
         Clears your completed days, reflections, comments, amens, prayer posts, and badges.
@@ -42,7 +42,7 @@ export default function ResetMyData() {
       {step === 0 ? (
         <button
           onClick={() => setStep(1)}
-          className="btn-secondary text-sm mt-3 text-red-600 border-red-200"
+          className="btn-danger text-sm mt-3"
         >
           Reset my activity
         </button>
@@ -52,7 +52,7 @@ export default function ResetMyData() {
           <button
             onClick={reset}
             disabled={busy}
-            className="btn text-sm px-4 py-2 bg-red-600 text-white disabled:opacity-50"
+            className="btn-danger text-sm disabled:opacity-50"
           >
             {busy ? "Clearing..." : "Yes, clear everything"}
           </button>

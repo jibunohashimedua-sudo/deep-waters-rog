@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import Mark from "@/components/Mark";
 
 export default async function LandingPage() {
   // Signed-in people never want the sales pitch. Without this, anyone who
@@ -21,13 +22,9 @@ export default async function LandingPage() {
         <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
 
         <div className="relative max-w-4xl mx-auto px-6 pt-20 pb-20 text-center">
-          <img
-            src="/deep-waters-mark-cream.png"
-            alt=""
-            width={112}
-            height={112}
-            className="mx-auto mb-8 w-24 md:w-28"
-          />
+          <div className="mb-8 flex justify-center">
+            <Mark size={104} className="text-[#F3EDE4] w-24 md:w-28 h-auto" />
+          </div>
           <h1 className="text-6xl md:text-8xl font-bold tracking-tight">
             DEEP WATERS
           </h1>

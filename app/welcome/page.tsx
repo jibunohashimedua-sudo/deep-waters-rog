@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Mark from "@/components/Mark";
 
 type Step = {
   kicker: string;
@@ -120,13 +121,9 @@ export default function WelcomePage() {
 
             <div className="relative">
               {step.mark ? (
-                <img
-                  src={step.mark}
-                  alt=""
-                  width={96}
-                  height={96}
-                  className="mx-auto mb-6 w-20 md:w-24"
-                />
+                <div className="mb-6 flex justify-center">
+                  <Mark size={88} className="text-[#F3EDE4] w-20 md:w-24 h-auto" />
+                </div>
               ) : (
                 <div className="text-6xl md:text-7xl mb-6">{step.emoji}</div>
               )}

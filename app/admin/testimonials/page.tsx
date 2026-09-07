@@ -30,16 +30,16 @@ export default async function AdminTestimonialsPage() {
             </div>
           ) : (
             (items ?? []).map((t: any) => (
-              <div key={t.id} className={`card ${t.approved ? "" : "border-amber-300"}`}>
+              <div key={t.id} className={`card ${t.approved ? "" : "border-warning"}`}>
                 <div className="flex items-center justify-between">
                   <p className="font-semibold text-rog-purple">{t.profiles?.name}</p>
                   <div className="flex gap-2 text-[10px] uppercase tracking-wider">
-                    {!t.approved && <span className="text-amber-600">Pending</span>}
-                    {t.approved && <span className="text-green-700">Approved</span>}
+                    {!t.approved && <span className="text-warning">Pending</span>}
+                    {t.approved && <span className="text-success">Approved</span>}
                     {t.featured && <span className="text-rog-purple font-medium">Featured</span>}
                   </div>
                 </div>
-                <p className="mt-2 text-sm whitespace-pre-wrap">{t.body}</p>
+                <p className="selectable mt-2 text-sm whitespace-pre-wrap">{t.body}</p>
                 <div className="mt-3">
                   <TestimonialAdminControls id={t.id} approved={t.approved} featured={t.featured} />
                 </div>

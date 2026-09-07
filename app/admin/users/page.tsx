@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Avatar from "@/components/Avatar";
 import Nav from "@/components/Nav";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth";
@@ -30,12 +30,13 @@ export default async function AdminUsersPage({
         <p className="kicker">Admin</p>
         <h1 className="mt-3 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight">Users</h1>
 
-        <form className="mt-6 flex gap-2">
+        <form className="mt-6 flex flex-wrap gap-2">
           <input
             name="q"
             defaultValue={searchParams.q ?? ""}
             placeholder="Search by name"
-            className="flex-1 rounded-full border border-rog-line bg-white px-5 py-2.5 text-sm"
+            aria-label="Search users by name"
+            className="flex-1 min-w-[10rem] rounded-full border border-rog-line bg-white px-5 py-2.5 text-sm"
           />
           <button className="btn-primary text-sm">Search</button>
           {searchParams.filter !== "pending" ? (
@@ -46,15 +47,15 @@ export default async function AdminUsersPage({
         </form>
 
         <div className="mt-6 space-y-2">
+          {(users ?? []).length === 0 && (
+            <div className="empty-state">
+              <p className="empty-body">No one matches that search.</p>
+              <p className="empty-hint">Try part of a name, or clear the box to see everyone.</p>
+            </div>
+          )}
           {(users ?? []).map((u) => (
             <div key={u.id} className="card flex items-center gap-3">
-              {u.photo_url ? (
-                <Image src={u.photo_url} alt="" width={40} height={40} className="rounded-full object-cover w-10 h-10" />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-rog-peach flex items-center justify-center font-bold text-rog-purple">
-                  {u.name.charAt(0).toUpperCase()}
-                </div>
-              )}
+              <Avatar name={u.name} photoUrl={u.photo_url} size="md" decorative />
               <div className="flex-1">
                 <p className="font-semibold text-rog-ink">
                   {u.name}
@@ -62,11 +63,11 @@ export default async function AdminUsersPage({
                     <span className="ml-2 text-[10px] uppercase tracking-[0.2em] text-rog-purple font-medium">Admin</span>
                   )}
                   {!u.approved && (
-                    <span className="ml-2 text-[10px] uppercase tracking-wider text-amber-600">Pending</span>
+                    <span className="ml-2 text-[10px] uppercase tracking-wider text-warning">Pending</span>
                   )}
                 </p>
                 <p className="text-xs text-rog-muted">
-                  Joined {new Date(u.created_at).toLocaleDateString("en-GB")} &bull; Start {u.start_date}
+                  Joined {new Date(u.created_at).toLocaleDateString("en-GB")} &bull; Start {new Date(u.start_date).toLocaleDateString("en-GB")}
                 </p>
               </div>
               {u.id !== me && (

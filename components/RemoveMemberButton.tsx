@@ -25,14 +25,14 @@ export default function RemoveMemberButton({
 
   if (!confirm) {
     return (
-      <button onClick={() => setConfirm(true)} className="text-xs text-rog-muted hover:text-red-600">
+      <button onClick={() => setConfirm(true)} className="text-xs text-rog-muted hover:text-danger">
         Remove
       </button>
     );
   }
   return (
     <div className="flex gap-2">
-      <button onClick={remove} className="text-xs text-red-600 font-semibold">Confirm</button>
+      <button onClick={remove} className="text-xs text-danger font-semibold">Confirm</button>
       <button onClick={() => setConfirm(false)} className="text-xs text-rog-muted">Cancel</button>
     </div>
   );

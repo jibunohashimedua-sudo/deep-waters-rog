@@ -70,13 +70,27 @@ export default function NotificationsPage() {
 
         <div className="mt-6 space-y-2">
           {loading ? (
-            <p className="text-rog-muted">Loading...</p>
+            <div className="space-y-3" aria-busy="true" aria-live="polite">
+              <span className="sr-only">Loading notifications</span>
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="card flex gap-3">
+                  <div className="skeleton w-10 h-10 !rounded-full shrink-0" />
+                  <div className="flex-1">
+                    <div className="skeleton h-3 w-3/5" />
+                    <div className="skeleton mt-2 h-3 w-2/5" />
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : items.length === 0 ? (
-            <p className="text-rog-muted">Nothing yet.</p>
+            <div className="empty-state">
+              <p className="empty-body">Nothing yet.</p>
+              <p className="empty-hint">Amens, comments and mentions will land here.</p>
+            </div>
           ) : (
             items.map((n) => {
               const inner = (
-                <div className={`card flex gap-3 ${n.read ? "opacity-60" : "border-rog-purple"}`}>
+                <div className={`card flex gap-3 ${n.read ? "opacity-60" : "!border-rog-purple"}`}>
                   <div className="text-xl w-8 text-center">{ICON[n.kind] ?? "•"}</div>
                   <div className="flex-1">
                     <p className="font-semibold text-rog-ink text-sm">{n.title}</p>

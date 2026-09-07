@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
+import Avatar from "@/components/Avatar";
 import Link from "next/link";
-import Image from "next/image";
 import Nav from "@/components/Nav";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile, isCohortLeader } from "@/lib/auth";
@@ -112,7 +112,7 @@ export default async function CohortManagePage({
             {(announcements ?? []).map((a) => (
               <div key={a.id} className="card">
                 {a.title && <p className="font-bold text-rog-purple">{a.title}</p>}
-                <p className="mt-1 text-sm whitespace-pre-wrap">{a.body}</p>
+                <p className="selectable mt-1 text-sm whitespace-pre-wrap">{a.body}</p>
                 <p className="mt-2 text-xs text-rog-muted">
                   {new Date(a.created_at).toLocaleString("en-GB")}
                 </p>
@@ -129,19 +129,7 @@ export default async function CohortManagePage({
               const p = progMap.get(m.user_id);
               return (
                 <div key={m.user_id} className="card flex items-center gap-3">
-                  {m.profiles?.photo_url ? (
-                    <Image
-                      src={m.profiles.photo_url}
-                      alt=""
-                      width={40}
-                      height={40}
-                      className="rounded-full object-cover w-10 h-10"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-rog-peach flex items-center justify-center font-bold text-rog-purple">
-                      {m.profiles?.name?.charAt(0).toUpperCase()}
-                    </div>
-                  )}
+                  <Avatar name={m.profiles?.name ?? "?"} photoUrl={m.profiles?.photo_url} size="md" decorative />
                   <div className="flex-1">
                     <p className="font-semibold text-rog-ink">
                       {m.profiles?.name}{" "}

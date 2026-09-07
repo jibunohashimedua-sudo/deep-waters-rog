@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
+import Avatar from "@/components/Avatar";
 import Link from "next/link";
-import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import CohortShareBox from "@/components/CohortShareBox";
 import BackButton from "@/components/BackButton";
+import Mark from "@/components/Mark";
 
 export default async function CohortLandingPage({
   params
@@ -77,13 +78,9 @@ export default async function CohortLandingPage({
           </div>
         )}
         <div className="max-w-3xl mx-auto px-6 py-16 text-center">
-          <img
-            src="/deep-waters-mark-cream.png"
-            alt=""
-            width={72}
-            height={72}
-            className="mx-auto mb-4 w-14"
-          />
+          <div className="mb-4 flex justify-center">
+            <Mark size={56} className="text-[#F3EDE4]" />
+          </div>
           <p className="kicker !text-white/70">Deep Waters</p>
           <h1 className="mt-3 text-5xl md:text-6xl font-bold tracking-tight">{cohort.name}</h1>
           {cohort.description && (
@@ -109,7 +106,7 @@ export default async function CohortLandingPage({
             {cohort.welcome_message && (
               <div className="mt-4 p-4 bg-rog-cream rounded-2xl text-left">
                 <p className="kicker">Welcome</p>
-                <p className="mt-1 text-sm whitespace-pre-wrap">{cohort.welcome_message}</p>
+                <p className="selectable mt-1 text-sm whitespace-pre-wrap">{cohort.welcome_message}</p>
               </div>
             )}
             <Link href="/today" className="btn-primary mt-4 inline-block">Go to today</Link>
@@ -152,7 +149,7 @@ export default async function CohortLandingPage({
               {announcements.map((a) => (
                 <div key={a.id} className="card">
                   {a.title && <p className="font-bold text-rog-purple">{a.title}</p>}
-                  <p className="mt-1 text-sm whitespace-pre-wrap">{a.body}</p>
+                  <p className="selectable mt-1 text-sm whitespace-pre-wrap">{a.body}</p>
                   <p className="mt-2 text-xs text-rog-muted">
                     {new Date(a.created_at).toLocaleDateString("en-GB")}
                   </p>
@@ -169,13 +166,7 @@ export default async function CohortLandingPage({
             <div className="mt-3 flex flex-wrap gap-2">
               {members.map((m: any) => (
                 <div key={m.user_id} title={m.profiles?.name}>
-                  {m.profiles?.photo_url ? (
-                    <Image src={m.profiles.photo_url} alt="" width={40} height={40} className="rounded-full object-cover w-10 h-10 border-2 border-white" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-rog-peach flex items-center justify-center font-bold text-rog-purple text-sm border-2 border-white">
-                      {m.profiles?.name?.charAt(0).toUpperCase()}
-                    </div>
-                  )}
+                  <Avatar name={m.profiles?.name ?? "?"} photoUrl={m.profiles?.photo_url} size="md" className="border-2 border-white" decorative />
                 </div>
               ))}
               {cohort.member_count > 12 && (

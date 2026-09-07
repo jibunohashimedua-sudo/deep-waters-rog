@@ -22,6 +22,7 @@ export default function EditProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -30,7 +31,16 @@ export default function EditProfilePage() {
       } = await supabase.auth.getUser();
       if (!user) return router.push("/login");
       setUserId(user.id);
-      const { data: p } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      const { data: p, error } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      // An empty form here isn't harmless: saving it would overwrite the real
+      // profile with blanks. Refuse to render the form at all if the load failed.
+      if (error) {
+        // eslint-disable-next-line no-console
+        console.error("[deep-waters] profile load failed:", error.message);
+        setLoadFailed(true);
+        setLoading(false);
+        return;
+      }
       if (p) {
         setName(p.name);
         setBio(p.bio ?? "");
@@ -104,7 +114,29 @@ export default function EditProfilePage() {
     return (
       <>
         <Nav />
-        <main className="max-w-lg mx-auto px-6 py-10 text-rog-muted">Loading...</main>
+        <main className="max-w-lg mx-auto px-6 py-10">
+          <div className="skeleton h-4 w-24" />
+          <div className="skeleton mt-3 h-9 w-64" />
+          <div className="skeleton mt-8 h-32 w-32 !rounded-full mx-auto" />
+          <div className="skeleton mt-6 h-12 w-full" />
+          <div className="skeleton mt-4 h-24 w-full" />
+        </main>
+      </>
+    );
+  }
+
+  if (loadFailed) {
+    return (
+      <>
+        <Nav />
+        <main className="max-w-lg mx-auto px-6 py-10">
+          <div className="card text-center">
+            <p className="font-semibold text-rog-purple">Couldn&rsquo;t load your profile</p>
+            <p className="mt-2 text-sm text-rog-muted">
+              Nothing has been changed. Refresh to try again.
+            </p>
+          </div>
+        </main>
       </>
     );
   }

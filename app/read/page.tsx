@@ -62,7 +62,7 @@ export default async function ReadPage({
           <div className="mt-10 card">
             <p className="kicker">Study note</p>
             {note.title && <p className="mt-3 font-bold text-rog-purple text-lg">{note.title}</p>}
-            <p className="mt-2 text-sm leading-relaxed whitespace-pre-wrap">{note.body}</p>
+            <p className="selectable mt-2 text-sm leading-relaxed whitespace-pre-wrap">{note.body}</p>
           </div>
         )}
 

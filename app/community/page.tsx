@@ -77,23 +77,17 @@ export default function CommunityPage() {
         <h1 className="mt-3 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight">Community</h1>
 
         {votd && (
-          <div
-            className="mt-6 rounded-3xl p-6 text-white shadow-lg"
-            style={{
-              background: "linear-gradient(135deg, #3B1E6E 0%, #4A2A85 55%, #2E4FD1 100%)",
-              boxShadow: "0 10px 32px -12px rgba(59,30,110,0.55)"
-            }}
-          >
-            <p className="text-xs font-medium tracking-[0.2em] uppercase" style={{ color: "#FF7EB6" }}>
+          <div className="votd mt-6 rounded-3xl p-6">
+            <p className="votd-kicker text-xs font-medium tracking-[0.2em] uppercase">
               Verse of the day
             </p>
-            <p className="mt-1 text-xl font-bold text-white">{votd.verse_reference}</p>
+            <p className="mt-1 text-xl font-bold">{votd.verse_reference}</p>
             {votd.verse_text && (
-              <p className="mt-2 italic" style={{ color: "rgba(255,255,255,0.9)" }}>
+              <p className="selectable mt-2 italic votd-body">
                 &ldquo;{votd.verse_text}&rdquo;
               </p>
             )}
-            <p className="mt-2 text-xs" style={{ color: "rgba(255,255,255,0.65)" }}>
+            <p className="mt-2 text-xs votd-meta">
               Picked by {votd.picks} {votd.picks === 1 ? "person" : "people"} today
             </p>
           </div>
@@ -122,9 +116,28 @@ export default function CommunityPage() {
 
         <div className="mt-6 space-y-4">
           {loading ? (
-            <p className="text-rog-muted">Loading...</p>
+            <div className="space-y-3" aria-busy="true" aria-live="polite">
+              <span className="sr-only">Loading the feed</span>
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="card">
+                  <div className="flex items-center gap-3">
+                    <div className="skeleton w-10 h-10 !rounded-full" />
+                    <div className="flex-1">
+                      <div className="skeleton h-3 w-28" />
+                      <div className="skeleton mt-2 h-3 w-20" />
+                    </div>
+                  </div>
+                  <div className="skeleton mt-4 h-3 w-40" />
+                  <div className="skeleton mt-2 h-3 w-full" />
+                  <div className="skeleton mt-2 h-3 w-4/5" />
+                </div>
+              ))}
+            </div>
           ) : filtered.length === 0 ? (
-            <p className="text-rog-muted">Nothing shared yet. Post your first reflection.</p>
+            <div className="empty-state">
+              <p className="empty-body">Nothing shared yet.</p>
+              <p className="empty-hint">Post the verse that stood out to you today and start the feed.</p>
+            </div>
           ) : (
             filtered.map((it) => <ReflectionCard key={it.id} item={it} currentUserId={me} isAdmin={isAdmin} />)
           )}

@@ -33,7 +33,7 @@ export default function ReportButton({
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="text-[11px] text-rog-muted hover:text-red-600">
+      <button onClick={() => setOpen(true)} className="text-[11px] text-rog-muted hover:text-danger">
         Report
       </button>
     );
@@ -47,7 +47,7 @@ export default function ReportButton({
         placeholder="Reason (optional)"
         className="flex-1 rounded-full border border-rog-line px-3 py-1 text-xs"
       />
-      <button onClick={submit} className="text-xs text-red-600 font-semibold">Send</button>
+      <button onClick={submit} className="text-xs text-danger font-semibold">Send</button>
       <button onClick={() => setOpen(false)} className="text-xs text-rog-muted">Cancel</button>
     </div>
   );

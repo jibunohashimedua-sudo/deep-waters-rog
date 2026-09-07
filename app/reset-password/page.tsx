@@ -150,7 +150,7 @@ export default function ResetPasswordPage() {
               <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-50">
                 {loading ? "Saving…" : "Save and continue"}
               </button>
-              {error && <p className="text-sm text-red-600 text-center">{error}</p>}
+              {error && <p className="text-sm text-danger text-center">{error}</p>}
             </form>
           </>
         )}

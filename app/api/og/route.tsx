@@ -1,3 +1,5 @@
+/* eslint-disable @next/next/no-img-element -- @vercel/og renders with
+   Satori, which only supports plain <img>; next/image cannot be used here. */
 import { ImageResponse } from "@vercel/og";
 import { NextRequest } from "next/server";
 
@@ -109,6 +111,7 @@ export async function GET(req: NextRequest) {
           {photo ? (
             <img
               src={photo}
+              alt=""
               width={200}
               height={200}
               style={{
