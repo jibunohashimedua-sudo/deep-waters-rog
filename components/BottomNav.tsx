@@ -118,15 +118,21 @@ export default function BottomNav() {
     pathname.startsWith("/cohorts") ||
     pathname.startsWith("/admin");
 
+  const itemBase =
+    "flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-[22px] transition-colors duration-[250ms] ease-out";
+  const activePill = "text-rog-purple";
+  const inactivePill = "text-rog-muted";
+  const activeBg = { backgroundColor: "rgba(106, 69, 199, 0.28)" };
+
   return (
     <>
       <nav
         id="bottom-nav"
         aria-label="Primary"
-        className="md:hidden glass-nav fixed bottom-0 left-0 right-0 z-40"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        className="md:hidden bottom-glass fixed left-3 right-3 z-40 rounded-[28px]"
+        style={{ bottom: "calc(env(safe-area-inset-bottom) + 10px)" }}
       >
-        <ul className="flex items-stretch justify-around px-1 pt-1.5">
+        <ul className="flex items-stretch justify-around px-1.5 py-1.5">
           {tabs.map((t) => {
             const active = t.match(pathname);
             return (
@@ -134,14 +140,11 @@ export default function BottomNav() {
                 <Link
                   href={t.href}
                   aria-current={active ? "page" : undefined}
-                  className={`flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl transition ${
-                    active ? "text-rog-purple" : "text-rog-muted"
-                  }`}
+                  className={`${itemBase} ${active ? activePill : inactivePill}`}
+                  style={active ? activeBg : undefined}
                 >
-                  <span className={active ? "text-rog-purple" : ""}>{t.icon}</span>
-                  <span className={`text-[10px] font-medium ${active ? "text-rog-purple" : ""}`}>
-                    {t.label}
-                  </span>
+                  <span>{t.icon}</span>
+                  <span className="text-[10px] font-medium">{t.label}</span>
                 </Link>
               </li>
             );
@@ -152,9 +155,8 @@ export default function BottomNav() {
               onClick={() => setSheetOpen(true)}
               aria-haspopup="dialog"
               aria-expanded={sheetOpen}
-              className={`w-full flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl transition ${
-                moreActive ? "text-rog-purple" : "text-rog-muted"
-              }`}
+              className={`w-full ${itemBase} ${moreActive ? activePill : inactivePill}`}
+              style={moreActive ? activeBg : undefined}
             >
               <span>{moreIcon}</span>
               <span className="text-[10px] font-medium">More</span>

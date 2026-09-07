@@ -67,11 +67,11 @@ export default function MoreSheet({ open, onClose, isAdmin }: Props) {
       className={`md:hidden fixed inset-0 z-50 ${open ? "" : "pointer-events-none"}`}
       aria-hidden={!open}
     >
-      {/* Backdrop */}
+      {/* Backdrop — dim + soft blur so the page behind softens */}
       <button
         aria-label="Close"
         onClick={onClose}
-        className={`absolute inset-0 bg-black/40 transition-opacity ${
+        className={`sheet-backdrop absolute inset-0 transition-opacity duration-[250ms] ${
           open ? "opacity-100" : "opacity-0"
         }`}
       />
@@ -81,7 +81,7 @@ export default function MoreSheet({ open, onClose, isAdmin }: Props) {
         role="dialog"
         aria-modal="true"
         aria-label="More"
-        className={`glass-nav absolute left-0 right-0 bottom-0 rounded-t-3xl border-t border-white/40 max-h-[85vh] overflow-y-auto transition-transform duration-300 ${
+        className={`bottom-glass absolute left-0 right-0 bottom-0 rounded-t-[28px] max-h-[85vh] overflow-y-auto transition-transform duration-300 ${
           open ? "translate-y-0" : "translate-y-full"
         }`}
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}
