@@ -297,9 +297,14 @@ export default async function DepthPage() {
             <h1 className="font-serif text-[26px] leading-tight text-rog-ink break-words">
               {profile.name}
             </h1>
+            {/* Terse on purpose. "Day 34 · 30 completed · 12 day streak"
+                is 34 characters, and beside an 80px portrait on a 390px
+                phone that wraps onto a second line and leaves "streak"
+                stranded on its own. Mono metadata should read as one
+                instrument reading, not as a sentence. */}
             <p className="kicker mt-2">
-              Day {day} &middot; {lb?.days_completed ?? doneDays.size} completed
-              &middot; {lb?.current_streak ?? 0} day streak
+              Day {day} &middot; {lb?.days_completed ?? doneDays.size} kept
+              &middot; Streak {lb?.current_streak ?? 0}
             </p>
             {profile.bio && (
               <p className="selectable mt-3 text-[13.5px] leading-5 text-rog-muted break-words">
