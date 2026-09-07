@@ -55,59 +55,78 @@ export default function ReflectionForm({
       <section className="surface-soft">
         <p className="chapter-mark">Reflection</p>
         <h2 className="mt-3 font-serif text-2xl md:text-3xl font-medium text-rog-ink leading-tight">
-          {done ? "You've completed today" : "Mark today complete"}
+          {done ? "Today's reflection is kept" : "Today's reflection"}
         </h2>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              The verse that stood out
-            </label>
-            <input
-              value={verseRef}
-              onChange={(e) => setVerseRef(e.target.value)}
-              placeholder="e.g. Genesis 1:3"
-              className="w-full rounded-full border border-rog-line bg-white px-6 py-3 focus:border-rog-purple focus:outline-none"
-            />
+        <form onSubmit={handleSubmit} className="mt-6">
+          {/* Verse info zone — a quieter grouping */}
+          <div className="pb-6 border-b border-dashed border-rog-line/70 space-y-5">
+            <div>
+              <label className="block text-sm font-medium mb-2 text-rog-ink">
+                The verse that stood out
+              </label>
+              <input
+                value={verseRef}
+                onChange={(e) => setVerseRef(e.target.value)}
+                placeholder="e.g. Genesis 1:3"
+                className="w-full rounded-xl border border-rog-line bg-white px-4 py-3 font-serif text-[15px] focus:border-rog-purple focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-rog-ink">
+                The words themselves
+              </label>
+              <p className="mt-1 mb-2 text-xs text-rog-muted">
+                So they travel with your reflection.
+              </p>
+              <textarea
+                value={verseText}
+                onChange={(e) => setVerseText(e.target.value)}
+                placeholder="From today's reading, or type it in."
+                rows={2}
+                className="w-full rounded-xl border border-rog-line bg-white px-4 py-3 font-serif text-[15px] leading-relaxed focus:border-rog-purple focus:outline-none"
+              />
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              The verse text (optional)
+
+          {/* Reflection zone — the writing surface, generous */}
+          <div className="pt-6">
+            <label className="block text-sm font-medium text-rog-ink">
+              What it stirred
             </label>
-            <textarea
-              value={verseText}
-              onChange={(e) => setVerseText(e.target.value)}
-              placeholder="Type or paste the verse..."
-              rows={2}
-              className="w-full rounded-2xl border border-rog-line bg-white px-6 py-3 focus:border-rog-purple focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Reflection (optional, shared with the community)
-            </label>
+            <p className="mt-1 mb-2 text-xs text-rog-muted">
+              Shared to the community feed when you save. Leave empty to keep it private.
+            </p>
             <textarea
               value={reflection}
               onChange={(e) => setReflection(e.target.value)}
-              placeholder="What did this stir in you?"
-              rows={3}
-              className="w-full rounded-2xl border border-rog-line bg-white px-6 py-3 focus:border-rog-purple focus:outline-none"
+              placeholder="In a sentence, or a paragraph."
+              rows={5}
+              className="w-full rounded-xl border border-rog-line bg-white px-4 py-3 font-serif text-[15px] leading-relaxed focus:border-rog-purple focus:outline-none"
             />
           </div>
-          <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-50">
-            {loading ? "Saving..." : done ? "Update today" : "Complete Day " + dayNumber}
+
+          <button type="submit" disabled={loading} className="btn-primary w-full mt-6 disabled:opacity-50">
+            {loading ? "Saving..." : done ? "Save changes" : "Save today"}
           </button>
         </form>
       </section>
 
-      {/* Level 2 — the celebration reveal. Distinct from the form. */}
+      {/* Level 2 — the completion reveal, mounted like a Polaroid on card stock */}
       {done && cardUrl && (
         <section className="card mt-6">
-          <p className="chapter-mark">Your share card</p>
-          <div className="mt-4 rounded-2xl overflow-hidden border border-rog-line">
+          <p className="chapter-mark">Today, as a card</p>
+          <div className="reveal-mat mt-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={cardUrl} alt="Day completion card" className="w-full" />
+            <img
+              src={cardUrl}
+              alt="Day completion card"
+              className="w-full block rounded-lg"
+            />
           </div>
+          <p className="mt-4 text-sm text-rog-muted">
+            Save it to your camera roll, or share it in your feed.
+          </p>
           <button
             type="button"
             onClick={async () => {
@@ -126,9 +145,9 @@ export default function ReflectionForm({
                 window.open(cardUrl, "_blank");
               }
             }}
-            className="btn-pink w-full mt-4"
+            className="btn-pink w-full mt-3"
           >
-            Download to share
+            Download the card
           </button>
         </section>
       )}
