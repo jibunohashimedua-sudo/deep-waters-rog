@@ -21,9 +21,22 @@ export type DayRow = {
   date: string;
   title: string | null;
   page_number: number;
+  verse_text: string | null;
+  body: string | null;
+  prayer: string | null;
+  prayer_label: string | null;
 };
 
-type Draft = { title: string; page: string };
+type Draft = {
+  title: string;
+  page: string;
+  verse: string;
+  body: string;
+  prayer: string;
+  prayerLabel: string;
+};
+
+const EMPTY: Draft = { title: "", page: "", verse: "", body: "", prayer: "", prayerLabel: "PRAYER" };
 
 export default function RhapsodyAdmin({
   month,
@@ -46,9 +59,16 @@ export default function RhapsodyAdmin({
 
   const [drafts, setDrafts] = useState<Record<string, Draft>>(() => {
     const seed: Record<string, Draft> = {};
-    for (const d of dates) seed[d] = { title: "", page: "" };
+    for (const d of dates) seed[d] = { ...EMPTY };
     for (const d of days) {
-      seed[d.date] = { title: d.title ?? "", page: String(d.page_number ?? "") };
+      seed[d.date] = {
+        title: d.title ?? "",
+        page: String(d.page_number ?? ""),
+        verse: d.verse_text ?? "",
+        body: d.body ?? "",
+        prayer: d.prayer ?? "",
+        prayerLabel: d.prayer_label ?? "PRAYER"
+      };
     }
     return seed;
   });
@@ -62,8 +82,10 @@ export default function RhapsodyAdmin({
   const [startPage, setStartPage] = useState("1");
   const [pagesPer, setPagesPer] = useState("1");
   const [titleList, setTitleList] = useState("");
+  const [open, setOpen] = useState<string | null>(null);
 
   const missing = dates.filter((d) => !drafts[d]?.page.trim());
+  const noText = dates.filter((d) => drafts[d]?.page.trim() && !drafts[d]?.body.trim());
 
   function say(message: string) {
     setErr(null);
@@ -170,11 +192,8 @@ export default function RhapsodyAdmin({
     setDrafts((prev) => {
       const next = { ...prev };
       dates.forEach((d, i) => {
-        const existing = next[d]?.title ?? "";
-        next[d] = {
-          title: titles[i] || existing,
-          page: String(start + i * step)
-        };
+        const prev = next[d] ?? EMPTY;
+        next[d] = { ...prev, title: titles[i] || prev.title, page: String(start + i * step) };
       });
       return next;
     });
@@ -184,10 +203,62 @@ export default function RhapsodyAdmin({
   function clearAll() {
     setDrafts(() => {
       const next: Record<string, Draft> = {};
-      for (const d of dates) next[d] = { title: "", page: "" };
+      for (const d of dates) next[d] = { ...EMPTY };
       return next;
     });
     say("Cleared. Nothing is saved until you press Save.");
+  }
+
+  /** Read this month's articles straight out of the PDF and fill them in. */
+  async function pullText() {
+    if (!edition) return fail("Upload this month's PDF first.");
+    const ask = dates
+      .map((d) => ({ date: d, page: parseInt((drafts[d]?.page ?? "").trim(), 10) }))
+      .filter((x) => Number.isInteger(x.page) && x.page >= 1);
+    if (!ask.length) return fail("Set the page numbers first — Quick fill does the whole month.");
+
+    setBusy("extract");
+    let json: {
+      articles?: Record<string, { title: string; verse: string; body: string; prayer: string; prayerLabel: string }>;
+      error?: string;
+    } = {};
+    let ok = false;
+    try {
+      const res = await fetch("/api/admin/rhapsody/extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          edition_id: edition.id,
+          pages_per: parseInt(pagesPer, 10) || 1,
+          days: ask
+        })
+      });
+      json = await res.json();
+      ok = res.ok;
+    } catch (e) {
+      json = { error: e instanceof Error ? e.message : "no answer from the server" };
+    }
+    setBusy(null);
+    if (!ok) return fail(`Couldn't read the PDF: ${json.error ?? "something went wrong"}`);
+
+    const articles = json.articles ?? {};
+    setDrafts((prev) => {
+      const next = { ...prev };
+      for (const [date, a] of Object.entries(articles)) {
+        const cur = next[date] ?? EMPTY;
+        next[date] = {
+          ...cur,
+          title: a.title?.trim() || cur.title,
+          verse: a.verse ?? "",
+          body: a.body ?? "",
+          prayer: a.prayer ?? "",
+          prayerLabel: a.prayerLabel || "PRAYER"
+        };
+      }
+      return next;
+    });
+    const n = Object.keys(articles).length;
+    say(`Read ${n} day${n === 1 ? "" : "s"} out of the PDF. Look over a few, then save.`);
   }
 
   async function saveMapping() {
@@ -199,6 +270,10 @@ export default function RhapsodyAdmin({
       edition_id: string;
       title: string | null;
       page_number: number;
+      verse_text: string | null;
+      body: string | null;
+      prayer: string | null;
+      prayer_label: string | null;
     }[] = [];
     const toClear: string[] = [];
 
@@ -210,7 +285,11 @@ export default function RhapsodyAdmin({
           date: d,
           edition_id: edition.id,
           title: draft.title.trim() || null,
-          page_number: page
+          page_number: page,
+          verse_text: draft.verse.trim() || null,
+          body: draft.body.trim() || null,
+          prayer: draft.prayer.trim() || null,
+          prayer_label: draft.prayer.trim() ? draft.prayerLabel || "PRAYER" : null
         });
       } else if (draft?.page.trim() || days.some((x) => x.date === d)) {
         // Blank or nonsense page: the date goes back to having no article.
@@ -401,6 +480,15 @@ export default function RhapsodyAdmin({
               )}
             </p>
 
+            {noText.length > 0 && (
+              <p className="mt-2 text-sm text-rog-muted">
+                <span className="font-semibold text-rog-ink">
+                  {noText.length} with a page but no text yet:
+                </span>{" "}
+                {noText.map((d) => dayOfMonth(d)).join(", ")}
+              </p>
+            )}
+
             {/* Quick fill */}
             <div className="surface-soft mt-4 space-y-3">
               <p className="text-sm font-semibold text-rog-ink">Quick fill</p>
@@ -444,6 +532,14 @@ export default function RhapsodyAdmin({
                 <button type="button" onClick={quickFill} className="btn-secondary px-5 py-2 text-sm">
                   Fill the month
                 </button>
+                <button
+                  type="button"
+                  onClick={pullText}
+                  disabled={busy === "extract"}
+                  className="btn-secondary px-5 py-2 text-sm disabled:opacity-50"
+                >
+                  {busy === "extract" ? "Reading the PDF..." : "Get the text from the PDF"}
+                </button>
                 <button type="button" onClick={clearAll} className="btn-secondary px-5 py-2 text-sm">
                   Clear all
                 </button>
@@ -453,38 +549,97 @@ export default function RhapsodyAdmin({
             {/* Per-date rows */}
             <ul className="mt-4 space-y-2">
               {dates.map((d) => {
-                const draft = drafts[d] ?? { title: "", page: "" };
+                const draft = drafts[d] ?? EMPTY;
                 const set = !!draft.page.trim();
+                const hasText = !!draft.body.trim();
+                const edit = (patch: Partial<Draft>) =>
+                  setDrafts((prev) => ({ ...prev, [d]: { ...draft, ...patch } }));
                 return (
-                  <li key={d} className="flex items-center gap-2">
-                    <div
-                      className={`w-11 shrink-0 rounded-2xl py-2 text-center leading-tight ${
-                        set ? "bg-rog-purple text-white" : "bg-rog-cream text-rog-muted"
-                      }`}
-                    >
-                      <span className="block text-sm font-bold">{dayOfMonth(d)}</span>
-                      <span className="block text-[9px] uppercase tracking-wider opacity-80">
-                        {weekdayShort(d)}
-                      </span>
+                  <li key={d} className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`w-11 shrink-0 rounded-2xl py-2 text-center leading-tight ${
+                          set ? "bg-rog-purple text-white" : "bg-rog-cream text-rog-muted"
+                        }`}
+                      >
+                        <span className="block text-sm font-bold">{dayOfMonth(d)}</span>
+                        <span className="block text-[9px] uppercase tracking-wider opacity-80">
+                          {weekdayShort(d)}
+                        </span>
+                      </div>
+                      <input
+                        value={draft.title}
+                        onChange={(e) => edit({ title: e.target.value })}
+                        placeholder="Article title"
+                        className="flex-1 min-w-0 rounded-xl border border-rog-line px-4 py-2 text-sm focus:border-rog-purple focus:outline-none"
+                      />
+                      <input
+                        value={draft.page}
+                        onChange={(e) => edit({ page: e.target.value })}
+                        inputMode="numeric"
+                        placeholder="pg"
+                        aria-label={`Page number for ${d}`}
+                        className="w-16 shrink-0 rounded-xl border border-rog-line px-3 py-2 text-sm text-center focus:border-rog-purple focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setOpen(open === d ? null : d)}
+                        aria-expanded={open === d}
+                        aria-label={`Article text for ${d}`}
+                        title={hasText ? "Article text is in \u2014 tap to read or edit" : "No article text yet"}
+                        className={`w-9 h-9 shrink-0 rounded-full text-xs font-bold ${
+                          hasText ? "bg-rog-cream text-rog-purple" : "bg-rog-cream text-rog-muted"
+                        }`}
+                      >
+                        {hasText ? "\u2713" : "\u2026"}
+                      </button>
                     </div>
-                    <input
-                      value={draft.title}
-                      onChange={(e) =>
-                        setDrafts((p) => ({ ...p, [d]: { ...draft, title: e.target.value } }))
-                      }
-                      placeholder="Article title"
-                      className="flex-1 min-w-0 rounded-xl border border-rog-line px-4 py-2 text-sm focus:border-rog-purple focus:outline-none"
-                    />
-                    <input
-                      value={draft.page}
-                      onChange={(e) =>
-                        setDrafts((p) => ({ ...p, [d]: { ...draft, page: e.target.value } }))
-                      }
-                      inputMode="numeric"
-                      placeholder="pg"
-                      aria-label={`Page number for ${d}`}
-                      className="w-16 shrink-0 rounded-xl border border-rog-line px-3 py-2 text-sm text-center focus:border-rog-purple focus:outline-none"
-                    />
+
+                    {open === d && (
+                      <div className="card space-y-3">
+                        <div>
+                          <label className="block text-xs text-rog-muted mb-1">Opening scripture</label>
+                          <textarea
+                            value={draft.verse}
+                            onChange={(e) => edit({ verse: e.target.value })}
+                            rows={3}
+                            className="w-full rounded-2xl border border-rog-line px-4 py-2.5 text-sm focus:border-rog-purple focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-rog-muted mb-1">
+                            The article &mdash; leave a blank line between paragraphs
+                          </label>
+                          <textarea
+                            value={draft.body}
+                            onChange={(e) => edit({ body: e.target.value })}
+                            rows={12}
+                            className="w-full rounded-2xl border border-rog-line px-4 py-2.5 text-sm leading-relaxed focus:border-rog-purple focus:outline-none"
+                          />
+                          <p className="mt-1 text-xs text-rog-muted">{draft.body.length} characters</p>
+                        </div>
+                        <div className="grid sm:grid-cols-[8rem,1fr] gap-2">
+                          <div className="min-w-0">
+                            <label className="block text-xs text-rog-muted mb-1">Heading</label>
+                            <input
+                              value={draft.prayerLabel}
+                              onChange={(e) => edit({ prayerLabel: e.target.value })}
+                              placeholder="PRAYER"
+                              className="w-full rounded-xl border border-rog-line px-4 py-2 text-sm focus:border-rog-purple focus:outline-none"
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <label className="block text-xs text-rog-muted mb-1">Prayer or confession</label>
+                            <textarea
+                              value={draft.prayer}
+                              onChange={(e) => edit({ prayer: e.target.value })}
+                              rows={4}
+                              className="w-full rounded-2xl border border-rog-line px-4 py-2.5 text-sm focus:border-rog-purple focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </li>
                 );
               })}

@@ -29,7 +29,7 @@ export default async function AdminRhapsodyPage({
 
   const { data: days, error: daysError } = await supabase
     .from("rhapsody_days")
-    .select("date, title, page_number")
+    .select("date, title, page_number, verse_text, body, prayer, prayer_label")
     .gte("date", dates[0])
     .lte("date", dates[dates.length - 1])
     .order("date", { ascending: true });

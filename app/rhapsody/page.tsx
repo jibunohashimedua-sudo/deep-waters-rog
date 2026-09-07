@@ -6,11 +6,10 @@ import { currentDayNumber } from "@/lib/plan";
 import { todayISO, longDate } from "@/lib/rhapsody";
 import Nav from "@/components/Nav";
 
-// The signed link is minted per request, so this page can never be cached.
+// A fresh signed link every visit, so this page can never be cached.
 export const dynamic = "force-dynamic";
 
-/** How long a signed link stays good. Long enough to read the article,
- *  short enough that a copied URL is worthless by the time it travels. */
+/** How long the link to the original PDF stays good. */
 const LINK_TTL_SECONDS = 30 * 60;
 
 export default async function RhapsodyPage() {
@@ -26,7 +25,7 @@ export default async function RhapsodyPage() {
   // bitten by ambiguous-relationship errors from PostgREST joins.
   const { data: entry, error: entryError } = await supabase
     .from("rhapsody_days")
-    .select("edition_id, title, page_number")
+    .select("edition_id, title, page_number, verse_text, body, prayer, prayer_label")
     .eq("date", date)
     .maybeSingle();
 
@@ -42,11 +41,12 @@ export default async function RhapsodyPage() {
     editionError = error?.message ?? null;
   }
 
-  // The signed link is made with the service role, so the bucket needs no
-  // read policy at all and the storage path never reaches the browser.
+  // The link to the original PDF is signed with the service role, so the
+  // bucket needs no read policy at all and the storage path never reaches
+  // the browser. Only made when there's an article to go with it.
   let signedUrl: string | null = null;
   let signError: string | null = null;
-  if (edition?.file_path) {
+  if (entry && edition?.file_path) {
     const service = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -62,11 +62,12 @@ export default async function RhapsodyPage() {
   const problem = entryError?.message ?? editionError ?? signError;
   if (problem) console.error("[deep-waters] rhapsody reader:", problem);
 
-  const page = entry?.page_number ?? 1;
-  // #page= is understood by the built-in PDF viewers in Chrome, Edge, Firefox
-  // and desktop Safari. Where it isn't (iOS Safari), the page number is
-  // printed under the heading so it can be turned to by hand.
-  const viewerUrl = signedUrl ? `${signedUrl}#page=${page}&view=FitH` : null;
+  const rawBody: string = entry?.body ?? "";
+  const paragraphs = rawBody
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  const pdfUrl = signedUrl ? `${signedUrl}#page=${entry?.page_number ?? 1}` : null;
 
   return (
     <>
@@ -76,19 +77,11 @@ export default async function RhapsodyPage() {
           &larr; Back to Day {day}
         </Link>
 
-        <div className="select-none">
-          <p className="mt-10 chapter-mark accent-pink">
-            Rhapsody of Realities &middot; {longDate(date)}
-          </p>
-          <h1 className="mt-3 font-serif text-3xl md:text-4xl font-normal text-rog-ink leading-tight">
-            {entry?.title?.trim() || "Today’s article"}
-          </h1>
-          {entry && edition && (
-            <p className="mt-2 text-sm text-rog-muted">
-              {edition.title} &middot; page {page}
-            </p>
-          )}
-        </div>
+        <p className="mt-10 chapter-mark accent-pink">Rhapsody of Realities</p>
+        <h1 className="mt-3 font-serif text-3xl md:text-4xl font-normal text-rog-ink leading-tight">
+          {entry?.title?.trim() || "Today’s article"}
+        </h1>
+        <p className="mt-2 text-sm text-rog-muted">{longDate(date)}</p>
 
         {!entry && !problem && (
           <div className="mt-16 card empty-state">
@@ -108,37 +101,67 @@ export default async function RhapsodyPage() {
           </div>
         )}
 
-        {viewerUrl && (
-          <>
-            {/* The browser's own PDF viewer. No library: an <iframe> is what
-                every phone and desktop already knows how to render. */}
-            <div className="mt-10 rounded-3xl overflow-hidden border border-rog-line">
-              <iframe
-                src={viewerUrl}
-                title={`Rhapsody of Realities — ${longDate(date)}`}
-                className="w-full block h-[70vh] min-h-[420px] bg-white"
-              />
-            </div>
+        {/* The opening scripture, set apart from the article the way it is
+            in the devotional itself. */}
+        {entry?.verse_text?.trim() && (
+          <blockquote className="mt-10 surface-soft selectable">
+            <p className="font-serif text-lg leading-relaxed text-rog-ink italic">
+              {entry.verse_text.trim()}
+            </p>
+          </blockquote>
+        )}
 
-            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+        {/* The article. Same serif, same measure, same rhythm as scripture —
+            it's meant to be read, not viewed. */}
+        {paragraphs.length > 0 && (
+          <div className="mt-10 bible-content selectable">
+            {paragraphs.map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+          </div>
+        )}
+
+        {entry?.prayer?.trim() && (
+          <div className="mt-16 surface-soft selectable">
+            <p className="chapter-mark accent-pink">
+              {entry.prayer_label?.trim() || "Prayer"}
+            </p>
+            <p className="mt-3 font-serif text-base leading-relaxed text-rog-ink">
+              {entry.prayer.trim()}
+            </p>
+          </div>
+        )}
+
+        {/* Nothing to read means the text hasn't been pulled in yet — the PDF
+            is still there, so send them to it rather than to an empty page. */}
+        {entry && paragraphs.length === 0 && pdfUrl && (
+          <div className="mt-10 card empty-state">
+            <p className="empty-body">Today&rsquo;s article hasn&rsquo;t been typed up yet.</p>
+            <p className="empty-hint">You can still read it in the original booklet below.</p>
+          </div>
+        )}
+
+        {entry && (
+          <div className="mt-16 flex flex-col sm:flex-row gap-3">
+            {pdfUrl && (
               <a
-                href={viewerUrl}
+                href={pdfUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-secondary flex-1 text-center"
               >
-                Open full screen
+                Open the original booklet
               </a>
-              <Link href="/today" className="btn-primary flex-1 text-center">
-                Back to today
-              </Link>
-            </div>
-          </>
+            )}
+            <Link href="/today" className="btn-primary flex-1 text-center">
+              Back to today
+            </Link>
+          </div>
         )}
 
         <p className="mt-10 text-xs text-rog-muted leading-relaxed max-w-prose">
-          Shared with our church members only. Please don&rsquo;t forward, download
-          or redistribute it &mdash; every member can open it here for themselves.
+          Shared with our church members only. Please don&rsquo;t forward or
+          redistribute it &mdash; every member can open it here for themselves.
         </p>
       </main>
     </>
