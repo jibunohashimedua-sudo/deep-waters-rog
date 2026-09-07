@@ -41,5 +41,26 @@ export function friendlyError(msg?: string | null): string {
     return "We don't have an account for that email. Sign up first.";
   }
 
+  // Password auth. "Invalid login credentials" also covers everyone who
+  // joined before passwords existed and so has no password set yet.
+  if (lower.includes("invalid login credentials")) {
+    return "That email and password don't match. If you've never set a password, use the link below to set one.";
+  }
+  if (lower.includes("already registered") || lower.includes("already been registered")) {
+    return "You already have an account with that email. Sign in instead.";
+  }
+  if (lower.includes("password should be at least") || lower.includes("password is too short")) {
+    return "That password is too short. Use at least 8 characters.";
+  }
+  if (lower.includes("email not confirmed")) {
+    return "Confirm your email first — check your inbox for the link we sent.";
+  }
+  if (lower.includes("same password") || lower.includes("should be different")) {
+    return "That's your current password. Pick a different one.";
+  }
+  if (lower.includes("auth session missing") || lower.includes("session_not_found")) {
+    return "That link has expired. Request a fresh one.";
+  }
+
   return "Something didn't work. Try again in a moment.";
 }
