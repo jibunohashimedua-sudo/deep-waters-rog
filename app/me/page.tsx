@@ -12,20 +12,33 @@ export default async function MePage() {
   const { userId, profile } = await requireProfile();
   const supabase = createClient();
 
-  const [{ data: completions }, { data: badges }, { data: lb }, { data: cohorts }] =
-    await Promise.all([
-      supabase
-        .from("completions")
-        .select("id, day_number, verse_reference, verse_text, reflection, completed_at")
-        .eq("user_id", userId)
-        .order("day_number", { ascending: false }),
-      supabase.from("badges").select("badge, earned_at").eq("user_id", userId),
-      supabase.from("leaderboard").select("*").eq("user_id", userId).maybeSingle(),
-      supabase
-        .from("cohort_members")
-        .select("role, cohorts(id, slug, name, start_date)")
-        .eq("user_id", userId)
-    ]);
+  const [
+    { data: completions },
+    { data: badges },
+    { data: lb },
+    { data: cohorts },
+    { data: verseNotes }
+  ] = await Promise.all([
+    supabase
+      .from("completions")
+      .select("id, day_number, verse_reference, verse_text, reflection, completed_at")
+      .eq("user_id", userId)
+      .order("day_number", { ascending: false }),
+    supabase.from("badges").select("badge, earned_at").eq("user_id", userId),
+    supabase.from("leaderboard").select("*").eq("user_id", userId).maybeSingle(),
+    supabase
+      .from("cohort_members")
+      .select("role, cohorts(id, slug, name, start_date)")
+      .eq("user_id", userId),
+    supabase
+      .from("verse_notes")
+      .select(
+        "id, day_number, testament, book, chapter, verse_start, verse_end, body, updated_at"
+      )
+      .eq("user_id", userId)
+      .order("updated_at", { ascending: false })
+      .limit(50)
+  ]);
 
   const day = currentDayNumber(profile.start_date);
   const earned = new Set((badges ?? []).map((b) => b.badge));
@@ -139,6 +152,48 @@ export default async function MePage() {
             </div>
           </section>
         )}
+
+        {/* Verse notes */}
+        <section className="mt-8">
+          <p className="kicker">Notes</p>
+          <h2 className="mt-1 text-xl font-bold text-rog-purple">Verse notes</h2>
+          <div className="mt-4 space-y-3">
+            {!verseNotes || verseNotes.length === 0 ? (
+              <div className="empty-state">
+                <p className="empty-body">No verse notes yet.</p>
+                <p className="empty-hint">
+                  Select a verse on the reading page to write one.
+                </p>
+              </div>
+            ) : (
+              verseNotes.map((n) => {
+                const ref =
+                  n.verse_end > n.verse_start
+                    ? `${n.book} ${n.chapter}:${n.verse_start}–${n.verse_end}`
+                    : `${n.book} ${n.chapter}:${n.verse_start}`;
+                const excerpt =
+                  n.body.length > 160 ? n.body.slice(0, 160).trimEnd() + "…" : n.body;
+                return (
+                  <Link
+                    key={n.id}
+                    href={`/read?t=${n.testament}&d=${n.day_number}`}
+                    className="card block hover:border-rog-purple transition"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-serif font-medium text-rog-purple">{ref}</p>
+                      <p className="text-xs text-rog-muted shrink-0">
+                        {new Date(n.updated_at).toLocaleDateString("en-GB")}
+                      </p>
+                    </div>
+                    <p className="mt-2 text-sm text-rog-ink whitespace-pre-wrap">
+                      {excerpt}
+                    </p>
+                  </Link>
+                );
+              })
+            )}
+          </div>
+        </section>
 
         {/* History */}
         <section className="mt-8">

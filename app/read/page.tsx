@@ -8,12 +8,14 @@ import {
   buildPassageIds
 } from "@/lib/plan";
 import { fetchChapters } from "@/lib/bible";
+import { wrapVersesInHtml } from "@/lib/verseParse";
 import Nav from "@/components/Nav";
+import ScriptureReader from "@/components/ScriptureReader";
 
 export default async function ReadPage({
   searchParams
 }: {
-  searchParams: { t?: string };
+  searchParams: { t?: string; d?: string };
 }) {
   const supabase = createClient();
   const {
@@ -28,7 +30,14 @@ export default async function ReadPage({
     .single();
   if (!profile) redirect("/onboarding");
 
-  const day = currentDayNumber(profile.start_date);
+  // ?d= overrides the current day so links from /me's verse-notes land
+  // on the correct chapter regardless of where the reader is today.
+  const currentDay = currentDayNumber(profile.start_date);
+  const requestedDay = Number.parseInt(searchParams.d ?? "", 10);
+  const day =
+    Number.isFinite(requestedDay) && requestedDay >= 1 && requestedDay <= 90
+      ? requestedDay
+      : currentDay;
   const reading = READING_PLAN[day - 1];
   const testament = searchParams.t === "nt" ? "nt" : "ot";
   const chapters = testament === "ot" ? reading.ot : reading.nt;
@@ -66,26 +75,20 @@ export default async function ReadPage({
           </div>
         )}
 
-        {/* Scripture. Each chapter is separated by a single step-7 gap
-            with a centered hairline at its midpoint. */}
-        <div className="mt-16">
-          {chapterContent.map((c, i) => (
-            <div key={c.reference}>
-              {i > 0 && (
-                <div className="my-12 flex justify-center" aria-hidden="true">
-                  <span className="block h-px w-16 bg-rog-line/70" />
-                </div>
-              )}
-              <article>
-                <p className="chapter-mark mb-4">{c.reference}</p>
-                <div
-                  className="bible-content"
-                  dangerouslySetInnerHTML={{ __html: c.content }}
-                />
-              </article>
-            </div>
-          ))}
-        </div>
+        {/* Scripture. ScriptureReader owns per-verse wrapping (via html
+            already pre-processed here), highlight painting, the custom
+            selection toolbar, and the notes sheet. */}
+        <ScriptureReader
+          userId={user.id}
+          dayNumber={day}
+          testament={testament}
+          chapters={chapterContent.map((c, i) => ({
+            book: chapters[i].book,
+            chapter: chapters[i].chapter,
+            reference: c.reference,
+            html: wrapVersesInHtml(c.content)
+          }))}
+        />
 
         <div className="mt-16 flex gap-3">
           <Link href={`/read?t=${otherT}`} className="btn-secondary flex-1">

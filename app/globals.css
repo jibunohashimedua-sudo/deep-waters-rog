@@ -51,6 +51,13 @@
   /* Ambient strength — dimmed on reading surfaces via [data-surface="reading"] */
   --orb-opacity: 1;
 
+  /* Scripture highlight colours. Low-opacity paint so words stay readable. */
+  --hl-amber:    rgba(240, 195, 106, 0.36);
+  --hl-mint:     rgba(143, 211, 179, 0.34);
+  --hl-sky:      rgba(143, 187, 230, 0.34);
+  --hl-rose:     rgba(242, 166, 182, 0.34);
+  --hl-lavender: rgba(193, 175, 232, 0.36);
+
   /* =========================================================
      SPACING SCALE — 7 named steps, each with a job.
      Every gap in the app is one of these. Tailwind classes map
@@ -109,6 +116,13 @@
   --success: #6EE7A8;
   --success-soft: rgba(110, 231, 168, 0.16);
   --warning: #E3B341;
+
+  /* Highlights: warmer opacity in dark so the swatch reads on the dark ground. */
+  --hl-amber:    rgba(240, 195, 106, 0.28);
+  --hl-mint:     rgba(143, 211, 179, 0.26);
+  --hl-sky:      rgba(143, 187, 230, 0.26);
+  --hl-rose:     rgba(242, 166, 182, 0.26);
+  --hl-lavender: rgba(193, 175, 232, 0.28);
 
   color-scheme: dark;
 }
@@ -467,6 +481,48 @@ body:has([data-surface="reading"]) {
   margin-right: 0.18em;
   letter-spacing: 0;
   font-variant-numeric: oldstyle-nums;
+}
+
+/* Per-verse wrappers, injected server-side by lib/verseParse.ts.
+   Selectable, no iOS callout on long-press (the callout kicks in a
+   custom toolbar instead — see components/ChapterReader.tsx). */
+.dw-verse {
+  -webkit-touch-callout: none;
+  -webkit-user-select: text;
+  user-select: text;
+  border-radius: 3px;
+  transition: background-color 0.15s ease;
+  padding: 0 1px;
+  margin: 0 -1px;
+}
+
+/* When a verse carries a highlight, --hl is set to a highlight token
+   from :root and painted here. Multiple overlapping highlights merge
+   by taking the most recent one applied (see ChapterReader). */
+.dw-verse[data-hl] {
+  background-color: var(--hl);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* A verse the current selection sits inside gets a tiny inset ring —
+   quiet, so the selection colour still dominates. */
+.dw-verse[data-selecting="true"] {
+  box-shadow: inset 0 0 0 1px var(--accent-soft);
+}
+
+/* Verses that already carry a note get a small dot marker after them. */
+.dw-verse[data-note="true"]::after {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background-color: var(--accent);
+  opacity: 0.55;
+  margin-left: 4px;
+  vertical-align: super;
+  font-size: 0.6em;
 }
 
 /* =========================================================
