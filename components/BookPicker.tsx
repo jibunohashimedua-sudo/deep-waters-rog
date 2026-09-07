@@ -111,7 +111,7 @@ export default function BookPicker() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={onKeyDown}
           placeholder="Book or reference — try “jn 3:16”"
-          className="w-full min-h-[48px] rounded-full px-5 text-base bg-white/80 dark:bg-white/10 border border-rog-line focus:border-rog-purple focus:outline-none text-rog-ink placeholder:text-rog-muted"
+          className="w-full min-h-[48px] px-5 text-base bg-white/80 dark:bg-white/10 border border-rog-line focus:border-rog-purple focus:outline-none text-rog-ink placeholder:text-rog-muted"
         />
 
         {/* Tabs live inside the pinned bar so switching testament doesn't

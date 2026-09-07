@@ -13,7 +13,7 @@ export default function BookLoading() {
         <div className="skeleton mt-2 h-4 w-36" />
         <div className="mt-10 grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
           {Array.from({ length: 30 }, (_, i) => (
-            <div key={i} className="skeleton h-[44px] w-full" style={{ borderRadius: 14 }} />
+            <div key={i} className="skeleton h-[44px] w-full" />
           ))}
         </div>
       </main>
