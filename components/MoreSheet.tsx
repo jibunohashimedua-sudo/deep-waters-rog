@@ -59,7 +59,7 @@ export default function MoreSheet({ open, onClose, isAdmin }: Props) {
   }
 
   const link =
-    "flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium text-rog-ink hover:bg-black/5 dark:hover:bg-white/10 transition";
+    "flex items-center gap-3 px-4 py-3  text-sm font-medium text-rog-ink hover:bg-black/5 dark:hover:bg-white/10 transition";
   const label = "px-4 pt-4 pb-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-rog-muted";
 
   return (
@@ -92,6 +92,14 @@ export default function MoreSheet({ open, onClose, isAdmin }: Props) {
         </div>
 
         <div className="px-2 pb-2">
+          {/* Prayer lost its own tab when Bible took a slot. It lives inside
+              the Community tab now, but it stays one tap from here so nobody
+              has to learn a new route to reach it. */}
+          <p className={label}>Together</p>
+          <Link href="/prayer" onClick={onClose} className={link}>
+            <span aria-hidden>🙏</span> Prayer wall
+          </Link>
+
           <p className={label}>Groups</p>
           <Link href="/cohorts" onClick={onClose} className={link}>
             <span aria-hidden>👥</span> Cohorts

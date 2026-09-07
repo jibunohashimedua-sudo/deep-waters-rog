@@ -103,7 +103,7 @@ export default async function AdminReportsPage() {
       <Nav />
       <main className="max-w-4xl mx-auto px-6 py-10">
         <p className="kicker">Admin</p>
-        <h1 className="mt-3 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight">Reports</h1>
+        <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Reports</h1>
 
         {reportsError && (
           <p className="mt-6 text-sm text-danger">
@@ -128,7 +128,7 @@ export default async function AdminReportsPage() {
                     {new Date(r.created_at).toLocaleDateString("en-GB")}
                   </p>
                 </div>
-                <p className="selectable mt-2 text-sm whitespace-pre-wrap break-words surface-soft !p-3 !rounded-xl">
+                <p className="selectable mt-2 text-sm whitespace-pre-wrap break-words surface-soft !p-3">
                   {r.content}
                 </p>
                 <p className="mt-2 text-xs text-rog-muted">

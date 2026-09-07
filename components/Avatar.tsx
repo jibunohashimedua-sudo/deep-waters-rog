@@ -43,14 +43,16 @@ export default function Avatar({
         width={px}
         height={px}
         // Intrinsic size matches the rendered box, so nothing reflows on load.
-        className={`rounded-full object-cover shrink-0 ${box} ${className}`}
+        // Square. Nothing in this app is round except the things you
+        // press, and a person is not a button.
+        className={`object-cover shrink-0 ${box} ${className}`}
       />
     );
   }
 
   return (
     <div
-      className={`rounded-full bg-rog-peach flex items-center justify-center font-bold text-rog-purple shrink-0 ${box} ${text} ${className}`}
+      className={`bg-rog-peach border border-rog-line flex items-center justify-center font-semibold text-rog-muted shrink-0 ${box} ${text} ${className}`}
       aria-hidden={decorative || undefined}
       title={decorative ? undefined : name}
     >

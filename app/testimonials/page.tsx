@@ -31,7 +31,7 @@ export default function TestimonialPage() {
       <Nav />
       <main className="max-w-lg mx-auto px-6 py-10">
         <p className="kicker">Your story</p>
-        <h1 className="mt-3 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight">Share a testimony</h1>
+        <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Share a testimony</h1>
         <p className="mt-2 text-sm text-rog-muted">
           What did God do in you through Deep Waters? Your story will be reviewed before it goes public.
         </p>
@@ -50,7 +50,7 @@ export default function TestimonialPage() {
               rows={8}
               maxLength={1500}
               placeholder="Write freely..."
-              className="w-full rounded-2xl border border-rog-line bg-white px-6 py-4 focus:border-rog-purple focus:outline-none leading-relaxed"
+              className="w-full border border-rog-line bg-white px-6 py-4 focus:border-rog-purple focus:outline-none leading-relaxed"
             />
             <p className="text-xs text-rog-muted text-right">{body.length}/1500</p>
             <button type="submit" disabled={saving || !body.trim()} className="btn-primary w-full disabled:opacity-50">

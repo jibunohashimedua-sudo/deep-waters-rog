@@ -104,7 +104,7 @@ export default async function CohortLandingPage({
           <div className="card text-center">
             <p className="text-rog-purple font-semibold">You&rsquo;re in this cohort.</p>
             {cohort.welcome_message && (
-              <div className="mt-4 p-4 bg-rog-cream rounded-2xl text-left">
+              <div className="mt-4 p-4 bg-rog-cream text-left">
                 <p className="kicker">Welcome</p>
                 <p className="selectable mt-1 text-sm whitespace-pre-wrap">{cohort.welcome_message}</p>
               </div>

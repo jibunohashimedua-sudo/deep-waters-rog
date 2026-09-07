@@ -98,13 +98,12 @@ export default function VerseToolbar({
     <div ref={ref} style={containerStyle} role="dialog" aria-label="Verse actions">
       <div
         style={{
+          // Opaque, hairline, flat. A toolbar that floats over scripture
+          // has to be readable more than it has to look like glass — the
+          // blur was compositing the words underneath it on every frame.
           background: "var(--card-bg)",
-          border: "1px solid var(--card-border)",
+          border: "1px solid var(--line)",
           borderRadius: 999,
-          boxShadow:
-            "0 10px 40px -12px var(--card-shadow), inset 0 1px 0 var(--card-highlight)",
-          backdropFilter: "blur(24px) saturate(180%)",
-          WebkitBackdropFilter: "blur(24px) saturate(180%)",
           padding: 4,
           display: "flex",
           alignItems: "center",
@@ -127,7 +126,7 @@ export default function VerseToolbar({
                     borderRadius: 999,
                     background: currentColour
                       ? HIGHLIGHT_SWATCH[currentColour]
-                      : "conic-gradient(#F0C36A, #8FD3B3, #8FBBE6, #F2A6B6, #C1AFE8, #F0C36A)"
+                      : "conic-gradient(#D6A84A, #067A5A, #487EC8, #C66080, #3B23B8, #D6A84A)"
                   }}
                 />
               }

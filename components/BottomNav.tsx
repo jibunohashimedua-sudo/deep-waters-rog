@@ -11,7 +11,7 @@ type Tab = {
   icon: JSX.Element;
 };
 
-const iconClass = "w-6 h-6";
+const iconClass = "w-[19px] h-[19px]";
 
 const tabs: Tab[] = [
   {
@@ -26,9 +26,26 @@ const tabs: Tab[] = [
     )
   },
   {
+    href: "/bible",
+    label: "Bible",
+    match: (p) => p === "/bible" || p.startsWith("/bible/"),
+    icon: (
+      <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H19v15.5H5.5A1.5 1.5 0 0 0 4 20V4.5Z" />
+        <path d="M11.5 7.5v6M9 10h5" />
+      </svg>
+    )
+  },
+  {
     href: "/community",
-    label: "Community",
-    match: (p) => p === "/community" || p.startsWith("/community/") || p.startsWith("/c/"),
+    label: "People",
+    match: (p) =>
+      p === "/community" ||
+      p.startsWith("/community/") ||
+      p.startsWith("/c/") ||
+      // /prayer redirects into the Community tab, so it lights up here.
+      p === "/prayer" ||
+      p.startsWith("/prayer/"),
     icon: (
       <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
         <circle cx="9" cy="9" r="3" />
@@ -39,18 +56,8 @@ const tabs: Tab[] = [
     )
   },
   {
-    href: "/prayer",
-    label: "Prayer",
-    match: (p) => p === "/prayer" || p.startsWith("/prayer/"),
-    icon: (
-      <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        <path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10Z" />
-      </svg>
-    )
-  },
-  {
     href: "/me",
-    label: "Progress",
+    label: "Depth",
     match: (p) =>
       p === "/me" ||
       p.startsWith("/me/") ||
@@ -85,9 +92,14 @@ export default function BottomNav({ isAdmin, hasUser }: Props) {
   const pathname = usePathname();
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  // Don't render on public/auth pages
+  // Don't render on public/auth pages — or while someone is reading.
+  // The reading screen is the one place in the app with a single job, and
+  // a permanent bar across the foot of a page of scripture is five ways
+  // to leave it. Getting out is the back arrow, which is where you came in.
   const hidden =
     !hasUser ||
+    pathname === "/read" ||
+    pathname.startsWith("/read/") ||
     pathname === "/" ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/signup") ||
@@ -103,48 +115,49 @@ export default function BottomNav({ isAdmin, hasUser }: Props) {
     pathname.startsWith("/cohorts") ||
     pathname.startsWith("/admin");
 
+  // No pill, no floating capsule, no frosted glass. The bar is ground: it
+  // sits on the bottom edge with one hairline along its top, and the tab
+  // you're on is marked by a 2px sonar rule on that edge (.tab-item in
+  // globals.css) — the only place that colour appears in the shell.
   const itemBase =
-    "flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-[22px] transition-colors duration-[250ms] ease-out";
-  const activePill = "text-rog-purple";
-  const inactivePill = "text-rog-muted";
-  const activeBg = { backgroundColor: "rgba(106, 69, 199, 0.28)" };
+    "tab-item flex w-full flex-col items-center justify-center gap-[5px] pt-[9px] pb-[13px]";
 
   return (
     <>
       <nav
         id="bottom-nav"
         aria-label="Primary"
-        className="md:hidden bottom-glass fixed left-3 right-3 z-40 rounded-[28px]"
-        style={{ bottom: "calc(env(safe-area-inset-bottom) + 10px)" }}
+        className="md:hidden bottom-glass fixed inset-x-0 bottom-0 z-40"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <ul className="flex items-stretch justify-around px-1.5 py-1.5">
+        <ul className="grid grid-cols-5">
           {tabs.map((t) => {
             const active = t.match(pathname);
             return (
-              <li key={t.href} className="flex-1">
+              <li key={t.href}>
                 <Link
                   href={t.href}
                   aria-current={active ? "page" : undefined}
-                  className={`${itemBase} ${active ? activePill : inactivePill}`}
-                  style={active ? activeBg : undefined}
+                  data-active={active ? "true" : undefined}
+                  className={itemBase}
                 >
                   <span>{t.icon}</span>
-                  <span className="text-[10px] font-medium">{t.label}</span>
+                  <span className="tab-label">{t.label}</span>
                 </Link>
               </li>
             );
           })}
-          <li className="flex-1">
+          <li>
             <button
               type="button"
               onClick={() => setSheetOpen(true)}
               aria-haspopup="dialog"
               aria-expanded={sheetOpen}
-              className={`w-full ${itemBase} ${moreActive ? activePill : inactivePill}`}
-              style={moreActive ? activeBg : undefined}
+              data-active={moreActive ? "true" : undefined}
+              className={itemBase}
             >
               <span>{moreIcon}</span>
-              <span className="text-[10px] font-medium">More</span>
+              <span className="tab-label">More</span>
             </button>
           </li>
         </ul>

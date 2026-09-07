@@ -1,4 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -10,53 +9,67 @@
    ========================================================= */
 
 :root {
-  --bg: #F7F1EA;
-  --text: #0F0F0F;
-  --muted: #6B6459;
-  --line: #E7DFD3;
+  --bg: #EDEFF2;        /* cold paper */
+  --text: #0C0F16;      /* ink        · 16.6:1 */
+  --muted: #565E6D;     /* ink, quiet ·  5.7:1 */
+  --line: #CFD4DC;      /* every rule in the app */
 
-  --card-bg: rgba(255, 255, 255, 0.62);
-  --card-border: rgba(255, 255, 255, 0.7);
-  --card-highlight: rgba(255, 255, 255, 0.9);
-  --card-shadow: rgba(59, 30, 110, 0.07);
+  /* There is no elevation in this system. What used to be a glass card
+     is now a recessed plate with a hairline round it: no blur, no
+     shadow, no inset highlight. The token names are kept so the 40-odd
+     .card call sites re-skin without being edited. */
+  --card-bg: #E7EAEE;
+  --card-border: #CFD4DC;
+  --card-highlight: transparent;
+  --card-shadow: transparent;
 
-  --nav-bg: rgba(247, 241, 234, 0.72);
-  --nav-border: rgba(255, 255, 255, 0.6);
+  --nav-bg: #EDEFF2;    /* opaque. Nothing is frosted anywhere. */
+  --nav-border: #CFD4DC;
 
-  --input-bg: rgba(255, 255, 255, 0.55);
-  --input-bg-focus: rgba(255, 255, 255, 0.9);
-  --input-border: #E7DFD3;
+  /* A field has to read as a field on the page ground *and* inside a
+     recessed panel, so it sits one step below the recess rather than
+     matching it. */
+  --input-bg: #DFE3E9;
+  --input-bg-focus: #E9ECF0;
+  --input-border: #CFD4DC;
 
-  --chip-bg: rgba(255, 255, 255, 0.55);
-  --chip-border: rgba(255, 255, 255, 0.7);
+  --chip-bg: transparent;
+  --chip-border: #CFD4DC;
 
-  /* Elevation 1 — soft plate. Sits flat on the page, no shadow, no blur. */
-  --soft-bg: rgba(255, 253, 249, 0.55);
-  --soft-border: rgba(15, 15, 15, 0.07);
+  /* Recess — one step below the page ground. Groups without lifting. */
+  --soft-bg: #E6E9EE;
+  --soft-border: #CFD4DC;
 
-  --accent: #3B1E6E;    /* deep purple */
-  --accent-strong: #2E4FD1;
-  --accent-soft: rgba(59, 30, 110, 0.08);
-  --pink: #E85D9E;
+  --accent: #3B23B8;    /* violet · 8.6:1 on ground */
+  --accent-strong: #2A1B8C;
+  --accent-soft: rgba(59, 35, 184, 0.09);
+  /* --pink is retired. The name survives because a dozen call sites still
+     ask for it; it resolves to the one accent now. */
+  --pink: #3B23B8;
+
+  /* Sonar. The second colour, and the entire budget for it: position and
+     state. The active tab, today's mark, a selected verse. If it is
+     decorating something, it is in the wrong place. */
+  --sonar: #067A5A;
+  --sonar-soft: rgba(6, 122, 90, 0.10);
+  --on-accent: #FFFFFF;
 
   /* Semantic states. Without these every error line and every "approved"
      label was a bare Tailwind red-600/green-700 that stayed dark on the
      dark ground. */
   --danger: #C2321F;
-  --danger-soft: rgba(194, 50, 31, 0.12);
-  --success: #15803D;
-  --success-soft: rgba(21, 128, 61, 0.12);
-  --warning: #A16207;
+  --danger-soft: rgba(194, 50, 31, 0.10);
+  --success: #067A5A;
+  --success-soft: rgba(6, 122, 90, 0.10);
+  --warning: #8A6100;
 
-  /* Ambient strength — dimmed on reading surfaces via [data-surface="reading"] */
-  --orb-opacity: 1;
-
-  /* Scripture highlight colours. Low-opacity paint so words stay readable. */
-  --hl-amber:    rgba(240, 195, 106, 0.36);
-  --hl-mint:     rgba(143, 211, 179, 0.34);
-  --hl-sky:      rgba(143, 187, 230, 0.34);
-  --hl-rose:     rgba(242, 166, 182, 0.34);
-  --hl-lavender: rgba(193, 175, 232, 0.36);
+  /* Scripture highlight colours — cooled onto the new ground. Still
+     low-opacity paint, so the words stay the darkest thing on the page. */
+  --hl-amber:    rgba(214, 168, 74, 0.30);
+  --hl-mint:     rgba(6, 122, 90, 0.16);
+  --hl-sky:      rgba(72, 126, 200, 0.20);
+  --hl-rose:     rgba(198, 96, 128, 0.20);
+  --hl-lavender: rgba(59, 35, 184, 0.16);
 
   /* =========================================================
      SPACING SCALE — 7 named steps, each with a job.
@@ -83,46 +96,52 @@
 }
 
 [data-theme="dark"] {
-  --bg: #0B0716;
-  --text: #F3EDE4;
-  --muted: #A9A0BB;
-  --line: rgba(255, 255, 255, 0.08);
+  /* The purple lives in the ground here, not in a button. That single
+     decision is why this dark mode doesn't look like every other one. */
+  --bg: #0C0A18;
+  --text: #E9E6F2;      /* 15.9:1 */
+  --muted: #8B87A3;     /*  5.7:1 */
+  --line: #262239;
 
-  --card-bg: rgba(255, 255, 255, 0.055);
-  --card-border: rgba(255, 255, 255, 0.11);
-  --card-highlight: rgba(255, 255, 255, 0.1);
-  --card-shadow: rgba(0, 0, 0, 0.45);
+  --card-bg: #15122A;
+  --card-border: #262239;
+  --card-highlight: transparent;
+  --card-shadow: transparent;
 
-  --nav-bg: rgba(11, 7, 22, 0.72);
-  --nav-border: rgba(255, 255, 255, 0.08);
+  --nav-bg: #0C0A18;
+  --nav-border: #262239;
 
-  --input-bg: rgba(255, 255, 255, 0.06);
-  --input-bg-focus: rgba(255, 255, 255, 0.12);
-  --input-border: rgba(255, 255, 255, 0.14);
+  --input-bg: #100D20;
+  --input-bg-focus: #1B1733;
+  --input-border: #302A47;
 
-  --chip-bg: rgba(255, 255, 255, 0.08);
-  --chip-border: rgba(255, 255, 255, 0.14);
+  --chip-bg: transparent;
+  --chip-border: #302A47;
 
-  --soft-bg: rgba(255, 255, 255, 0.035);
-  --soft-border: rgba(255, 255, 255, 0.09);
+  --soft-bg: #15122A;
+  --soft-border: #262239;
 
-  --accent: #B79FE8;
-  --accent-strong: #8AA5FF;
-  --accent-soft: rgba(183, 159, 232, 0.14);
-  --pink: #FF7EB6;
+  --accent: #A78BFF;    /* 7.3:1 */
+  --accent-strong: #C0AAFF;
+  --accent-soft: rgba(167, 139, 255, 0.14);
+  --pink: #A78BFF;
+
+  --sonar: #46E0A8;     /* 11.7:1 */
+  --sonar-soft: rgba(70, 224, 168, 0.14);
+  --on-accent: #0C0A18;
 
   --danger: #FF8A7A;
-  --danger-soft: rgba(255, 138, 122, 0.16);
-  --success: #6EE7A8;
-  --success-soft: rgba(110, 231, 168, 0.16);
+  --danger-soft: rgba(255, 138, 122, 0.14);
+  --success: #46E0A8;
+  --success-soft: rgba(70, 224, 168, 0.14);
   --warning: #E3B341;
 
-  /* Highlights: warmer opacity in dark so the swatch reads on the dark ground. */
-  --hl-amber:    rgba(240, 195, 106, 0.28);
-  --hl-mint:     rgba(143, 211, 179, 0.26);
-  --hl-sky:      rgba(143, 187, 230, 0.26);
-  --hl-rose:     rgba(242, 166, 182, 0.26);
-  --hl-lavender: rgba(193, 175, 232, 0.28);
+  /* Highlights: lower alpha on the dark ground, or they glow. */
+  --hl-amber:    rgba(240, 195, 106, 0.22);
+  --hl-mint:     rgba(70, 224, 168, 0.20);
+  --hl-sky:      rgba(143, 187, 230, 0.20);
+  --hl-rose:     rgba(242, 166, 182, 0.20);
+  --hl-lavender: rgba(167, 139, 255, 0.22);
 
   color-scheme: dark;
 }
@@ -130,7 +149,7 @@
 html, body {
   background-color: var(--bg);
   color: var(--text);
-  font-family: "Poppins", system-ui, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.4s ease, color 0.3s ease;
   max-width: 100vw;
@@ -195,80 +214,77 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Reserve room at the bottom on mobile whenever the bottom tab bar is
-   present. The bar is fixed and floats, so content still scrolls behind
-   and beside it — this padding just keeps the final item reachable. */
+/* Reserve room at the bottom on mobile for the floating tab bar.
+   The bar is fixed, so content scrolls behind it — this padding keeps
+   the last card reachable rather than trapped underneath.
+
+   This used to read `body:has(#bottom-nav) main`, which failed twice
+   over. BottomNav renders nothing until a client-side getUser() comes
+   back, so the server HTML has no #bottom-nav and the padding was 40px
+   on first paint, jumping to 96px a moment later — a visible shift, and
+   a permanent one in any browser without live :has() re-evaluation.
+   And 96px was a guess: measured, the bar is 68px tall and floats 10px
+   up, so 96px left only 19px of clearance before the last card slid
+   under the glass.
+
+   Reserving the room unconditionally costs nothing on pages that scroll
+   anyway, and every measurement is now derived from the bar itself. */
+:root {
+  --bottom-nav-h: 60px;   /* measured: 19px icon + 11px label + padding */
+  --bottom-nav-gap: 0px;  /* it doesn't float any more — it is the edge */
+  --bottom-nav-clearance: calc(
+    env(safe-area-inset-bottom) + var(--bottom-nav-h) + var(--bottom-nav-gap) + var(--sp-4)
+  );
+}
+
 @media (max-width: 767px) {
-  body:has(#bottom-nav) main {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 96px);
+  main {
+    padding-bottom: var(--bottom-nav-clearance);
+  }
+  /* Public and auth pages centre a single card and never show the bar,
+     so they opt out rather than being pushed off-centre. */
+  main.main-plain {
+    padding-bottom: var(--sp-5);
   }
 }
 
-/* Ambient blurred colour orbs, tinted for each theme. Strength is controlled
-   by --orb-opacity, which reading surfaces dim via [data-surface="reading"]. */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -2;
-  pointer-events: none;
-  opacity: var(--orb-opacity);
-  transition: opacity 0.5s ease;
-}
-
-body:has([data-surface="reading"]) {
-  --orb-opacity: 0.25;
-}
-
-:root body::before {
-  background:
-    radial-gradient(600px 400px at 12% 8%, rgba(232, 93, 158, 0.20), transparent 60%),
-    radial-gradient(700px 500px at 88% 18%, rgba(46, 79, 209, 0.14), transparent 60%),
-    radial-gradient(500px 400px at 50% 95%, rgba(59, 30, 110, 0.12), transparent 60%),
-    radial-gradient(400px 300px at 92% 88%, rgba(240, 213, 196, 0.5), transparent 60%);
-}
-
-[data-theme="dark"] body::before {
-  background:
-    radial-gradient(700px 500px at 12% 8%, rgba(232, 93, 158, 0.22), transparent 60%),
-    radial-gradient(800px 600px at 88% 18%, rgba(46, 79, 209, 0.28), transparent 60%),
-    radial-gradient(600px 500px at 50% 95%, rgba(183, 159, 232, 0.18), transparent 60%),
-    radial-gradient(500px 400px at 92% 88%, rgba(255, 126, 182, 0.15), transparent 60%);
-}
+/* The ambient gradient orbs are gone. They were atmosphere applied
+   evenly to every screen — weather, not structure. The ground is a flat
+   colour now and the hairlines do the separating.
+   [data-surface="reading"] is still set by the reader; it no longer dims
+   an overlay, it hides the tab bar entirely (see BottomNav).
+   ========================================================= */
 
 /* =========================================================
    BUTTONS
    ========================================================= */
 
+/* Pills are the one curved shape in the system and they mean exactly one
+   thing: press me. Buttons, chips, the verse toolbar. Nothing else in the
+   app is round, so the shape itself is the affordance. */
 .btn {
-  @apply inline-flex items-center justify-center rounded-full font-medium transition-all;
+  @apply inline-flex items-center justify-center rounded-full font-medium;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  font-size: 14px;
+  letter-spacing: -0.005em;
 }
 
 .btn-primary {
-  @apply btn text-white px-6 py-3;
-  background-color: #3B1E6E;
-  box-shadow: 0 6px 20px -12px rgba(59, 30, 110, 0.4);
+  @apply btn px-6 py-3;
+  background-color: var(--accent);
+  color: var(--on-accent);
+  border: 1px solid var(--accent);
 }
-/* Hover shifts to a lighter purple. Same hue family so the accent
-   stays one colour; the shift signals interactivity. */
-.btn-primary:hover { background-color: #4A2A85; }
-
-[data-theme="dark"] .btn-primary {
-  background-color: #6A45C7;
-  box-shadow: 0 6px 20px -10px rgba(138, 90, 255, 0.45);
-}
-[data-theme="dark"] .btn-primary:hover { background-color: #8560D8; }
+.btn-primary:hover { background-color: var(--accent-strong); border-color: var(--accent-strong); }
 
 .btn-secondary {
   @apply btn px-6 py-3;
   color: var(--text);
-  background: var(--chip-bg);
-  backdrop-filter: blur(12px) saturate(180%);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
-  border: 1px solid var(--chip-border);
+  background: transparent;
+  border: 1px solid var(--line);
 }
 .btn-secondary:hover {
-  background: var(--input-bg-focus);
+  background: var(--soft-bg);
   border-color: var(--accent);
 }
 
@@ -281,23 +297,30 @@ body:has([data-surface="reading"]) {
    ========================================================= */
 
 .card {
-  @apply rounded-3xl p-6;
+  @apply p-6;
   background: var(--card-bg);
-  backdrop-filter: blur(28px) saturate(200%);
-  -webkit-backdrop-filter: blur(28px) saturate(200%);
   border: 1px solid var(--card-border);
-  box-shadow:
-    0 8px 32px var(--card-shadow),
-    inset 0 1px 0 var(--card-highlight),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  border-radius: 0;
 }
+
+/* A stack of things people wrote — the feed, comments, a prayer list — is
+   not a stack of objects. It is one list, separated by hairlines. Put
+   .card-list on the wrapper and the cards inside stop being cards. */
+.card-list > .card {
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line);
+  padding: 20px 0;
+}
+.card-list > .card:first-child { border-top: 0; }
 
 /* Elevation 1 — a warm plate lying flat on the page.
    For grouping content without lifting it. No shadow, no blur. */
 .surface-soft {
-  @apply rounded-3xl p-6;
+  @apply p-6;
   background: var(--soft-bg);
   border: 1px solid var(--soft-border);
+  border-radius: 0;
   transition: border-color 0.15s ease;
 }
 
@@ -327,7 +350,7 @@ body:has([data-surface="reading"]) {
   line-height: 0;
 }
 .empty-state .empty-body {
-  font-family: "Source Serif 4", Georgia, serif;
+  font-family: var(--font-serif), Georgia, serif;
   font-size: 17px;
   line-height: 1.5;
   color: var(--text);
@@ -350,12 +373,13 @@ body:has([data-surface="reading"]) {
   gap: 8px;
   padding: 6px 12px 6px 10px;
   border-radius: 999px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-family: "Poppins", system-ui, sans-serif;
-  font-size: 11.5px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
+  background: var(--sonar-soft);
+  color: var(--sonar);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
 }
 
 /* Mat for the completion share-card. A small piece of off-white
@@ -363,62 +387,43 @@ body:has([data-surface="reading"]) {
    keepsake, not a file. */
 .reveal-mat {
   padding: 14px;
-  border-radius: 18px;
-  background: color-mix(in oklab, var(--bg) 65%, #ffffff 35%);
+  border-radius: 0;
+  background: var(--soft-bg);
   border: 1px solid var(--soft-border);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 [data-theme="dark"] .reveal-mat {
-  background: rgba(255, 255, 255, 0.03);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  background: var(--soft-bg);
 }
 
+/* The .glass-* names are kept so existing call sites don't need touching,
+   but there is no glass left in the app. Every one of these is now an
+   opaque surface with a hairline. Blur was costing a repaint of the whole
+   page behind the bar on every scroll frame, and it made scripture swim
+   underneath the tab bar while you read. */
 .glass-dark {
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
 }
 
 .glass-nav {
   background: var(--nav-bg);
-  backdrop-filter: blur(28px) saturate(200%);
-  -webkit-backdrop-filter: blur(28px) saturate(200%);
   border-bottom: 1px solid var(--nav-border);
 }
 
-/* Floating frosted pill used by the mobile bottom nav and the More sheet.
-   The inset highlight on the top edge is what gives it the thin bright rim
-   real glass has; the outer shadow lifts it off the page. */
+/* The tab bar. Not floating, not frosted: it sits on the bottom edge of
+   the screen as ground, with a single hairline along its top. */
 .bottom-glass {
   background: var(--nav-bg);
-  backdrop-filter: blur(28px) saturate(200%);
-  -webkit-backdrop-filter: blur(28px) saturate(200%);
-  border: 1px solid var(--nav-border);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  border-top: 1px solid var(--nav-border);
 }
 
-/* Dimmed, softly-blurred backdrop that sits behind the More sheet. */
+/* Backdrop behind the More sheet. Dim, not blurred. */
 .sheet-backdrop {
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-/* Fallback: if the browser can't do backdrop-filter, keep the surface
-   readable by using the page background solid. */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .bottom-glass { background: var(--bg); }
-  .sheet-backdrop { background: rgba(0, 0, 0, 0.65); }
+  background: rgba(6, 5, 12, 0.55);
 }
 
 .glass-chip {
-  background: var(--chip-bg);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  background: transparent;
   border: 1px solid var(--chip-border);
   color: var(--text);
 }
@@ -427,38 +432,52 @@ body:has([data-surface="reading"]) {
    TYPOGRAPHY & UTILITIES
    ========================================================= */
 
-/* Kickers orient — they don't shout. Same treatment as .chapter-mark,
-   which we collapse into this. Muted colour so the accent stays reserved
-   for the emphasised element per screen. */
+/* Data is monospaced; prose is not. That split does the hierarchy work
+   the old uppercase kickers were doing, which is why a .kicker is now
+   simply a line of metadata — a reference, a count, a timestamp — rather
+   than a label announcing the heading underneath it.
+
+   The rule for adding one: if it names a number or a state, it is a
+   kicker. If it names the thing below it, delete it and let the heading
+   be the heading. */
 .kicker {
-  @apply text-xs font-medium tracking-[0.2em] uppercase;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
   color: var(--muted);
 }
+.kicker-strong { color: var(--text); }
 
 /* =========================================================
    SCRIPTURE READING
    The passage sits on the page ground itself, not in a card.
-   Source Serif 4 at 18/19 px, ~62 ch measure, quiet verse markers.
+   Literata at 18/19 px on 1.74, a 34rem measure, monospaced verse
+   markers. Literata was drawn for long reading on screens.
    Every choice here is about getting out of the way of the words.
    ========================================================= */
 
 .chapter-mark {
-  font-family: "Poppins", system-ui, sans-serif;
-  font-weight: 500;
-  font-size: 11px;
-  line-height: 1;
-  letter-spacing: 0.24em;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-weight: 400;
+  font-size: 10px;
+  line-height: 1.4;
+  letter-spacing: 0.13em;
   text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
   color: var(--muted);
 }
 
 .bible-content {
-  font-family: "Source Serif 4", "Iowan Old Style", "Charter", Georgia, serif;
+  font-family: var(--font-serif), "Iowan Old Style", "Charter", Georgia, serif;
   font-weight: 400;
   font-size: 18px;
-  line-height: 1.65;
+  line-height: 1.74;
   color: var(--text);
-  max-width: 38rem;
+  max-width: 34rem;
   font-variant-numeric: oldstyle-nums;
   font-feature-settings: "kern", "liga", "onum";
   text-rendering: optimizeLegibility;
@@ -472,15 +491,17 @@ body:has([data-surface="reading"]) {
 .bible-content p:last-child {
   margin-bottom: 0;
 }
+/* Verse numbers are data, so they are set as data: monospaced, tabular,
+   quiet. Raised slightly, never interrupting the serif line. */
 .bible-content .v {
-  font-family: "Source Serif 4", serif;
+  font-family: var(--font-mono), ui-monospace, monospace;
   font-weight: 400;
-  font-size: 0.72em;
-  vertical-align: super;
+  font-size: 0.56em;
+  vertical-align: 0.42em;
   color: var(--muted);
-  margin-right: 0.18em;
-  letter-spacing: 0;
-  font-variant-numeric: oldstyle-nums;
+  margin-right: 0.3em;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Per-verse wrappers, injected server-side by lib/verseParse.ts.
@@ -507,8 +528,10 @@ body:has([data-surface="reading"]) {
 
 /* A verse the current selection sits inside gets a tiny inset ring —
    quiet, so the selection colour still dominates. */
+/* Sonar marks position — including the position of your own thumb. */
 .dw-verse[data-selecting="true"] {
-  box-shadow: inset 0 0 0 1px var(--accent-soft);
+  background-color: var(--sonar-soft);
+  box-shadow: inset 2px 0 0 var(--sonar);
 }
 
 /* Verses that already carry a note get a small dot marker after them. */
@@ -518,8 +541,8 @@ body:has([data-surface="reading"]) {
   width: 6px;
   height: 6px;
   border-radius: 999px;
-  background-color: var(--accent);
-  opacity: 0.55;
+  background-color: var(--sonar);
+  opacity: 0.9;
   margin-left: 4px;
   vertical-align: super;
   font-size: 0.6em;
@@ -529,17 +552,19 @@ body:has([data-surface="reading"]) {
    FORM CONTROLS
    ========================================================= */
 
+/* Fields are recessed squares with a hairline. No blur, no glow ring —
+   the border goes to full accent on focus and that is the whole state. */
 input, textarea, select {
   background: var(--input-bg) !important;
   color: var(--text);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border-color: var(--input-border);
+  border-radius: 0;
+  font-family: var(--font-sans), system-ui, sans-serif;
 }
 input:focus, textarea:focus, select:focus {
   background: var(--input-bg-focus) !important;
   border-color: var(--accent) !important;
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent);
   outline: none;
 }
 input::placeholder, textarea::placeholder {
@@ -567,24 +592,26 @@ button:focus-visible, a:focus-visible {
 [data-theme="dark"] .text-rog-ink { color: var(--text); }
 [data-theme="dark"] .text-rog-muted { color: var(--muted); }
 [data-theme="dark"] .text-rog-purple { color: var(--accent); }
-[data-theme="dark"] .bg-white { background-color: rgba(255, 255, 255, 0.05); }
-[data-theme="dark"] .bg-rog-cream { background-color: rgba(255, 255, 255, 0.04); }
-[data-theme="dark"] .bg-rog-peach { background-color: rgba(255, 200, 175, 0.09); }
+[data-theme="dark"] .bg-white { background-color: var(--soft-bg); }
+[data-theme="dark"] .bg-rog-cream { background-color: var(--soft-bg); }
+[data-theme="dark"] .bg-rog-peach { background-color: var(--soft-bg); }
 [data-theme="dark"] .border-rog-line { border-color: var(--line); }
 [data-theme="dark"] .border-rog-pink\/40 { border-color: rgba(255, 126, 182, 0.4); }
 
 /* Deep Waters mark — purple in light mode, warm cream in dark.
    Its own class so the global .text-rog-purple override doesn't win. */
 .dw-mark { color: var(--accent); }
-[data-theme="dark"] .dw-mark { color: #F3EDE4; }
+[data-theme="dark"] .dw-mark { color: var(--text); }
 
 /* Hover surfaces used in nav */
-[data-theme="dark"] .hover\:bg-rog-cream:hover { background-color: rgba(255, 255, 255, 0.08); }
-[data-theme="dark"] .hover\:bg-rog-peach:hover { background-color: rgba(255, 200, 175, 0.12); }
+[data-theme="dark"] .hover\:bg-rog-cream:hover { background-color: var(--soft-bg); }
+[data-theme="dark"] .hover\:bg-rog-peach:hover { background-color: var(--soft-bg); }
 
-/* Nav pill active state */
+/* Nav pill active state. The dark violet is a light tint, so white text
+   on it fails; ink is the only legible foreground. */
 [data-theme="dark"] .bg-rog-purple.text-white {
-  background-color: #6A45C7;
+  background-color: var(--accent);
+  color: var(--on-accent);
 }
 
 /* =========================================================
@@ -618,7 +645,7 @@ button:focus-visible, a:focus-visible {
    ========================================================= */
 
 .skeleton {
-  border-radius: 12px;
+  border-radius: 0;
   background: linear-gradient(
     90deg,
     var(--soft-bg) 25%,
@@ -667,23 +694,28 @@ button:focus-visible, a:focus-visible {
 /* Bare .bg-rog-purple (progress-bar fill, legend swatches, active dots).
    Only `.bg-rog-purple.text-white` was patched, so these stayed near-black
    on the dark ground. The pill rule above is more specific and still wins. */
-[data-theme="dark"] .bg-rog-purple { background-color: #6A45C7; }
-[data-theme="dark"] .file\:bg-rog-purple::file-selector-button { background-color: #6A45C7; }
+[data-theme="dark"] .bg-rog-purple { background-color: var(--accent); }
+[data-theme="dark"] .file\:bg-rog-purple::file-selector-button {
+  background-color: var(--accent);
+  color: var(--on-accent);
+}
 
 /* Verse of the day. Was hand-rolled with three inline hex values, one of
    which was the dark-theme pink pinned into light mode. */
+/* Verse of the day. It was a purple gradient panel with white text — the
+   loudest object on a screen whose actual job is other people's writing.
+   Now it is a recessed plate marked with one sonar rule down its left
+   edge, and the verse itself is set in the reading serif. */
 .votd {
-  background: linear-gradient(135deg, var(--accent) 0%, #4A2A85 55%, var(--accent-strong) 100%);
-  box-shadow: 0 10px 32px -12px var(--card-shadow);
-  color: #FFFFFF;
+  background: var(--soft-bg);
+  border: 1px solid var(--soft-border);
+  border-left: 2px solid var(--sonar);
+  border-radius: 0;
+  color: var(--text);
 }
-[data-theme="dark"] .votd {
-  background: linear-gradient(135deg, #33215C 0%, #3B2A70 55%, #26356F 100%);
-  box-shadow: 0 10px 32px -12px rgba(0, 0, 0, 0.6);
-}
-.votd-kicker { color: var(--pink); }
-.votd-body   { color: rgba(255, 255, 255, 0.9); }
-.votd-meta   { color: rgba(255, 255, 255, 0.65); }
+.votd-kicker { color: var(--muted); }
+.votd-body   { color: var(--text); font-family: var(--font-serif), Georgia, serif; }
+.votd-meta   { color: var(--muted); }
 
 /* =========================================================
    FOCUS & TAP TARGETS
@@ -730,8 +762,7 @@ select:focus-visible {
 /* =========================================================
    OPENING SPLASH — "Rise From the Deep"
    Four bars rise out of the dark, smallest first, then the
-   wordmark, then the whole stage dissolves. Plays on every full
-   page load, never on internal navigation. Purely decorative:
+   wordmark, then the whole stage dissolves. Purely decorative:
    the app renders underneath from the first paint and nothing
    waits on this. Only transform and opacity are animated so it
    stays on the compositor on older phones.
@@ -766,7 +797,7 @@ select:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #0B0716;
+  background: #0C0A18;
   animation: dw-stage-out 420ms cubic-bezier(.4, 0, .2, 1) 1800ms both;
 }
 
@@ -786,7 +817,7 @@ select:focus-visible {
 .dw-bar {
   height: 16px;
   border-radius: 999px;
-  background: #F7F1EA;
+  background: #E9E6F2;
   opacity: 0;
   will-change: transform, opacity;
   animation: dw-rise-bar 820ms cubic-bezier(.16, .68, .30, 1) both;
@@ -803,14 +834,14 @@ select:focus-visible {
   animation: dw-word-rise 580ms cubic-bezier(.22, .61, .36, 1) 920ms both;
 }
 .dw-word .d {
-  font: 700 34px/1 Poppins, sans-serif;
-  letter-spacing: 3px;
-  color: #F7F1EA;
+  font: 600 32px/1 var(--font-sans), sans-serif;
+  letter-spacing: 2px;
+  color: #E9E6F2;
 }
 .dw-word .w {
-  font: 300 34px/1 Poppins, sans-serif;
-  letter-spacing: 9px;
-  color: #F7F1EA;
+  font: 400 32px/1 var(--font-sans), sans-serif;
+  letter-spacing: 8px;
+  color: #E9E6F2;
   display: block;
   margin-top: 6px;
 }
@@ -819,4 +850,205 @@ select:focus-visible {
   .dw-bar   { animation: none; opacity: 1; transform: none; }
   .dw-word  { animation: dw-fade 360ms ease-out both; }
   .dw-launch { animation: dw-stage-out 380ms ease-out 800ms both; }
+}
+
+/* =========================================================
+   BIBLE BROWSER
+   ========================================================= */
+
+/* The search box stays put while the book grid scrolls under it — it's the
+   fastest route to a book mid-service, so it shouldn't scroll away. The
+   blur and ground match the app header it sits below. */
+.bible-search-bar {
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--nav-border);
+}
+
+/* Chapter numbers. Square, 44px minimum so they're comfortably tappable on
+   a phone, and never smaller however many chapters a book has. */
+.chapter-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  width: 100%;
+  border-radius: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  background: var(--soft-bg);
+  border: 1px solid var(--soft-border);
+  transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+}
+.chapter-tile:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* "Already read on the plan" — deliberately quiet. A tint and a dot, not a
+   tick and not a colour change: it's a note to self, not a status badge. */
+.chapter-tile[data-read="true"] {
+  background: var(--accent-soft);
+  position: relative;
+}
+.chapter-tile[data-read="true"]::after {
+  content: "";
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--sonar);
+  opacity: 0.9;
+}
+
+/* The little swatch in the key line beneath the grid. */
+.chapter-tile-key {
+  min-height: 26px;
+  min-width: 26px;
+  width: 26px;
+  border-radius: 0;
+  font-size: 11px;
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   TAB BAR
+   Labels are metadata, so they are set like every other piece of
+   metadata: Plex Mono, 8.5px, tabular. The active tab is marked with a
+   2px sonar rule along its top edge — the only place in the whole shell
+   that colour appears, which is what makes it read as "you are here"
+   rather than as decoration.
+   ========================================================= */
+
+.tab-label {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 8.5px;
+  line-height: 1.3;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.tab-item {
+  position: relative;
+  color: var(--muted);
+  transition: color 0.15s ease;
+}
+.tab-item[data-active="true"] {
+  color: var(--text);
+  box-shadow: inset 0 2px 0 var(--sonar);
+}
+
+/* =========================================================
+   THE GAUGE
+   The mark is a sounding line — four bars descending in width, depth
+   read off a scale — so progress through the ninety days is drawn as a
+   ruler with ticks rather than as a filled capsule. Ten ticks, one per
+   nine days, and a single upright marking today.
+   ========================================================= */
+
+.gauge {
+  position: relative;
+  height: 15px;
+  border-bottom: 1px solid var(--line);
+  background-image: repeating-linear-gradient(
+    to right, var(--line) 0 1px, transparent 1px 11.111%
+  );
+  background-size: 100% 5px;
+  background-position: left bottom;
+  background-repeat: repeat-x;
+}
+.gauge-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: var(--accent);
+}
+.gauge-today {
+  position: absolute;
+  bottom: 0;
+  width: 2px;
+  height: 15px;
+  background: var(--accent);
+}
+.gauge-today[data-kept="true"] { background: var(--sonar); }
+
+/* =========================================================
+   READING ROWS
+   The three daily readings were three plates in a grid. They are one
+   list now: a mono index, the reference in the reading serif, and the
+   state underneath it. Hairlines top and bottom, nothing lifted.
+   ========================================================= */
+
+.read-list { border-bottom: 1px solid var(--line); }
+.read-row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 0;
+  border-top: 1px solid var(--line);
+  transition: background-color 0.12s ease;
+}
+.read-row:hover { background-color: var(--soft-bg); }
+.read-row .read-ref {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 17px;
+  line-height: 1.25;
+  color: var(--text);
+}
+.read-row .read-arrow { color: var(--muted); justify-self: end; font-size: 13px; }
+.read-row:hover .read-arrow { color: var(--accent); }
+
+/* =========================================================
+   CHIPS
+   Filters and toggles. Pills, because you press them. Selected is a
+   solid ink fill rather than a purple one: the accent is spent on the
+   thing you're reading, not on the filter you left switched on.
+   ========================================================= */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+.chip:hover { color: var(--text); border-color: var(--text); }
+.chip[data-on="true"] {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
+}
+
+/* An action under something someone wrote: amen, reply, report. Metadata
+   sized, so a row of them reads as a footer rather than as a button bar. */
+.act {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  transition: color 0.15s ease;
+}
+.act:hover { color: var(--text); }
+.act svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.7; }
+.act[data-on="true"] { color: var(--sonar); }
+
+/* A quoted verse inside someone else's reflection. Rule on the left,
+   scripture serif, no quotation marks doing the work of the rule. */
+.quoted {
+  padding-left: 12px;
+  box-shadow: inset 2px 0 0 var(--line);
 }

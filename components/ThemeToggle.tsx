@@ -56,7 +56,7 @@ export default function ThemeToggle() {
             onClick={() => setOpen(false)}
             aria-hidden
           />
-          <div className="absolute right-0 mt-2 w-40 rounded-2xl overflow-hidden glass-chip shadow-xl z-40">
+          <div className="absolute right-0 mt-2 w-40 overflow-hidden glass-chip z-40">
             {(["light", "dark", "system"] as const).map((c) => (
               <button
                 key={c}

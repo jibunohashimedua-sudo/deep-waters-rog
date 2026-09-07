@@ -48,12 +48,12 @@ function SignupPageInner() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-6 py-12">
+    <main className="main-plain min-h-screen flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-md">
         <div className="mx-auto mb-6 flex justify-center">
           <Mark size={64} />
         </div>
-        <h1 className="font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight text-center">
+        <h1 className="text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight text-center">
           Join Deep Waters
         </h1>
         <p className="mt-2 text-center text-rog-muted text-sm">
@@ -79,7 +79,7 @@ function SignupPageInner() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full rounded-full border border-rog-line px-6 py-3 focus:border-rog-purple focus:outline-none"
+              className="w-full border border-rog-line px-4 py-3 focus:border-rog-purple focus:outline-none"
             />
             <div>
               <input
@@ -90,7 +90,7 @@ function SignupPageInner() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Choose a password"
-                className="w-full rounded-full border border-rog-line px-6 py-3 focus:border-rog-purple focus:outline-none"
+                className="w-full border border-rog-line px-4 py-3 focus:border-rog-purple focus:outline-none"
               />
               <p className="mt-2 px-6 text-xs text-rog-muted">
                 At least {MIN_PASSWORD} characters.

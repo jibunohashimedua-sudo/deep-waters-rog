@@ -65,7 +65,7 @@ export default async function CohortManagePage({
           &larr; Back to {cohort.name}
         </Link>
         <p className="mt-4 kicker">Manage</p>
-        <h1 className="mt-3 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight">{cohort.name}</h1>
+        <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">{cohort.name}</h1>
 
         {/* Dashboard */}
         <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">

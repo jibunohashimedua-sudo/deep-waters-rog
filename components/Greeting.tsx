@@ -129,7 +129,9 @@ export default function Greeting({ name, day, completedToday, streak, returning 
     <div className="mb-10">
       {/* Styled like the page heading but deliberately a <p>: "Day N" below is
           the page's real h1, and two h1s would break the heading order. */}
-      <p className="font-serif text-3xl md:text-4xl font-medium text-rog-purple leading-tight">
+      {/* The one large sans line in the app. Scripture gets the serif;
+          the person being spoken to gets the interface face, at weight. */}
+      <p className="text-[27px] md:text-[32px] font-semibold tracking-[-0.025em] text-rog-ink leading-[1.14]">
         {line ? (
           `${line.greeting}, ${first}.`
         ) : (
@@ -139,7 +141,7 @@ export default function Greeting({ name, day, completedToday, streak, returning 
           </span>
         )}
       </p>
-      <p className="mt-2 text-sm text-rog-muted">
+      <p className="mt-2 text-[13.5px] text-rog-muted">
         {line ? (
           line.sub
         ) : (

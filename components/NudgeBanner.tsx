@@ -13,7 +13,7 @@ export default function NudgeBanner({ completed, day }: { completed: boolean; da
   if (!show) return null;
 
   return (
-    <div className="mb-6 rounded-2xl bg-rog-purple text-white px-5 py-4 flex items-center gap-3">
+    <div className="mb-6 bg-rog-purple text-white px-5 py-4 flex items-center gap-3">
       <span className="text-2xl">⏰</span>
       <div>
         <p className="font-semibold">Day {day} is still open</p>

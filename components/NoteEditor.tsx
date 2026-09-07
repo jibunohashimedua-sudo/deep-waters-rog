@@ -56,7 +56,7 @@ export default function NoteEditor({
           onChange={(e) => setBody(e.target.value)}
           rows={14}
           placeholder="Write the day's study note. Plain text, line breaks are kept."
-          className="w-full rounded-2xl border border-rog-line bg-white px-5 py-3 focus:border-rog-purple focus:outline-none font-sans leading-relaxed"
+          className="w-full border border-rog-line bg-white px-5 py-3 focus:border-rog-purple focus:outline-none font-sans leading-relaxed"
         />
         <p className="mt-1 text-xs text-rog-muted">{body.length} characters</p>
       </div>

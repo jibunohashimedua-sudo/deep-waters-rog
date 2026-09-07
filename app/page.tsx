@@ -14,44 +14,51 @@ export default async function LandingPage() {
   if (user) redirect("/today");
 
   return (
-    <main className="min-h-screen">
-      {/* Purple hero block */}
-      <section className="bg-rog-purple text-white relative overflow-hidden">
-        {/* subtle blurred glass orbs for depth */}
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-white/15 rounded-full blur-3xl" />
-        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
-
-        <div className="relative max-w-4xl mx-auto px-6 pt-20 pb-20 text-center">
+    <main className="main-plain min-h-screen">
+      {/* The hero is the dark ground, in both themes — the same violet-black
+          the splash rises out of. The blurred white orbs are gone: they were
+          depth painted on rather than built, on the one page where the whole
+          idea is depth. */}
+      <section style={{ background: "#0C0A18", color: "#E9E6F2" }}>
+        <div className="max-w-4xl mx-auto px-6 pt-20 pb-20 text-center">
           <div className="mb-8 flex justify-center">
-            <Mark size={104} className="text-[#F3EDE4] w-24 md:w-28 h-auto" />
+            <Mark size={104} className="text-[#E9E6F2] w-24 md:w-28 h-auto" />
           </div>
-          <h1 className="text-6xl md:text-8xl font-bold tracking-tight">
+          <h1 className="text-5xl md:text-7xl font-semibold tracking-[-0.03em]">
             DEEP WATERS
           </h1>
-          <p className="mt-4 text-base md:text-lg font-light tracking-[0.3em] uppercase text-white/80">
+          <p className="mt-5 kicker" style={{ color: "#8B87A3" }}>
             A 90 day Bible reading plan
           </p>
-          <p className="mt-8 text-white/85 max-w-xl mx-auto">
+          <p className="mt-8 max-w-xl mx-auto text-[15px] leading-relaxed" style={{ color: "#B9B4C9" }}>
             Old Testament and New Testament, every single day.
             Read together. Finish together.
           </p>
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/welcome" className="btn bg-white text-rog-purple px-8 py-4 text-lg font-semibold hover:bg-rog-cream shadow-xl shadow-black/10">
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link
+              href="/welcome"
+              className="btn px-8 py-4 text-[15px] font-medium"
+              style={{ background: "#E9E6F2", color: "#0C0A18" }}
+            >
               Join Deep Waters
             </Link>
-            <Link href="/login" className="glass-dark btn text-white px-8 py-4 text-lg">
+            <Link
+              href="/login"
+              className="btn px-8 py-4 text-[15px]"
+              style={{ border: "1px solid #302A47", color: "#E9E6F2" }}
+            >
               I already have an account
             </Link>
           </div>
         </div>
-        <div className="h-px bg-white/20 relative" />
       </section>
 
       {/* Verse card */}
       <section className="py-20 px-6">
-        <div className="max-w-2xl mx-auto card text-center">
-          <p className="font-serif italic text-xl md:text-2xl leading-relaxed text-rog-ink">
-            &ldquo;With joy shall ye draw water out of the wells of salvation.&rdquo;
+        {/* Scripture doesn't need a box round it. A rule and a measure. */}
+        <div className="max-w-2xl mx-auto quoted">
+          <p className="font-serif text-xl md:text-[26px] leading-[1.6] text-rog-ink">
+            With joy shall ye draw water out of the wells of salvation.
           </p>
           <p className="mt-4 kicker">Isaiah 12:3</p>
         </div>
@@ -60,8 +67,8 @@ export default async function LandingPage() {
       {/* How it works */}
       <section className="py-16 px-6">
         <div className="max-w-5xl mx-auto">
-          <p className="kicker text-center">How it works</p>
-          <h2 className="mt-4 font-serif text-3xl md:text-4xl font-medium text-rog-ink text-center leading-tight">
+          {/* No kicker over the heading — the heading is the heading. */}
+          <h2 className="text-[30px] md:text-[38px] font-semibold tracking-[-0.03em] text-rog-ink text-center leading-tight">
             Read. Reflect. Share. Finish.
           </h2>
           <div className="grid md:grid-cols-4 gap-4 mt-12">
@@ -72,8 +79,9 @@ export default async function LandingPage() {
               { n: "04", t: "Finish at day 90", d: "Get on the finisher wall. Get your card." }
             ].map((s) => (
               <div key={s.n} className="card">
-                <p className="text-rog-muted text-xs font-medium tracking-[0.2em] uppercase">{s.n}</p>
-                <h3 className="mt-3 font-serif text-xl font-medium text-rog-ink leading-tight">{s.t}</h3>
+                {/* The numbers stay: these four really are a sequence. */}
+                <p className="kicker">Step {s.n}</p>
+                <h3 className="mt-3 text-[19px] font-semibold text-rog-ink leading-tight tracking-[-0.02em]">{s.t}</h3>
                 <p className="mt-2 text-sm text-rog-muted leading-relaxed">{s.d}</p>
               </div>
             ))}
@@ -81,7 +89,10 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <footer className="bg-rog-purple text-white text-center py-8 text-sm tracking-[0.2em] uppercase">
+      <footer
+        className="text-center py-8 kicker"
+        style={{ background: "#0C0A18", color: "#8B87A3" }}
+      >
         Deep Waters
       </footer>
     </main>

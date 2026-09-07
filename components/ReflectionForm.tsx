@@ -51,16 +51,17 @@ export default function ReflectionForm({
 
   return (
     <>
-      {/* Level 1 — a soft plate. Writing your reflection should feel like writing on a page. */}
+      {/* The writing surface. The old "Reflection" mark above the heading
+          was a label announcing the heading underneath it, which is the
+          one thing a kicker must never be — the heading says it already. */}
       <section className="surface-soft">
-        <p className="chapter-mark">Reflection</p>
-        <h2 className="mt-3 font-serif text-2xl md:text-3xl font-medium text-rog-ink leading-tight">
+        <h2 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.02em] text-rog-ink leading-tight">
           {done ? "Today's reflection is kept" : "Today's reflection"}
         </h2>
 
         <form onSubmit={handleSubmit} className="mt-10">
           {/* Verse info zone — a quieter grouping */}
-          <div className="pb-10 border-b border-dashed border-rog-line/70 space-y-6">
+          <div className="pb-10 border-b border-rog-line space-y-6">
             <div>
               <label className="block text-sm font-medium mb-2 text-rog-ink">
                 The verse that stood out
@@ -69,7 +70,7 @@ export default function ReflectionForm({
                 value={verseRef}
                 onChange={(e) => setVerseRef(e.target.value)}
                 placeholder="e.g. Genesis 1:3"
-                className="w-full rounded-xl border border-rog-line bg-white px-4 py-3 font-serif text-[15px] focus:border-rog-purple focus:outline-none"
+                className="w-full border border-rog-line px-4 py-3 font-serif text-[15px] focus:border-rog-purple focus:outline-none"
               />
             </div>
             <div>
@@ -84,7 +85,7 @@ export default function ReflectionForm({
                 onChange={(e) => setVerseText(e.target.value)}
                 placeholder="From today's reading, or type it in."
                 rows={2}
-                className="w-full rounded-xl border border-rog-line bg-white px-4 py-3 font-serif text-[15px] leading-relaxed focus:border-rog-purple focus:outline-none"
+                className="w-full border border-rog-line px-4 py-3 font-serif text-[15px] leading-relaxed focus:border-rog-purple focus:outline-none"
               />
             </div>
           </div>
@@ -102,7 +103,7 @@ export default function ReflectionForm({
               onChange={(e) => setReflection(e.target.value)}
               placeholder="In a sentence, or a paragraph."
               rows={5}
-              className="w-full rounded-xl border border-rog-line bg-white px-4 py-3 font-serif text-[15px] leading-relaxed focus:border-rog-purple focus:outline-none"
+              className="w-full border border-rog-line px-4 py-3 font-serif text-[15px] leading-relaxed focus:border-rog-purple focus:outline-none"
             />
           </div>
 
@@ -115,13 +116,13 @@ export default function ReflectionForm({
       {/* Level 2 — the completion reveal, mounted like a Polaroid on card stock */}
       {done && cardUrl && (
         <section className="card mt-10">
-          <p className="chapter-mark">Today, as a card</p>
+          <p className="kicker">Today, as a card</p>
           <div className="reveal-mat mt-6">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={cardUrl}
               alt="Day completion card"
-              className="w-full block rounded-lg"
+              className="w-full block"
             />
           </div>
           <p className="mt-6 text-sm text-rog-muted">

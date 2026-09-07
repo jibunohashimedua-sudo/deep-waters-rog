@@ -116,10 +116,10 @@ function OnboardingPageInner() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-6 py-16">
+    <main className="main-plain min-h-screen flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-md">
         <p className="kicker text-center">Welcome</p>
-        <h1 className="mt-3 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight text-center">
+        <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight text-center">
           Set up your profile
         </h1>
         <p className="mt-3 text-center text-rog-muted text-sm">

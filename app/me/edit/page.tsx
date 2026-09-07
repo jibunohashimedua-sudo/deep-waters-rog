@@ -148,7 +148,7 @@ export default function EditProfilePage() {
       <Nav />
       <main className="max-w-lg mx-auto px-6 py-10">
         <p className="kicker">Profile</p>
-        <h1 className="mt-3 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight">Edit your profile</h1>
+        <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Edit your profile</h1>
 
         <form onSubmit={handleSave} className="mt-8 space-y-6">
           <div className="flex flex-col items-center">
@@ -183,7 +183,7 @@ export default function EditProfilePage() {
               rows={2}
               maxLength={160}
               placeholder="A line about you"
-              className="w-full rounded-2xl border border-rog-line bg-white px-6 py-3 focus:border-rog-purple focus:outline-none"
+              className="w-full border border-rog-line bg-white px-6 py-3 focus:border-rog-purple focus:outline-none"
             />
           </div>
 

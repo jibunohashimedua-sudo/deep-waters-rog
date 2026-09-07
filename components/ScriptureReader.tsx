@@ -577,8 +577,8 @@ export default function ScriptureReader({
         {chapters.map((c, i) => (
           <div key={`${c.book}-${c.chapter}`}>
             {i > 0 && (
-              <div className="my-12 flex justify-center" aria-hidden>
-                <span className="block h-px w-16 bg-rog-line/70" />
+              <div className="my-12" aria-hidden>
+                <span className="block h-px w-full bg-rog-line" />
               </div>
             )}
             <article
@@ -626,11 +626,12 @@ export default function ScriptureReader({
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-24 md:bottom-8 left-1/2 z-[80] -translate-x-1/2 px-4 py-2 rounded-full text-sm font-medium text-white pointer-events-none"
+          className="fixed bottom-8 left-1/2 z-[80] -translate-x-1/2 px-4 py-2 text-[13px] font-medium pointer-events-none"
           style={{
-            background: "rgba(15,15,15,0.85)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)"
+            // The tab bar is hidden while reading, so this sits on the
+            // bottom edge. Square: it is a message, not something to press.
+            background: "var(--text)",
+            color: "var(--bg)"
           }}
         >
           {toast}
