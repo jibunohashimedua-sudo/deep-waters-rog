@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import ThemeToggle from "./ThemeToggle";
 import BottomNav from "./BottomNav";
+import Mark from "./Mark";
 
 const links = [
   { href: "/today", label: "Today" },
@@ -91,7 +92,7 @@ export default function Nav() {
               </button>
             )}
             <Link href="/today" className="flex items-center gap-2">
-              <HeartLogo />
+              <Mark size={22} />
               <span className="font-bold text-rog-purple text-lg tracking-tight">Deep Waters</span>
             </Link>
           </div>
@@ -134,23 +135,3 @@ export default function Nav() {
   );
 }
 
-// The Deep Waters mark. Uses currentColor so a single component works in both
-// themes: deep purple in light mode, warm cream in dark.
-function HeartLogo() {
-  return (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 100 100"
-      fill="currentColor"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden
-      className="dw-mark"
-    >
-      <rect x="18" y="24" width="64" height="11" rx="5.5" />
-      <rect x="26" y="42" width="48" height="11" rx="5.5" />
-      <rect x="34" y="60" width="32" height="11" rx="5.5" />
-      <rect x="42" y="78" width="16" height="11" rx="5.5" />
-    </svg>
-  );
-}
