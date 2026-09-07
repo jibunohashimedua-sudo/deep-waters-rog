@@ -83,7 +83,7 @@ export default function Nav() {
             {showBack && (
               <button
                 onClick={() => router.back()}
-                className="glass-chip inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium text-rog-purple hover:text-rog-blue transition"
+                className="glass-chip inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium text-rog-purple hover:opacity-70 transition"
                 aria-label="Go back"
               >
                 <span aria-hidden>&larr;</span>
@@ -114,7 +114,7 @@ export default function Nav() {
             <Link href="/notifications" className="relative p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10" aria-label="Notifications">
               <span className="text-lg">🔔</span>
               {unread > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-rog-pink text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 bg-red-600 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
                   {unread > 9 ? "9+" : unread}
                 </span>
               )}
@@ -143,10 +143,11 @@ function HeartLogo() {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden
+      className="text-rog-purple"
     >
       <path
         d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10Z"
-        fill="#E85D9E"
+        fill="currentColor"
       />
     </svg>
   );

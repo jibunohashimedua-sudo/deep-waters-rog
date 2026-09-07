@@ -77,7 +77,7 @@ export default async function CohortLandingPage({
           </div>
         )}
         <div className="max-w-3xl mx-auto px-6 py-16 text-center">
-          <p className="kicker !text-rog-pink">Deep Waters</p>
+          <p className="kicker !text-white/70">Deep Waters</p>
           <h1 className="mt-3 text-5xl md:text-6xl font-bold tracking-tight">{cohort.name}</h1>
           {cohort.description && (
             <p className="mt-4 text-white/85 max-w-xl mx-auto">{cohort.description}</p>
@@ -86,7 +86,7 @@ export default async function CohortLandingPage({
             {status} &bull; {cohort.member_count} member{cohort.member_count === 1 ? "" : "s"}
           </p>
           {isLeader && (
-            <Link href={`/cohorts/${cohort.slug}/manage`} className="mt-6 inline-block text-sm underline text-rog-pink">
+            <Link href={`/cohorts/${cohort.slug}/manage`} className="mt-6 inline-block text-sm underline text-white/80 hover:text-white">
               Manage cohort
             </Link>
           )}

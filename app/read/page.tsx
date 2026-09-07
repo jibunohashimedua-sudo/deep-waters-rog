@@ -59,7 +59,7 @@ export default async function ReadPage({
         </h1>
 
         {note?.body && testament === "ot" && (
-          <div className="mt-10 card border-rog-pink border-2 bg-white">
+          <div className="mt-10 card">
             <p className="kicker">Study note</p>
             {note.title && <p className="mt-3 font-bold text-rog-purple text-lg">{note.title}</p>}
             <p className="mt-2 text-sm leading-relaxed whitespace-pre-wrap">{note.body}</p>

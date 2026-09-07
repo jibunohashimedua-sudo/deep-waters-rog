@@ -60,14 +60,14 @@ export default async function TodayPage() {
         {/* Reading tiles — Level 1 (soft plate). These are navigation, not objects. */}
         <div className="mt-10 grid md:grid-cols-2 gap-4">
           <Link href="/read?t=ot" className="surface-soft block hover:border-rog-purple group">
-            <p className="kicker !text-rog-blue">Old Testament</p>
+            <p className="kicker">Old Testament</p>
             <p className="mt-3 font-serif text-lg text-rog-ink">{otRef}</p>
             <p className="mt-6 text-xs text-rog-muted font-semibold uppercase tracking-[0.18em] group-hover:text-rog-purple transition-colors">
               Read &rarr;
             </p>
           </Link>
           <Link href="/read?t=nt" className="surface-soft block hover:border-rog-purple group">
-            <p className="kicker !text-rog-blue">New Testament</p>
+            <p className="kicker">New Testament</p>
             <p className="mt-3 font-serif text-lg text-rog-ink">{ntRef}</p>
             <p className="mt-6 text-xs text-rog-muted font-semibold uppercase tracking-[0.18em] group-hover:text-rog-purple transition-colors">
               Read &rarr;

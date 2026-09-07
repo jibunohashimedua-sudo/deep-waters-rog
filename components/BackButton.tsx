@@ -16,7 +16,7 @@ export default function BackButton({
   return (
     <button
       onClick={onClick}
-      className="glass-chip inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm text-rog-purple font-medium hover:text-rog-blue transition"
+      className="glass-chip inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm text-rog-purple font-medium hover:opacity-70 transition"
     >
       <span aria-hidden>&larr;</span>
       <span>{label}</span>

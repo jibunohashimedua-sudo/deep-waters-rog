@@ -145,7 +145,7 @@ export default function ReflectionForm({
                 window.open(cardUrl, "_blank");
               }
             }}
-            className="btn-pink w-full mt-3"
+            className="btn-primary w-full mt-3"
           >
             Download the card
           </button>

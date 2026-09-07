@@ -28,7 +28,7 @@ export default function CohortShareBox({ slug }: { slug: string }) {
           value={url}
           className="flex-1 rounded-full border border-rog-line bg-rog-cream px-4 py-2 text-sm truncate"
         />
-        <button onClick={handleCopy} className="btn-pink whitespace-nowrap">
+        <button onClick={handleCopy} className="btn-primary whitespace-nowrap">
           {copied ? "Copied" : "Copy"}
         </button>
       </div>

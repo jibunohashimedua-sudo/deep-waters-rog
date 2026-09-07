@@ -168,13 +168,15 @@ body:has([data-surface="reading"]) {
   background-color: #3B1E6E;
   box-shadow: 0 6px 20px -12px rgba(59, 30, 110, 0.4);
 }
-.btn-primary:hover { background-color: #2E4FD1; }
+/* Hover shifts to a lighter purple. Same hue family so the accent
+   stays one colour; the shift signals interactivity. */
+.btn-primary:hover { background-color: #4A2A85; }
 
 [data-theme="dark"] .btn-primary {
   background-color: #6A45C7;
   box-shadow: 0 6px 20px -10px rgba(138, 90, 255, 0.45);
 }
-[data-theme="dark"] .btn-primary:hover { background-color: #8AA5FF; color: #0B0716; }
+[data-theme="dark"] .btn-primary:hover { background-color: #8560D8; }
 
 .btn-secondary {
   @apply btn px-6 py-3;
@@ -189,11 +191,9 @@ body:has([data-surface="reading"]) {
   border-color: var(--accent);
 }
 
-.btn-pink {
-  @apply btn text-white px-6 py-3 hover:opacity-90;
-  background-color: #E85D9E;
-  box-shadow: 0 6px 20px -12px rgba(232, 93, 158, 0.4);
-}
+/* .btn-pink retired in Move 5. All primary actions use .btn-primary,
+   which carries the one accent (purple). Semantic buttons (delete /
+   report / etc.) use their own semantic classes. */
 
 /* =========================================================
    GLASS SURFACES
@@ -289,9 +289,12 @@ body:has([data-surface="reading"]) {
    TYPOGRAPHY & UTILITIES
    ========================================================= */
 
+/* Kickers orient — they don't shout. Same treatment as .chapter-mark,
+   which we collapse into this. Muted colour so the accent stays reserved
+   for the emphasised element per screen. */
 .kicker {
   @apply text-xs font-medium tracking-[0.2em] uppercase;
-  color: var(--pink);
+  color: var(--muted);
 }
 
 /* =========================================================

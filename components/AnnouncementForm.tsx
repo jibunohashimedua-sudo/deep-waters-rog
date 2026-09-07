@@ -51,7 +51,7 @@ export default function AnnouncementForm({ cohortId }: { cohortId: string | null
         placeholder="Write your announcement..."
         className="w-full rounded-2xl border border-rog-line bg-white px-5 py-2.5 focus:border-rog-purple focus:outline-none"
       />
-      <button type="submit" disabled={saving || !body.trim()} className="btn-pink w-full disabled:opacity-50">
+      <button type="submit" disabled={saving || !body.trim()} className="btn-primary w-full disabled:opacity-50">
         {saving ? "Posting..." : "Post announcement"}
       </button>
       {msg && <p className="text-sm text-rog-purple">{msg}</p>}
