@@ -726,3 +726,93 @@ select:focus-visible {
 .bible-content {
   overflow-wrap: anywhere;
 }
+
+/* =========================================================
+   OPENING SPLASH — "Rise From the Deep"
+   Four bars rise out of the dark, smallest first, then the
+   wordmark, then the whole stage dissolves. Purely decorative:
+   the app renders underneath from the first paint and nothing
+   waits on this. Only transform and opacity are animated so it
+   stays on the compositor on older phones.
+
+   NOTE: the bar stack is .dw-launch-mark, not .dw-mark — that
+   name is already the colour rule for the <Mark> logo svg.
+   ========================================================= */
+
+@keyframes dw-rise-bar {
+  0%   { opacity: 0; transform: translate3d(0, 26px, 0) scale(.92); }
+  60%  { opacity: 1; transform: translate3d(0,  0,   0) scale(1); }
+  100% { opacity: 1; transform: translate3d(0,  0,   0) scale(1); }
+}
+@keyframes dw-word-rise {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to   { opacity: 1; transform: translate3d(0,  0,   0); }
+}
+@keyframes dw-stage-out { to { opacity: 0; } }
+@keyframes dw-fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* Set by the inline gate script in SplashScreen before React hydrates, so a
+   reload later in the session never flashes the overlay on its way out. */
+[data-dw-splash="skip"] .dw-launch { display: none; }
+
+.dw-launch {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0B0716;
+  animation: dw-stage-out 320ms cubic-bezier(.4, 0, .2, 1) 1040ms both;
+}
+
+.dw-launch-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dw-launch-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.dw-bar {
+  height: 16px;
+  border-radius: 999px;
+  background: #F7F1EA;
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: dw-rise-bar 720ms cubic-bezier(.16, .68, .30, 1) both;
+}
+.dw-bar1 { width: 96px; animation-delay: 400ms; }
+.dw-bar2 { width: 72px; animation-delay: 280ms; }
+.dw-bar3 { width: 48px; animation-delay: 160ms; }
+.dw-bar4 { width: 24px; animation-delay:  40ms; }
+
+.dw-word {
+  margin-top: 24px;
+  text-align: center;
+  opacity: 0;
+  animation: dw-word-rise 520ms cubic-bezier(.22, .61, .36, 1) 780ms both;
+}
+.dw-word .d {
+  font: 700 34px/1 Poppins, sans-serif;
+  letter-spacing: 3px;
+  color: #F7F1EA;
+}
+.dw-word .w {
+  font: 300 34px/1 Poppins, sans-serif;
+  letter-spacing: 9px;
+  color: #F7F1EA;
+  display: block;
+  margin-top: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dw-bar   { animation: none; opacity: 1; transform: none; }
+  .dw-word  { animation: dw-fade 320ms ease-out both; }
+  .dw-launch { animation: dw-stage-out 320ms ease-out 640ms both; }
+}
