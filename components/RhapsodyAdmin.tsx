@@ -164,15 +164,15 @@ export default function RhapsodyAdmin({
     const step = parseInt(pagesPer, 10);
     if (!Number.isInteger(start) || start < 1) return fail("Start page must be 1 or more.");
     if (!Number.isInteger(step) || step < 1) return fail("Pages per article must be 1 or more.");
-    const titles = titleList
-      .split("\n")
-      .map((t) => t.trim())
-      .filter((t) => t.length > 0);
+    // Blank lines are kept, not dropped: line 5 is always the 5th of the
+    // month, and an empty one means "leave that day's title alone".
+    const titles = titleList.trim() ? titleList.split("\n").map((t) => t.trim()) : [];
     setDrafts((prev) => {
       const next = { ...prev };
       dates.forEach((d, i) => {
+        const existing = next[d]?.title ?? "";
         next[d] = {
-          title: titles[i] ?? next[d]?.title ?? "",
+          title: titles[i] || existing,
           page: String(start + i * step)
         };
       });
