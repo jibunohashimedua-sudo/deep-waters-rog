@@ -526,6 +526,20 @@ body {
   box-decoration-break: clone;
 }
 
+/* A verse arrived at from a link — /bible/john/3/16. Marked so the eye finds
+   it after the scroll, then faded, because the mark is a pointer and not a
+   permanent state. Softer than a highlight on purpose: a highlight is
+   something the reader chose, this is only the app answering a question. */
+.dw-verse[data-focus] {
+  background-color: var(--accent-soft);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+  transition: background-color 600ms ease, box-shadow 600ms ease;
+}
+.dw-verse[data-focus="fading"] {
+  background-color: transparent;
+  box-shadow: 0 0 0 4px transparent;
+}
+
 /* A verse the current selection sits inside gets a tiny inset ring —
    quiet, so the selection colour still dominates. */
 /* Sonar marks position — including the position of your own thumb. */
@@ -867,6 +881,11 @@ select:focus-visible {
 /* Chapter numbers. Square, 44px minimum so they're comfortably tappable on
    a phone, and never smaller however many chapters a book has. */
 .chapter-tile {
+  /* Press-and-hold opens the verse grid, so the OS link callout and the
+     text-selection lasso both have to be suppressed or they fire first. */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1051,4 +1070,88 @@ select:focus-visible {
 .quoted {
   padding-left: 12px;
   box-shadow: inset 2px 0 0 var(--line);
+}
+
+/* =========================================================
+   BIBLE — TESTAMENT TABS, REFERENCE JUMP, VERSE SHEET
+   ========================================================= */
+
+/* Two options, equal width, so neither testament reads as the default even
+   though one has to be selected on arrival. Square, like every other
+   control in the app. */
+.segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--soft-bg);
+  border: 1px solid var(--soft-border);
+}
+
+.segmented-option {
+  min-height: 44px;
+  padding: 0 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.segmented-option:hover {
+  color: var(--text);
+}
+.segmented-option[aria-selected="true"] {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.segmented-option:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/* The answer to a typed reference. Styled as the destination rather than as
+   one more result, because when it appears it is almost always what the
+   person meant — anything else in the list is a consolation prize. */
+.reference-jump {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  background: var(--accent);
+  color: var(--on-accent);
+  border: 1px solid var(--accent);
+  text-decoration: none;
+}
+.reference-jump:hover {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+}
+.reference-jump-label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+.reference-jump-ref {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 20px;
+  line-height: 1.1;
+}
+.reference-jump-arrow {
+  margin-left: auto;
+  font-size: 18px;
+}
+
+/* Verse grid, as a sheet from the bottom — within thumb reach on a phone,
+   which is the whole point of it existing. */
+.verse-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
 }

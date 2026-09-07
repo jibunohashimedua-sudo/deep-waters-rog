@@ -55,3 +55,29 @@ export function wrapVersesInHtml(html: string): string {
     return `<p${attrs || ""}>${wrapped}</p>`;
   });
 }
+
+/**
+ * The highest verse number in a chapter's HTML.
+ *
+ * Used to size the verse grid on the chapter picker. It reads the markers
+ * API.Bible already sent rather than a table of verse counts kept here,
+ * because those counts differ between translations — the KJV, the ESV and
+ * the Vulgate genuinely disagree about where verses fall, most visibly in
+ * the Psalms where a Hebrew superscription is verse 1 in some traditions
+ * and unnumbered in others. A hardcoded table would be right for whichever
+ * translation it was typed from and quietly wrong for the rest.
+ *
+ * Returns the highest number rather than the count of markers, because some
+ * translations merge verses under a single marker ("1-2") and a grid has to
+ * reach the last verse, not the number of markers before it.
+ */
+export function countVersesInHtml(html: string): number {
+  const re = new RegExp(MARKER_RE.source, "g");
+  let highest = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html)) !== null) {
+    const n = Number.parseInt(m[1], 10);
+    if (Number.isFinite(n) && n > highest) highest = n;
+  }
+  return highest;
+}

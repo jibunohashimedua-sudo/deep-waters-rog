@@ -9,6 +9,7 @@ import {
   type HighlightColour,
   type VerseNote
 } from "@/lib/highlights";
+import { bookByName } from "@/lib/bibleBooks";
 import VerseToolbar, { type ToolbarPos } from "./VerseToolbar";
 import VerseNoteSheet from "./VerseNoteSheet";
 
@@ -28,7 +29,17 @@ type Props = {
   dayNumber: number;
   testament: "ot" | "nt";
   chapters: ChapterInput[];
+  /** Set when the URL named a verse: bring it into view and mark it briefly. */
+  focusVerse?: { start: number; end: number };
 };
+
+/** How far below the top edge a focused verse settles — clears the sticky
+    header and leaves it room to breathe rather than jamming it to the edge. */
+const FOCUS_OFFSET_PX = 120;
+
+/** How long the focus mark stays at full strength, then how long it fades. */
+const FOCUS_HOLD_MS = 1800;
+const FOCUS_FADE_MS = 600;
 
 type Selection = {
   book: string;
@@ -62,7 +73,8 @@ export default function ScriptureReader({
   userId,
   dayNumber,
   testament,
-  chapters
+  chapters,
+  focusVerse
 }: Props) {
   const supabase = useMemo(() => createClient(), []);
 
@@ -154,6 +166,86 @@ export default function ScriptureReader({
       }
     }
   }, [highlights, notes]);
+
+  // Landing on a verse.
+  //
+  // Deliberately a jump rather than a filter: the verse is brought into view
+  // and marked for a moment, and the rest of the chapter stays exactly where
+  // it was above and below it. Someone following a shared link usually wants
+  // the surrounding sentence too, and a verse shown alone is how scripture
+  // gets quoted into meaning things it doesn't.
+  //
+  // The mark is held as state and re-applied after every render rather than
+  // written once onto elements we keep hold of. React owns this subtree
+  // through dangerouslySetInnerHTML and replaces it wholesale when the
+  // highlights and notes arrive, which quietly detached the very spans the
+  // mark had been written to: the attribute survived, on nodes no longer in
+  // the document, and the reader saw nothing.
+  const [focusPhase, setFocusPhase] = useState<"on" | "fading" | "off">(
+    focusVerse ? "on" : "off"
+  );
+
+  // No dependency array on purpose. This is the pass that keeps the DOM in
+  // step with focusPhase, and it has to run after any render that might have
+  // rebuilt the verses underneath it. It is a handful of querySelectors over
+  // a range that is almost always one verse.
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root || !focusVerse) return;
+    for (let v = focusVerse.start; v <= focusVerse.end; v++) {
+      const el = root.querySelector<HTMLElement>(`[data-verse="${v}"]`);
+      if (!el) continue;
+      if (focusPhase === "off") el.removeAttribute("data-focus");
+      else el.setAttribute("data-focus", focusPhase === "fading" ? "fading" : "true");
+    }
+  });
+
+  // Scroll to the verse, then start the mark's clock.
+  useEffect(() => {
+    if (!focusVerse) return;
+
+    let inner = 0;
+    let fade = 0;
+    let clear = 0;
+    // Two frames: the first lets the mark paint, the second means the scroll
+    // maths runs against a layout that has settled.
+    const outer = requestAnimationFrame(() => {
+      inner = requestAnimationFrame(() => {
+        const el = rootRef.current?.querySelector<HTMLElement>(
+          `[data-verse="${focusVerse.start}"]`
+        );
+        // A verse number past the end of this chapter in this translation.
+        // The chapter still renders from the top, which is the honest
+        // fallback, so there is nothing to apologise for here.
+        if (!el) return;
+
+        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const top = el.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({
+          top: Math.max(0, top - FOCUS_OFFSET_PX),
+          behavior: reduced ? "auto" : "smooth"
+        });
+
+        // The clock starts here, inside the frame, rather than beside it.
+        // Browsers pause rAF in a background tab but keep firing timers, so
+        // starting it outside would mean a verse link opened in a background
+        // tab — which is how a shared link tends to be opened — faded out
+        // unseen, leaving an unmarked verse for whenever the reader looked.
+        fade = window.setTimeout(() => setFocusPhase("fading"), FOCUS_HOLD_MS);
+        clear = window.setTimeout(
+          () => setFocusPhase("off"),
+          FOCUS_HOLD_MS + FOCUS_FADE_MS
+        );
+      });
+    });
+
+    return () => {
+      cancelAnimationFrame(outer);
+      cancelAnimationFrame(inner);
+      window.clearTimeout(fade);
+      window.clearTimeout(clear);
+    };
+  }, [focusVerse]);
 
   // Selection tracking.
   useEffect(() => {
@@ -477,6 +569,36 @@ export default function ScriptureReader({
     showToast("Note deleted.");
   }
 
+  /**
+   * A link that lands the recipient on the verse, not the front door.
+   *
+   * This used to share window.location.origin — so someone sent "Isaiah 43:2"
+   * got the home page and had to go and find it, which rather undoes the point
+   * of sharing a verse. The book comes through as a display name because that
+   * is what the reader sees, so it goes back through the book table to reach
+   * the slug the route is built on.
+   *
+   * Works from /read as well as /bible: a verse shared out of the daily plan
+   * still points at a stable, readable Bible route rather than at whichever
+   * plan day happened to contain it.
+   */
+  function shareUrl(): string {
+    if (typeof window === "undefined") return "";
+    const origin = window.location.origin;
+    if (!selection) return origin;
+
+    const book = bookByName(selection.book);
+    // Shouldn't happen — the reader is always given canonical names — but a
+    // share is not worth breaking over a lookup miss.
+    if (!book) return origin;
+
+    const segment =
+      selection.verseStart === selection.verseEnd
+        ? `${selection.verseStart}`
+        : `${selection.verseStart}-${selection.verseEnd}`;
+    return `${origin}/bible/${book.slug}/${selection.chapter}/${segment}`;
+  }
+
   async function share() {
     if (!selection) return;
     const ref = formatVerseReference(
@@ -486,7 +608,7 @@ export default function ScriptureReader({
       selection.verseEnd
     );
     const text = `“${selection.text}” — ${ref}`;
-    const url = typeof window !== "undefined" ? window.location.origin : "";
+    const url = shareUrl();
     if (typeof navigator !== "undefined" && (navigator as any).share) {
       try {
         await (navigator as any).share({ text, url });
@@ -526,7 +648,7 @@ export default function ScriptureReader({
       const nav: any = navigator;
       if (nav.canShare && nav.canShare({ files: [file] })) {
         try {
-          await nav.share({ files: [file], text: ref });
+          await nav.share({ files: [file], text: ref, url: shareUrl() });
           setToast(null);
           dismissSelection();
           return;

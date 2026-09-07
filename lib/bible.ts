@@ -13,6 +13,7 @@
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { DEFAULT_BIBLE_ID } from "./translations";
+import { countVersesInHtml } from "./verseParse";
 
 const BASE = "https://api.scripture.api.bible/v1";
 
@@ -222,4 +223,30 @@ export async function fetchChapters(
     return null;
   });
   return { chapters, failure };
+}
+
+/**
+ * How many verses are in one chapter.
+ *
+ * Deliberately derived from the chapter text rather than API.Bible's
+ * /chapters/{id}/verses endpoint. That endpoint would be a smaller payload,
+ * but it is a second rate-limited call whose result we have nowhere to keep,
+ * whereas the chapter itself is already cached in Supabase and very often
+ * already warm — the plan alone touches ~1200 chapters. So the common case
+ * costs nothing, and the uncommon case warms the cache for the read that is
+ * about to follow anyway, since somebody asking for the verse list is on
+ * their way into that chapter.
+ *
+ * Returns null rather than a guess when the chapter can't be loaded; the
+ * caller should fall back to opening the chapter at the top.
+ */
+export async function fetchVerseCount(
+  book: string,
+  chapter: number,
+  bibleId: string = DEFAULT_BIBLE_ID
+): Promise<number | null> {
+  const outcome = await fetchChapter(book, chapter, bibleId);
+  if (!outcome.ok) return null;
+  const count = countVersesInHtml(outcome.chapter.content);
+  return count > 0 ? count : null;
 }

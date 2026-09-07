@@ -5,6 +5,7 @@ import { requireProfile } from "@/lib/auth";
 import { bookBySlug } from "@/lib/bibleBooks";
 import { readChaptersForBook } from "@/lib/plan";
 import Nav from "@/components/Nav";
+import ChapterGrid from "@/components/ChapterGrid";
 
 export async function generateMetadata({ params }: { params: { book: string } }) {
   const book = bookBySlug(params.book);
@@ -37,8 +38,6 @@ export default async function BookChaptersPage({
     (completions ?? []).map((c) => c.day_number as number)
   );
 
-  const chapters = Array.from({ length: book.chapters }, (_, i) => i + 1);
-
   return (
     <>
       <Nav />
@@ -55,27 +54,12 @@ export default async function BookChaptersPage({
           {read.size > 0 && ` · ${read.size} read in your plan`}
         </p>
 
-        <ul className="mt-10 grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
-          {chapters.map((c) => {
-            const done = read.has(c);
-            return (
-              <li key={c}>
-                <Link
-                  href={`/bible/${book.slug}/${c}`}
-                  data-read={done ? "true" : undefined}
-                  aria-label={
-                    done
-                      ? `${book.name} chapter ${c}, already read in your plan`
-                      : `${book.name} chapter ${c}`
-                  }
-                  className="chapter-tile"
-                >
-                  {c}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        <ChapterGrid
+          bookSlug={book.slug}
+          bookName={book.name}
+          chapters={book.chapters}
+          read={[...read]}
+        />
 
         {read.size > 0 && (
           <p className="mt-6 text-xs text-rog-muted flex items-center gap-2">
