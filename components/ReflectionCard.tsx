@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import Avatar from "./Avatar";
 import { createClient } from "@/lib/supabase/client";
 import MentionText from "./MentionText";
@@ -108,16 +109,31 @@ export default function ReflectionCard({
 
   return (
     <article id={item.id} className="card">
-      <div className="flex items-center gap-3">
-        <Avatar name={item.name} photoUrl={item.photo_url} size="md" decorative />
-        <div className="flex-1">
-          <p className="text-[14px] font-semibold text-rog-ink leading-tight">{item.name}</p>
-          <p className="kicker mt-1">
-            Day {item.day_number} &middot;{" "}
-            {new Date(item.completed_at).toLocaleDateString("en-GB")}
-          </p>
-        </div>
-      </div>
+      {/* Your own post takes you to Depth. Everyone else's does nothing —
+          there are no public profiles yet, and a name that looks tappable
+          and isn't is worse than one that plainly isn't. */}
+      {(() => {
+        const mine = !!currentUserId && item.user_id === currentUserId;
+        const inner = (
+          <>
+            <Avatar name={item.name} photoUrl={item.photo_url} size="md" decorative />
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-semibold text-rog-ink leading-tight">{item.name}</p>
+              <p className="kicker mt-1">
+                Day {item.day_number} &middot;{" "}
+                {new Date(item.completed_at).toLocaleDateString("en-GB")}
+              </p>
+            </div>
+          </>
+        );
+        return mine ? (
+          <Link href="/depth" className="flex items-center gap-3" aria-label="Your depth">
+            {inner}
+          </Link>
+        ) : (
+          <div className="flex items-center gap-3">{inner}</div>
+        );
+      })()}
 
       {/* The verse they kept. A rule down the left says "this is quoted"
           more quietly than quotation marks and an italic ever did. */}

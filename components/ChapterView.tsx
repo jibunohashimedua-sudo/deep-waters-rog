@@ -7,7 +7,7 @@ import { fetchChapter, chapterErrorMessage } from "@/lib/bible";
 import { resolveTranslation } from "@/lib/translations";
 import { wrapVersesInHtml } from "@/lib/verseParse";
 import ScriptureReader from "@/components/ScriptureReader";
-import TranslationSwitcher from "@/components/TranslationSwitcher";
+import ReadingHeader from "@/components/ReadingHeader";
 import ChapterPrefetch from "@/components/ChapterPrefetch";
 
 type Props = {
@@ -52,24 +52,18 @@ export default async function ChapterView({ bookSlug, chapter, focus }: Props) {
 
   return (
     <>
-      <main data-surface="reading" className="max-w-3xl mx-auto px-6 py-10">
-        <Link
-          href={`/bible/${book.slug}`}
-          className="text-sm text-rog-muted hover:text-rog-purple"
-        >
-          &larr; {book.name}
-        </Link>
-
-        <div className="mt-10 flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <p className="chapter-mark">{book.group}</p>
-            <h1 className="mt-3 font-serif text-3xl md:text-4xl font-normal text-rog-ink leading-tight">
-              {book.name} {chapter}
-            </h1>
-          </div>
-          {/* Which translation you're in, and a tap to change it. */}
-          <TranslationSwitcher userId={userId} currentId={resolved.chosen.id} />
-        </div>
+      <main data-surface="reading" className="max-w-3xl mx-auto px-6 pt-0 pb-10">
+        {/* The same header as the daily reading, so scripture looks and
+            behaves identically wherever you meet it — including the
+            translation switcher travelling down the chapter with you. */}
+        <ReadingHeader
+          backHref={`/bible/${book.slug}`}
+          backLabel={`Back to ${book.name}`}
+          kicker={book.group}
+          reference={`${book.name} ${chapter}`}
+          userId={userId}
+          translationId={resolved.chosen.id}
+        />
 
         {resolved.fallbackNote && (
           <p className="mt-6 surface-soft !py-3 !px-4 text-sm text-rog-muted">

@@ -81,3 +81,80 @@ export function countVersesInHtml(html: string): number {
   }
   return highest;
 }
+
+/**
+ * Every verse in a chapter's HTML, as plain text, keyed by verse number.
+ *
+ * Depth lists highlights, and a list of references with no words in them is
+ * a list of coordinates. The highlights table stores a book, a chapter and a
+ * range — it has never stored the text — so the text has to be read back out
+ * of the chapter HTML the shared cache already holds.
+ *
+ * Regex rather than a DOM, because this runs on the server where there is no
+ * DOM, and the input is the same narrow shape of markup API.Bible has always
+ * returned. It is only ever asked for display text: nothing downstream parses
+ * or trusts it.
+ */
+export function verseTextsFromHtml(html: string): Map<number, string> {
+  const out = new Map<number, string>();
+
+  // Section headings, reference lines and descriptive titles sit between
+  // verses in API.Bible's markup. They belong to the chapter, not to the
+  // verse above them, so they go before anything is sliced.
+  const body = html.replace(
+    /<p[^>]*class="[^"]*\b(?:s|s1|s2|s3|ms|ms1|mr|r|d|sp|qa)\b[^"]*"[^>]*>[\s\S]*?<\/p>/g,
+    " "
+  );
+
+  const re = new RegExp(MARKER_RE.source, "g");
+  const marks: { num: number; start: number; end: number }[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(body)) !== null) {
+    const n = Number.parseInt(m[1], 10);
+    if (Number.isFinite(n)) {
+      marks.push({ num: n, start: m.index, end: m.index + m[0].length });
+    }
+  }
+
+  for (let i = 0; i < marks.length; i++) {
+    const from = marks[i].end;
+    const to = i + 1 < marks.length ? marks[i + 1].start : body.length;
+    const text = stripToText(body.slice(from, to));
+    if (!text) continue;
+    // A translation can repeat a marker across a paragraph break; the
+    // pieces are one verse, so they join rather than overwrite.
+    const existing = out.get(marks[i].num);
+    out.set(marks[i].num, existing ? `${existing} ${text}` : text);
+  }
+
+  return out;
+}
+
+/** Tags out, entities in, whitespace collapsed. */
+function stripToText(fragment: string): string {
+  return fragment
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&[a-z]+;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** The text of a verse range, joined — "3" or "3–5". */
+export function joinVerseRange(
+  verses: Map<number, string>,
+  start: number,
+  end: number
+): string {
+  const parts: string[] = [];
+  for (let v = start; v <= end; v++) {
+    const t = verses.get(v);
+    if (t) parts.push(t);
+  }
+  return parts.join(" ");
+}

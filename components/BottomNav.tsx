@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import MoreSheet from "./MoreSheet";
+import { isReadingRoute } from "@/lib/routes";
 
 type Tab = {
   href: string;
@@ -56,9 +57,11 @@ const tabs: Tab[] = [
     )
   },
   {
-    href: "/me",
+    href: "/depth",
     label: "Depth",
     match: (p) =>
+      p === "/depth" ||
+      p.startsWith("/depth/") ||
       p === "/me" ||
       p.startsWith("/me/") ||
       p === "/leaderboard" ||
@@ -95,11 +98,14 @@ export default function BottomNav({ isAdmin, hasUser }: Props) {
   // Don't render on public/auth pages — or while someone is reading.
   // The reading screen is the one place in the app with a single job, and
   // a permanent bar across the foot of a page of scripture is five ways
-  // to leave it. Getting out is the back arrow, which is where you came in.
+  // to leave it. Getting out is the back chevron, which is where you came
+  // in — and the foot of the screen belongs to the verse toolbar now.
+  //
+  // This used to name /read only, so a chapter opened from the Bible tab
+  // kept its tab bar and the verse toolbar landed on top of it.
   const hidden =
     !hasUser ||
-    pathname === "/read" ||
-    pathname.startsWith("/read/") ||
+    isReadingRoute(pathname) ||
     pathname === "/" ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/signup") ||

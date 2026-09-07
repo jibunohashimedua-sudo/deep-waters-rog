@@ -52,6 +52,10 @@ export default function VerseNoteSheet({
 
   return (
     <div
+      // Tagged so ScriptureReader's "tap outside clears the selection"
+      // rule knows this counts as inside — a tap on the note sheet is
+      // the reason the verses were selected in the first place.
+      data-verse-sheet
       className={`fixed inset-0 z-[70] ${open ? "" : "pointer-events-none"}`}
       aria-hidden={!open}
     >

@@ -64,7 +64,9 @@ export default function TranslationSwitcher({
           // Sized to the abbreviation, not to the longest option: the full
           // "King James Version" was setting the width of the control and
           // pushing it off the edge of a phone.
-          className="chip appearance-none min-h-[36px] max-w-[132px] truncate pl-3 pr-8 font-mono !text-[10px] tracking-[0.13em] uppercase disabled:opacity-60"
+          // A pill, because it is a thing you press — and 44px tall,
+          // because it is a thing you press with a thumb.
+          className="chip appearance-none min-h-[44px] max-w-[132px] truncate pl-4 pr-8 font-mono !text-[9.5px] tracking-[0.13em] uppercase disabled:opacity-60"
         >
           {TRANSLATION_GROUPS.map((g) => (
             <optgroup key={g} label={g}>
@@ -77,7 +79,7 @@ export default function TranslationSwitcher({
           ))}
         </select>
         <span
-          className="pointer-events-none absolute right-3 text-rog-muted text-[9px]"
+          className="pointer-events-none absolute right-3.5 text-rog-muted text-[9px]"
           aria-hidden
         >
           ▾

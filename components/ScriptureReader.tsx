@@ -3,14 +3,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/errors";
 import {
-  HIGHLIGHT_CSS,
+  formatVerseList,
   formatVerseReference,
   type Highlight,
   type HighlightColour,
   type VerseNote
 } from "@/lib/highlights";
 import { bookByName } from "@/lib/bibleBooks";
-import VerseToolbar, { type ToolbarPos } from "./VerseToolbar";
+import VerseToolbar from "./VerseToolbar";
 import VerseNoteSheet from "./VerseNoteSheet";
 
 type ChapterInput = {
@@ -41,33 +41,30 @@ const FOCUS_OFFSET_PX = 120;
 const FOCUS_HOLD_MS = 1800;
 const FOCUS_FADE_MS = 600;
 
-type Selection = {
-  book: string;
-  chapter: number;
-  verseStart: number;
-  verseEnd: number;
-  text: string;
-  rect: ToolbarPos;
-  /** DOM element for the containing chapter — used to mark verses as
-      "selecting" so the highlight tone shows through the browser's own
-      selection colour. */
-  rootEl: HTMLElement;
-};
+/** The most verses you can hold at once. Past this a selection stops being
+    a selection and becomes a passage, which is what a chapter link is for. */
+const MAX_SELECTED = 20;
+
+/** One selected verse. Selections may be non-contiguous but never span two
+    chapters — a reference has one chapter in it, and so does a highlight row. */
+type SelKey = { book: string; chapter: number; verse: number };
+
+const keyOf = (s: SelKey) => `${s.book}|${s.chapter}|${s.verse}`;
 
 /**
- * Coordinates the entire /read scripture area:
- *   - renders every chapter's pre-wrapped HTML
- *   - fetches this user's highlights + notes for these chapters
- *   - paints highlights and note markers on the DOM verses
- *   - listens for selectionchange, shows our own toolbar
- *   - handles highlight save/change/remove, note write/edit/delete,
- *     share (Web Share + clipboard fallback), and share-as-image
+ * Coordinates the whole scripture area on /read and /bible alike:
+ *   - renders each chapter's pre-wrapped HTML
+ *   - fetches this reader's highlights and notes for those chapters
+ *   - paints them onto the verses
+ *   - owns tap-to-select and the bottom toolbar
+ *   - handles highlight, note, copy, share and share-as-image
  *
- * iOS Safari's native selection callout cannot be fully suppressed by
- * JS — it's system UI. We show our toolbar above the selection with
- * high z-index so it dominates visually; the native callout may still
- * appear alongside on some iOS versions. See the commit message for
- * the honest breakdown.
+ * Selection is a tap, not a drag. Text selection on a phone is a long-press,
+ * a pair of draggable handles and a system menu we do not control, and it
+ * gave no clear feedback about which verse you had actually caught. Tapping
+ * a verse selects it, tapping it again lets it go, tapping another adds it,
+ * and tapping anywhere else clears the lot. Scripture is no longer
+ * user-selectable at all, which is why Copy is now a button on the toolbar.
  */
 export default function ScriptureReader({
   userId,
@@ -83,10 +80,19 @@ export default function ScriptureReader({
 
   const [highlights, setHighlights] = useState<Highlight[]>([]);
   const [notes, setNotes] = useState<VerseNote[]>([]);
-  const [selection, setSelection] = useState<Selection | null>(null);
+  const [selected, setSelected] = useState<SelKey[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetSaving, setSheetSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [atCap, setAtCap] = useState(false);
+
+  // Small toast, no library. Auto-clears.
+  const toastTimer = useRef<number | null>(null);
+  const showToast = useCallback((msg: string) => {
+    setToast(msg);
+    if (toastTimer.current) window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(null), 2600);
+  }, []);
 
   // Load highlights + notes for these chapters.
   useEffect(() => {
@@ -122,23 +128,25 @@ export default function ScriptureReader({
     return () => {
       cancelled = true;
     };
-  }, [userId, chapters, supabase]);
+  }, [userId, chapters, supabase, showToast]);
 
-  // Paint highlights + note markers whenever the state changes.
+  // ------------------------------------------------------------ painting
+
+  // Highlights and note markers. Highlights are stored as spans (a verse
+  // range), so they're expanded to one attribute per verse here — which is
+  // also what makes "the newest wins" work: later rows simply overwrite the
+  // attribute, so a verse ends up wearing one colour rather than a blend.
   useEffect(() => {
     for (const [key, root] of chapterRefs.current) {
       const [book, chapter] = key.split("|");
       const chNum = Number(chapter);
       const verseEls = root.querySelectorAll<HTMLElement>(".dw-verse");
 
-      // Reset first — no leftover state on this pass.
       verseEls.forEach((el) => {
-        el.style.removeProperty("--hl");
         el.removeAttribute("data-hl");
         el.removeAttribute("data-note");
       });
 
-      // Later highlights win on overlap — same rule as the DB, insertion order.
       const chapterHighlights = highlights
         .filter((h) => h.book === book && h.chapter === chNum)
         .sort(
@@ -148,13 +156,10 @@ export default function ScriptureReader({
       for (const h of chapterHighlights) {
         for (let v = h.verse_start; v <= h.verse_end; v++) {
           const el = root.querySelector<HTMLElement>(`[data-verse="${v}"]`);
-          if (!el) continue;
-          el.style.setProperty("--hl", HIGHLIGHT_CSS[h.colour]);
-          el.setAttribute("data-hl", h.colour);
+          if (el) el.setAttribute("data-hl", h.colour);
         }
       }
 
-      // Notes marker — a small dot after the verse (see globals.css).
       const chapterNotes = notes.filter(
         (n) => n.book === book && n.chapter === chNum
       );
@@ -167,6 +172,149 @@ export default function ScriptureReader({
     }
   }, [highlights, notes]);
 
+  // The selection mark. Written straight onto the DOM rather than rendered,
+  // because React owns this subtree through dangerouslySetInnerHTML — and
+  // re-run on every render for the same reason: when the highlights arrive
+  // React replaces the whole subtree, and any attribute written once would
+  // be left behind on nodes no longer in the document.
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const wanted = new Set(selected.map(keyOf));
+    for (const [key, chapterRoot] of chapterRefs.current) {
+      const [book, chapter] = key.split("|");
+      chapterRoot.querySelectorAll<HTMLElement>(".dw-verse").forEach((el) => {
+        const v = Number(el.dataset.verse);
+        const on = wanted.has(`${book}|${chapter}|${v}`);
+        if (on) el.setAttribute("data-sel", "true");
+        else el.removeAttribute("data-sel");
+      });
+    }
+  });
+
+  // ------------------------------------------------------------ selecting
+
+  // One listener on the container, rather than a handler per verse: the
+  // verses are injected HTML, so there is nothing to attach a React handler
+  // to. A tap that lands on a verse toggles it; a tap anywhere else in the
+  // reading area clears the selection.
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    function verseFrom(target: EventTarget | null): {
+      book: string;
+      chapter: number;
+      verse: number;
+    } | null {
+      let n = target as Node | null;
+      let verse: number | null = null;
+      while (n) {
+        if (n instanceof HTMLElement) {
+          if (verse === null && n.dataset.verse) {
+            const v = Number.parseInt(n.dataset.verse, 10);
+            if (Number.isFinite(v)) verse = v;
+          }
+          if (verse !== null && n.dataset.book && n.dataset.chapter) {
+            return {
+              book: n.dataset.book,
+              chapter: Number(n.dataset.chapter),
+              verse
+            };
+          }
+        }
+        n = n.parentNode;
+      }
+      return null;
+    }
+
+    function onClick(e: MouseEvent) {
+      const hit = verseFrom(e.target);
+      if (!hit) {
+        setSelected([]);
+        setAtCap(false);
+        return;
+      }
+      setSelected((prev) => {
+        const k = keyOf(hit);
+        const already = prev.some((s) => keyOf(s) === k);
+        if (already) {
+          setAtCap(false);
+          return prev.filter((s) => keyOf(s) !== k);
+        }
+        // A selection lives in one chapter. Tapping into a different one
+        // starts again there rather than building a reference that spans
+        // two books and means nothing.
+        const sameChapter = prev.filter(
+          (s) => s.book === hit.book && s.chapter === hit.chapter
+        );
+        if (sameChapter.length !== prev.length) {
+          setAtCap(false);
+          return [hit];
+        }
+        if (prev.length >= MAX_SELECTED) {
+          setAtCap(true);
+          return prev;
+        }
+        setAtCap(false);
+        // A light tap back, where the phone supports it. Wrapped because
+        // Safari on iOS has no vibrate() at all and older Android throws
+        // when the page hasn't been interacted with — which it has, but
+        // the call is not worth an exception either way.
+        try {
+          if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+            navigator.vibrate(8);
+          }
+        } catch {
+          /* no haptics here, and nothing depends on them */
+        }
+        return [...prev, hit];
+      });
+    }
+
+    root.addEventListener("click", onClick);
+    return () => root.removeEventListener("click", onClick);
+  }, []);
+
+  // Tapping outside the reading area clears too — the toolbar and the note
+  // sheet excepted, since a tap on those is the whole point of selecting.
+  useEffect(() => {
+    if (selected.length === 0) return;
+    function onDocClick(e: MouseEvent) {
+      const t = e.target as HTMLElement | null;
+      if (!t) return;
+      if (rootRef.current?.contains(t)) return;
+      if (t.closest(".verse-bar") || t.closest("[data-verse-sheet]")) return;
+      setSelected([]);
+      setAtCap(false);
+    }
+    // Registered on the next tick so the very click that made the selection
+    // doesn't immediately clear it again.
+    const id = window.setTimeout(
+      () => document.addEventListener("click", onDocClick),
+      0
+    );
+    return () => {
+      window.clearTimeout(id);
+      document.removeEventListener("click", onDocClick);
+    };
+  }, [selected.length]);
+
+  // Escape clears, for anyone reading on a keyboard.
+  useEffect(() => {
+    if (selected.length === 0) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setSelected([]);
+        setAtCap(false);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selected.length]);
+
+  // ------------------------------------------------------------- focus
+
   // Landing on a verse.
   //
   // Deliberately a jump rather than a filter: the verse is brought into view
@@ -174,21 +322,11 @@ export default function ScriptureReader({
   // it was above and below it. Someone following a shared link usually wants
   // the surrounding sentence too, and a verse shown alone is how scripture
   // gets quoted into meaning things it doesn't.
-  //
-  // The mark is held as state and re-applied after every render rather than
-  // written once onto elements we keep hold of. React owns this subtree
-  // through dangerouslySetInnerHTML and replaces it wholesale when the
-  // highlights and notes arrive, which quietly detached the very spans the
-  // mark had been written to: the attribute survived, on nodes no longer in
-  // the document, and the reader saw nothing.
   const [focusPhase, setFocusPhase] = useState<"on" | "fading" | "off">(
     focusVerse ? "on" : "off"
   );
 
-  // No dependency array on purpose. This is the pass that keeps the DOM in
-  // step with focusPhase, and it has to run after any render that might have
-  // rebuilt the verses underneath it. It is a handful of querySelectors over
-  // a range that is almost always one verse.
+  // No dependency array on purpose — same reason as the selection pass above.
   useEffect(() => {
     const root = rootRef.current;
     if (!root || !focusVerse) return;
@@ -247,246 +385,215 @@ export default function ScriptureReader({
     };
   }, [focusVerse]);
 
-  // Selection tracking.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  // ------------------------------------------------- derived selection
 
-    let lastRoot: HTMLElement | null = null;
+  const sortedSelected = useMemo(
+    () => [...selected].sort((a, b) => a.verse - b.verse),
+    [selected]
+  );
+  const anchor = sortedSelected[0] ?? null;
+  const verseNumbers = sortedSelected.map((s) => s.verse);
+  const spanStart = verseNumbers[0] ?? 0;
+  const spanEnd = verseNumbers[verseNumbers.length - 1] ?? 0;
 
-    function clearSelectingMarks() {
-      if (!lastRoot) return;
-      lastRoot
-        .querySelectorAll<HTMLElement>('[data-selecting="true"]')
-        .forEach((el) => el.removeAttribute("data-selecting"));
-      lastRoot = null;
+  /** The honest reference — runs collapsed, gaps kept. */
+  const reference = anchor
+    ? formatVerseList(anchor.book, anchor.chapter, verseNumbers)
+    : "";
+
+  /** The selected verses' text, read back off the page in verse order. */
+  const selectionText = useCallback((): string => {
+    if (!anchor) return "";
+    const root = chapterRefs.current.get(`${anchor.book}|${anchor.chapter}`);
+    if (!root) return "";
+    const parts: string[] = [];
+    for (const v of verseNumbers) {
+      const el = root.querySelector<HTMLElement>(`[data-verse="${v}"]`);
+      if (!el) continue;
+      // Drop the verse marker itself — a quoted verse doesn't carry its
+      // own number inside the sentence.
+      const clone = el.cloneNode(true) as HTMLElement;
+      clone.querySelectorAll(".v").forEach((n) => n.remove());
+      const t = (clone.textContent ?? "").replace(/\s+/g, " ").trim();
+      if (t) parts.push(t);
     }
+    return parts.join(" ");
+  }, [anchor, verseNumbers]);
 
-    function findChapterRoot(node: Node | null): HTMLElement | null {
-      let n: Node | null = node;
-      while (n) {
-        if (n instanceof HTMLElement && n.dataset.book && n.dataset.chapter) {
-          return n;
-        }
-        n = n.parentNode;
+  /** Highlights touching any selected verse. */
+  const touchedHighlights = useMemo(() => {
+    if (!anchor) return [] as Highlight[];
+    const chosen = new Set(verseNumbers);
+    return highlights.filter((h) => {
+      if (h.book !== anchor.book || h.chapter !== anchor.chapter) return false;
+      for (let v = h.verse_start; v <= h.verse_end; v++) {
+        if (chosen.has(v)) return true;
       }
-      return null;
+      return false;
+    });
+  }, [anchor, verseNumbers, highlights]);
+
+  // The colour shown as current only when every selected verse actually
+  // wears it. A mixed selection has no current colour, which is the truth.
+  const currentColour: HighlightColour | null = useMemo(() => {
+    if (!anchor || verseNumbers.length === 0) return null;
+    const byVerse = new Map<number, HighlightColour>();
+    const ordered = [...touchedHighlights].sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+    for (const h of ordered) {
+      for (let v = h.verse_start; v <= h.verse_end; v++) byVerse.set(v, h.colour);
     }
+    const first = byVerse.get(verseNumbers[0]);
+    if (!first) return null;
+    return verseNumbers.every((v) => byVerse.get(v) === first) ? first : null;
+  }, [anchor, verseNumbers, touchedHighlights]);
 
-    function findVerseNumber(node: Node | null): number | null {
-      let n: Node | null = node;
-      while (n) {
-        if (n instanceof HTMLElement && n.dataset.verse) {
-          const v = parseInt(n.dataset.verse, 10);
-          return Number.isFinite(v) ? v : null;
-        }
-        n = n.parentNode;
-      }
-      return null;
-    }
-
-    function onChange() {
-      const sel = window.getSelection();
-      if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
-        clearSelectingMarks();
-        setSelection(null);
-        return;
-      }
-      const range = sel.getRangeAt(0);
-      const root = findChapterRoot(range.commonAncestorContainer);
-      if (!root) {
-        clearSelectingMarks();
-        setSelection(null);
-        return;
-      }
-      const vs = findVerseNumber(range.startContainer);
-      const ve = findVerseNumber(range.endContainer);
-      if (!vs || !ve) {
-        clearSelectingMarks();
-        setSelection(null);
-        return;
-      }
-      const verseStart = Math.min(vs, ve);
-      const verseEnd = Math.max(vs, ve);
-      const text = sel.toString().trim();
-      if (!text) {
-        clearSelectingMarks();
-        setSelection(null);
-        return;
-      }
-      const rect = range.getBoundingClientRect();
-      const pos: ToolbarPos = {
-        top: rect.top,
-        left: rect.left,
-        bottom: rect.bottom,
-        right: rect.right
-      };
-
-      // Mark verses in the selection so the highlight tone shows through
-      // the browser's selection colour — small tell that we own this range.
-      clearSelectingMarks();
-      lastRoot = root;
-      for (let v = verseStart; v <= verseEnd; v++) {
-        const el = root.querySelector<HTMLElement>(`[data-verse="${v}"]`);
-        if (el) el.setAttribute("data-selecting", "true");
-      }
-
-      setSelection({
-        book: root.dataset.book!,
-        chapter: Number(root.dataset.chapter),
-        verseStart,
-        verseEnd,
-        text,
-        rect: pos,
-        rootEl: root
-      });
-    }
-
-    // Also drop the toolbar on scroll — otherwise the pill floats over
-    // stale content until the user re-selects.
-    function onScroll() {
-      const sel = window.getSelection();
-      if (sel && sel.isCollapsed) {
-        clearSelectingMarks();
-        setSelection(null);
-      }
-    }
-
-    document.addEventListener("selectionchange", onChange);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      document.removeEventListener("selectionchange", onChange);
-      window.removeEventListener("scroll", onScroll);
-      clearSelectingMarks();
-    };
-  }, []);
-
-  // Small toast, no library. Auto-clears.
-  const toastTimer = useRef<number | null>(null);
-  const showToast = useCallback((msg: string) => {
-    setToast(msg);
-    if (toastTimer.current) window.clearTimeout(toastTimer.current);
-    toastTimer.current = window.setTimeout(() => setToast(null), 2600);
-  }, []);
-
-  // Find any highlight that fully spans the current selection.
-  const currentHighlight: Highlight | null = selection
-    ? (highlights
-        .filter(
-          (h) =>
-            h.book === selection.book &&
-            h.chapter === selection.chapter &&
-            h.verse_start <= selection.verseStart &&
-            h.verse_end >= selection.verseEnd
-        )
-        .sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        )[0] as Highlight) ?? null
-    : null;
-
-  const existingNote: VerseNote | null = selection
+  const existingNote: VerseNote | null = anchor
     ? notes.find(
         (n) =>
-          n.book === selection.book &&
-          n.chapter === selection.chapter &&
-          n.verse_start === selection.verseStart &&
-          n.verse_end === selection.verseEnd
+          n.book === anchor.book &&
+          n.chapter === anchor.chapter &&
+          n.verse_start === spanStart &&
+          n.verse_end === spanEnd
       ) ?? null
     : null;
 
-  const hasNoteOnRange = selection
+  const hasNoteOnRange = anchor
     ? notes.some(
         (n) =>
-          n.book === selection.book &&
-          n.chapter === selection.chapter &&
-          n.verse_start <= selection.verseStart &&
-          n.verse_end >= selection.verseEnd
+          n.book === anchor.book &&
+          n.chapter === anchor.chapter &&
+          n.verse_start <= spanStart &&
+          n.verse_end >= spanEnd
       )
     : false;
 
-  // Actions ----------------------------------------------------------
+  // ------------------------------------------------------------- actions
+
+  function clearSelection() {
+    setSelected([]);
+    setAtCap(false);
+  }
+
+  /**
+   * Highlighting a non-contiguous selection writes one row per run, so
+   * "3,7" becomes two highlights rather than one row claiming 3–7. The
+   * rows are what Depth lists later, and a row has to be true on its own.
+   */
+  function runsOf(verses: number[]): { start: number; end: number }[] {
+    const runs: { start: number; end: number }[] = [];
+    let start = verses[0];
+    let prev = verses[0];
+    for (let i = 1; i <= verses.length; i++) {
+      const v = verses[i];
+      if (v === prev + 1) {
+        prev = v;
+        continue;
+      }
+      runs.push({ start, end: prev });
+      start = v;
+      prev = v;
+    }
+    return runs;
+  }
 
   async function saveHighlight(colour: HighlightColour) {
-    if (!selection) return;
-    const optimistic: Highlight = {
-      id: `optimistic-${Date.now()}`,
+    if (!anchor || verseNumbers.length === 0) return;
+    const previous = highlights;
+    const chosen = new Set(verseNumbers);
+    const runs = runsOf(verseNumbers);
+    const now = new Date().toISOString();
+
+    // Optimistic: strip anything overlapping these verses, then lay the new
+    // runs on top, so the screen shows the answer before the network does.
+    const kept = highlights.filter((h) => {
+      if (h.book !== anchor.book || h.chapter !== anchor.chapter) return true;
+      for (let v = h.verse_start; v <= h.verse_end; v++) {
+        if (chosen.has(v)) return false;
+      }
+      return true;
+    });
+    const optimistic: Highlight[] = runs.map((r, i) => ({
+      id: `optimistic-${Date.now()}-${i}`,
       user_id: userId,
       day_number: dayNumber,
       testament,
-      book: selection.book,
-      chapter: selection.chapter,
-      verse_start: selection.verseStart,
-      verse_end: selection.verseEnd,
+      book: anchor.book,
+      chapter: anchor.chapter,
+      verse_start: r.start,
+      verse_end: r.end,
       colour,
-      created_at: new Date().toISOString()
-    };
-    // Remove any highlights on the same span so the new one replaces cleanly.
-    const stripped = highlights.filter(
-      (h) =>
-        !(
-          h.book === selection.book &&
-          h.chapter === selection.chapter &&
-          h.verse_start === selection.verseStart &&
-          h.verse_end === selection.verseEnd
-        )
-    );
-    setHighlights([...stripped, optimistic]);
+      created_at: now
+    }));
+    setHighlights([...kept, ...optimistic]);
+    clearSelection();
 
-    // Delete then insert — cleanest for "replace on the same span".
-    const { error: delErr } = await supabase
-      .from("highlights")
-      .delete()
-      .eq("user_id", userId)
-      .eq("book", selection.book)
-      .eq("chapter", selection.chapter)
-      .eq("verse_start", selection.verseStart)
-      .eq("verse_end", selection.verseEnd);
-    if (delErr) {
-      setHighlights(highlights); // rollback
-      showToast(friendlyError(delErr.message));
-      return;
+    // Clear the old rows on these verses, then write the new ones. Deleting
+    // by id is exact — a filter on verse ranges would need an overlap test
+    // PostgREST can't express, and would quietly miss partial overlaps.
+    // Optimistic ids were never written, so they are dropped here rather
+    // than sent — an empty `.in()` list builds `id=in.()`, which PostgREST
+    // rejects outright and which would roll the whole highlight back.
+    const doomed = previous
+      .filter((h) => !kept.includes(h))
+      .map((h) => h.id)
+      .filter((id) => !id.startsWith("optimistic-"));
+
+    if (doomed.length > 0) {
+      const { error } = await supabase.from("highlights").delete().in("id", doomed);
+      if (error) {
+        setHighlights(previous);
+        showToast(friendlyError(error.message));
+        return;
+      }
     }
+
     const { data, error } = await supabase
       .from("highlights")
-      .insert({
-        user_id: userId,
-        day_number: dayNumber,
-        testament,
-        book: selection.book,
-        chapter: selection.chapter,
-        verse_start: selection.verseStart,
-        verse_end: selection.verseEnd,
-        colour
-      })
-      .select()
-      .single();
+      .insert(
+        runs.map((r) => ({
+          user_id: userId,
+          day_number: dayNumber,
+          testament,
+          book: anchor.book,
+          chapter: anchor.chapter,
+          verse_start: r.start,
+          verse_end: r.end,
+          colour
+        }))
+      )
+      .select();
     if (error) {
-      setHighlights(highlights); // rollback
+      setHighlights(previous);
       showToast(friendlyError(error.message));
       return;
     }
-    setHighlights([...stripped, data as Highlight]);
-    dismissSelection();
+    setHighlights([...kept, ...((data ?? []) as Highlight[])]);
   }
 
   async function removeHighlight() {
-    if (!selection || !currentHighlight) return;
-    const prev = highlights;
-    setHighlights(highlights.filter((h) => h.id !== currentHighlight.id));
-    const { error } = await supabase
-      .from("highlights")
-      .delete()
-      .eq("id", currentHighlight.id);
+    if (touchedHighlights.length === 0) return;
+    const previous = highlights;
+    const doomed = touchedHighlights.map((h) => h.id);
+    setHighlights(highlights.filter((h) => !doomed.includes(h.id)));
+    clearSelection();
+
+    // Same guard as above: a selection whose only highlight is still
+    // optimistic has nothing to delete, and an empty `.in()` is an error.
+    const saved = doomed.filter((id) => !id.startsWith("optimistic-"));
+    if (saved.length === 0) return;
+
+    const { error } = await supabase.from("highlights").delete().in("id", saved);
     if (error) {
-      setHighlights(prev);
+      setHighlights(previous);
       showToast(friendlyError(error.message));
-      return;
     }
-    dismissSelection();
   }
 
   async function saveNote(body: string) {
-    if (!selection) return;
+    if (!anchor) return;
     setSheetSaving(true);
     if (existingNote) {
       const prev = notes;
@@ -506,16 +613,18 @@ export default function ScriptureReader({
         return;
       }
     } else {
+      const prev = notes;
+      const text = selectionText();
       const optimistic: VerseNote = {
         id: `optimistic-${Date.now()}`,
         user_id: userId,
         day_number: dayNumber,
         testament,
-        book: selection.book,
-        chapter: selection.chapter,
-        verse_start: selection.verseStart,
-        verse_end: selection.verseEnd,
-        verse_text: selection.text,
+        book: anchor.book,
+        chapter: anchor.chapter,
+        verse_start: spanStart,
+        verse_end: spanEnd,
+        verse_text: text,
         body,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -527,25 +636,25 @@ export default function ScriptureReader({
           user_id: userId,
           day_number: dayNumber,
           testament,
-          book: selection.book,
-          chapter: selection.chapter,
-          verse_start: selection.verseStart,
-          verse_end: selection.verseEnd,
-          verse_text: selection.text,
+          book: anchor.book,
+          chapter: anchor.chapter,
+          verse_start: spanStart,
+          verse_end: spanEnd,
+          verse_text: text,
           body
         })
         .select()
         .single();
       setSheetSaving(false);
       if (error) {
-        setNotes(notes);
+        setNotes(prev);
         showToast(friendlyError(error.message));
         return;
       }
-      setNotes([...notes, data as VerseNote]);
+      setNotes([...prev, data as VerseNote]);
     }
     setSheetOpen(false);
-    dismissSelection();
+    clearSelection();
     showToast("Note saved.");
   }
 
@@ -565,98 +674,92 @@ export default function ScriptureReader({
       return;
     }
     setSheetOpen(false);
-    dismissSelection();
+    clearSelection();
     showToast("Note deleted.");
   }
 
   /**
    * A link that lands the recipient on the verse, not the front door.
    *
-   * This used to share window.location.origin — so someone sent "Isaiah 43:2"
-   * got the home page and had to go and find it, which rather undoes the point
-   * of sharing a verse. The book comes through as a display name because that
-   * is what the reader sees, so it goes back through the book table to reach
-   * the slug the route is built on.
-   *
-   * Works from /read as well as /bible: a verse shared out of the daily plan
-   * still points at a stable, readable Bible route rather than at whichever
-   * plan day happened to contain it.
+   * The book comes through as a display name because that is what the reader
+   * sees, so it goes back through the book table to reach the slug the route
+   * is built on. Works from /read as well as /bible: a verse shared out of
+   * the daily plan still points at a stable, readable Bible route rather
+   * than at whichever plan day happened to contain it.
    */
   function shareUrl(): string {
     if (typeof window === "undefined") return "";
     const origin = window.location.origin;
-    if (!selection) return origin;
+    if (!anchor) return origin;
 
-    const book = bookByName(selection.book);
+    const book = bookByName(anchor.book);
     // Shouldn't happen — the reader is always given canonical names — but a
     // share is not worth breaking over a lookup miss.
     if (!book) return origin;
 
-    const segment =
-      selection.verseStart === selection.verseEnd
-        ? `${selection.verseStart}`
-        : `${selection.verseStart}-${selection.verseEnd}`;
-    return `${origin}/bible/${book.slug}/${selection.chapter}/${segment}`;
+    const segment = spanStart === spanEnd ? `${spanStart}` : `${spanStart}-${spanEnd}`;
+    return `${origin}/bible/${book.slug}/${anchor.chapter}/${segment}`;
+  }
+
+  async function copy() {
+    const text = selectionText();
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(`“${text}” — ${reference}`);
+      showToast("Copied.");
+      clearSelection();
+    } catch {
+      showToast("Couldn't copy. Try again.");
+    }
   }
 
   async function share() {
-    if (!selection) return;
-    const ref = formatVerseReference(
-      selection.book,
-      selection.chapter,
-      selection.verseStart,
-      selection.verseEnd
-    );
-    const text = `“${selection.text}” — ${ref}`;
+    const text = selectionText();
+    if (!text) return;
+    const body = `“${text}” — ${reference}`;
     const url = shareUrl();
     if (typeof navigator !== "undefined" && (navigator as any).share) {
       try {
-        await (navigator as any).share({ text, url });
-        dismissSelection();
+        await (navigator as any).share({ text: body, url });
+        clearSelection();
         return;
       } catch {
         /* user cancelled — fall through to clipboard */
       }
     }
     try {
-      await navigator.clipboard.writeText(`${text}\n${url}`);
+      await navigator.clipboard.writeText(`${body}\n${url}`);
       showToast("Copied to clipboard.");
-      dismissSelection();
+      clearSelection();
     } catch {
       showToast("Couldn't copy. Try again.");
     }
   }
 
   async function shareImage() {
-    if (!selection) return;
-    const ref = formatVerseReference(
-      selection.book,
-      selection.chapter,
-      selection.verseStart,
-      selection.verseEnd
-    );
-    const params = new URLSearchParams({ ref, text: selection.text });
-    const url = `/api/og/verse?${params.toString()}`;
+    const text = selectionText();
+    if (!text) return;
+    const params = new URLSearchParams({ ref: reference, text });
     showToast("Building your card…");
     try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("bad response");
+      const res = await fetch(`/api/og/verse?${params.toString()}`);
+      if (!res.ok) throw new Error(`card responded ${res.status}`);
       const blob = await res.blob();
-      const file = new File([blob], `deep-waters-${ref.replace(/[^\w]+/g, "-")}.png`, {
-        type: "image/png"
-      });
+      const file = new File(
+        [blob], `deep-waters-${reference.replace(/[^\w]+/g, "-")}.png`,
+        { type: "image/png" }
+      );
       const nav: any = navigator;
       if (nav.canShare && nav.canShare({ files: [file] })) {
         try {
-          await nav.share({ files: [file], text: ref, url: shareUrl() });
+          await nav.share({ files: [file], text: reference, url: shareUrl() });
           setToast(null);
-          dismissSelection();
+          clearSelection();
           return;
         } catch {
-          /* fall through */
+          /* fall through to the download */
         }
       }
-      // Download fallback.
       const objUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = objUrl;
@@ -666,36 +769,24 @@ export default function ScriptureReader({
       a.remove();
       URL.revokeObjectURL(objUrl);
       showToast("Card downloaded.");
-      dismissSelection();
-    } catch {
+      clearSelection();
+    } catch (err) {
+      // Say what went wrong rather than shrugging — a card that silently
+      // never arrives is indistinguishable from a broken button.
+      console.error("[deep-waters] verse card:", err);
       showToast("Couldn't build the card. Try again.");
     }
   }
 
-  function dismissSelection() {
-    window.getSelection()?.removeAllRanges();
-    setSelection(null);
-  }
-
-  function openNote() {
-    if (!selection) return;
-    setSheetOpen(true);
-  }
-
-  const currentRef = selection
-    ? formatVerseReference(
-        selection.book,
-        selection.chapter,
-        selection.verseStart,
-        selection.verseEnd
-      )
+  const noteReference = anchor
+    ? formatVerseReference(anchor.book, anchor.chapter, spanStart, spanEnd)
     : "";
 
-  // Render -----------------------------------------------------------
+  // -------------------------------------------------------------- render
 
   return (
     <>
-      <div ref={rootRef} className="mt-16">
+      <div ref={rootRef} className="mt-10">
         {chapters.map((c, i) => (
           <div key={`${c.book}-${c.chapter}`}>
             {i > 0 && (
@@ -714,7 +805,7 @@ export default function ScriptureReader({
             >
               <p className="chapter-mark mb-4">{c.reference}</p>
               <div
-                className="bible-content selectable"
+                className="bible-content"
                 dangerouslySetInnerHTML={{ __html: c.html }}
               />
             </article>
@@ -723,20 +814,25 @@ export default function ScriptureReader({
       </div>
 
       <VerseToolbar
-        pos={selection?.rect ?? null}
-        currentColour={currentHighlight?.colour ?? null}
+        open={selected.length > 0}
+        reference={reference}
+        cap={MAX_SELECTED}
+        atCap={atCap}
+        currentColour={currentColour}
+        anyHighlighted={touchedHighlights.length > 0}
         hasNote={hasNoteOnRange}
         onHighlight={saveHighlight}
         onRemoveHighlight={removeHighlight}
-        onNote={openNote}
+        onNote={() => setSheetOpen(true)}
+        onCopy={copy}
         onShare={share}
         onShareImage={shareImage}
       />
 
       <VerseNoteSheet
         open={sheetOpen}
-        reference={currentRef}
-        verseText={selection?.text ?? ""}
+        reference={noteReference}
+        verseText={sheetOpen ? selectionText() : ""}
         initialBody={existingNote?.body ?? null}
         onSave={saveNote}
         onDelete={existingNote ? deleteNote : undefined}
@@ -748,10 +844,12 @@ export default function ScriptureReader({
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-8 left-1/2 z-[80] -translate-x-1/2 px-4 py-2 text-[13px] font-medium pointer-events-none"
+          className="fixed left-1/2 z-[80] -translate-x-1/2 px-4 py-2 text-[13px] font-medium pointer-events-none"
           style={{
-            // The tab bar is hidden while reading, so this sits on the
-            // bottom edge. Square: it is a message, not something to press.
+            // Sits clear of the verse toolbar when the toolbar is up, and
+            // on the bottom edge when it isn't. Square: it is a message,
+            // not something to press.
+            bottom: selected.length > 0 ? 120 : 32,
             background: "var(--text)",
             color: "var(--bg)"
           }}

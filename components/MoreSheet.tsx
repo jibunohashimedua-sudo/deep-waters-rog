@@ -3,6 +3,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import Avatar from "./Avatar";
+import { currentDayNumber } from "@/lib/plan";
 
 type Choice = "light" | "dark" | "system";
 
@@ -22,10 +24,58 @@ type Props = {
   isAdmin: boolean;
 };
 
+type Me = { name: string; photoUrl: string | null; day: number; streak: number };
+
 export default function MoreSheet({ open, onClose, isAdmin }: Props) {
   const router = useRouter();
   const supabase = createClient();
   const [theme, setTheme] = useState<Choice>("system");
+  const [me, setMe] = useState<Me | null>(null);
+
+  // Who you are, fetched the first time the sheet is opened and then kept.
+  // Two plain queries, no nested join — this project has had HTTP 300s out
+  // of ambiguous relationships, so the streak is counted here in code.
+  useEffect(() => {
+    if (!open || me) return;
+    let cancelled = false;
+    (async () => {
+      const {
+        data: { user }
+      } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+      const [{ data: profile, error: pErr }, { data: done, error: cErr }] =
+        await Promise.all([
+          supabase
+            .from("profiles")
+            .select("name, photo_url, start_date")
+            .eq("id", user.id)
+            .maybeSingle(),
+          supabase.from("completions").select("day_number").eq("user_id", user.id)
+        ]);
+      if (cancelled) return;
+      if (pErr) console.error("[deep-waters] more sheet profile:", pErr.message);
+      if (cErr) console.error("[deep-waters] more sheet completions:", cErr.message);
+      if (!profile) return;
+
+      const day = currentDayNumber(profile.start_date);
+      const days = new Set((done ?? []).map((c) => c.day_number));
+      // Count back from today, or from yesterday when today isn't saved
+      // yet, so a run isn't reported broken while the day is in progress.
+      let streak = 0;
+      for (let d = days.has(day) ? day : day - 1; d >= 1 && days.has(d); d--) {
+        streak++;
+      }
+      setMe({
+        name: profile.name,
+        photoUrl: profile.photo_url ?? null,
+        day,
+        streak
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, me, supabase]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -92,6 +142,34 @@ export default function MoreSheet({ open, onClose, isAdmin }: Props) {
         </div>
 
         <div className="px-2 pb-2">
+          {/* You, first. Depth is the profile, and this is the row that
+              says so — portrait, name, and one mono line of where you
+              are. Hairline separated, no card. */}
+          <Link
+            href="/depth"
+            onClick={onClose}
+            className="person-row px-4 !border-t-0"
+          >
+            <Avatar
+              name={me?.name ?? ""}
+              photoUrl={me?.photoUrl}
+              size="lg"
+              decorative
+            />
+            <span className="min-w-0">
+              <span className="block text-[15px] font-medium text-rog-ink truncate">
+                {me?.name ?? "\u00a0"}
+              </span>
+              <span className="kicker block mt-1">
+                {me ? `Day ${me.day} \u00b7 Streak ${me.streak}` : "\u00a0"}
+              </span>
+            </span>
+          </Link>
+
+          <Link href="/me/edit" onClick={onClose} className={`${link} border-t border-rog-line`}>
+            Edit profile
+          </Link>
+
           {/* Prayer lost its own tab when Bible took a slot. It lives inside
               the Community tab now, but it stays one tap from here so nobody
               has to learn a new route to reach it. */}
@@ -119,9 +197,6 @@ export default function MoreSheet({ open, onClose, isAdmin }: Props) {
           </Link>
 
           <p className={label}>Settings</p>
-          <Link href="/me/edit" onClick={onClose} className={link}>
-            <span aria-hidden>✏️</span> Edit profile
-          </Link>
 
           <div className="px-4 py-3">
             <p className="text-sm font-medium text-rog-ink mb-2">Theme</p>

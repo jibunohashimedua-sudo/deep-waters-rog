@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import ThemeToggle from "./ThemeToggle";
 import BottomNav from "./BottomNav";
 import Mark from "./Mark";
+import { isReadingRoute } from "@/lib/routes";
 
 // Mirrors the mobile tab bar: Prayer is a view inside Community now, so it
 // isn't a separate destination here either.
@@ -78,11 +79,18 @@ export default function Nav() {
 
   // Main tab routes never show a back button. Everything else (sub-pages
   // like /me/edit, /admin/notes, /c/slug, /read) shows one.
-  const mainRoutes = ["/today", "/bible", "/community", "/leaderboard", "/cohorts", "/finishers", "/me", "/admin", "/notifications"];
+  const mainRoutes = ["/today", "/bible", "/community", "/leaderboard", "/cohorts", "/finishers", "/depth", "/admin", "/notifications"];
   const showBack = !mainRoutes.includes(pathname);
+
+  // On a reading screen the sticky reading header is the only chrome, so
+  // the app bar stands down rather than stacking a second bar above it.
+  // BottomNav still renders — it hides itself on the same routes, and it
+  // is what carries the admin flag and the sheet.
+  const reading = isReadingRoute(pathname);
 
   return (
     <>
+      {!reading && (
       <header className="glass-nav sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 shrink-0">
@@ -132,13 +140,14 @@ export default function Nav() {
             </Link>
 
             {/* Desktop-only Me + Sign out */}
-            <Link href="/me" className={`hidden md:inline-flex ${linkCls("/me")}`}>Me</Link>
+            <Link href="/depth" className={`hidden md:inline-flex ${linkCls("/depth")}`}>Depth</Link>
             <button onClick={signOut} className="hidden md:inline text-xs text-rog-muted hover:text-rog-purple px-2">
               Sign out
             </button>
           </div>
         </div>
       </header>
+      )}
 
       <BottomNav isAdmin={isAdmin} hasUser={hasUser} />
     </>

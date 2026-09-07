@@ -1,34 +1,69 @@
-// The five highlight colours + shared types for highlights and verse notes.
-// Colours are low-opacity so scripture stays legible in light AND dark mode.
+// The five highlight colours, plus shared types for highlights and notes.
+//
+// Fathom allows one second colour, and highlights are the one exception to
+// it: they carry a reader's own meaning rather than decorating a screen.
+// They are built inside the system's logic all the same — a tinted ground
+// the verse sits on, a 2px coloured rule down its left edge, square corners,
+// no shadow, no glow. None of the five is green, so sonar keeps its one job.
+//
+// The colours are named for the sounding instrument the mark comes from:
+// Shoal, Current, Coral, Fathom, Silt.
+//
+// ── on the stored values ────────────────────────────────────────────────
+// The `colour` column carries a CHECK constraint written when the palette
+// was amber/mint/sky/rose/lavender, so those five strings are still what
+// goes in and out of the database. Renaming them would mean a hand-run
+// migration, and until it ran every new highlight would be rejected by the
+// constraint. So the stored key stays legacy and the palette below gives it
+// its Fathom name and colours. Nothing a reader sees says "amber".
+// ────────────────────────────────────────────────────────────────────────
 
-export type HighlightColour = "amber" | "mint" | "sky" | "rose" | "lavender";
+/** What the database stores. Do not change without migrating the CHECK. */
+export type HighlightColour = "amber" | "sky" | "rose" | "lavender" | "mint";
 
+export type HighlightPaint = {
+  /** Fathom name, shown to the reader. */
+  name: string;
+  /** Tinted ground the verse sits on. */
+  ground: string;
+  /** 2px rule down the left edge, identifying the colour. */
+  rule: string;
+};
+
+/** Display order, as the palette is written down. */
 export const HIGHLIGHT_COLOURS: HighlightColour[] = [
-  "amber",
-  "mint",
-  "sky",
-  "rose",
-  "lavender"
+  "amber",    // Shoal
+  "sky",      // Current
+  "rose",     // Coral
+  "lavender", // Fathom
+  "mint"      // Silt
 ];
 
-// CSS variables — defined in globals.css so the same swatch reads
-// correctly on the cream light ground and the deep dark ground.
-export const HIGHLIGHT_CSS: Record<HighlightColour, string> = {
-  amber:    "var(--hl-amber)",
-  mint:     "var(--hl-mint)",
-  sky:      "var(--hl-sky)",
-  rose:     "var(--hl-rose)",
-  lavender: "var(--hl-lavender)"
+export const HIGHLIGHT_LIGHT: Record<HighlightColour, HighlightPaint> = {
+  amber:    { name: "Shoal",   ground: "#F0E4CE", rule: "#C9A45E" },
+  sky:      { name: "Current", ground: "#D8E4F4", rule: "#1E5AA8" },
+  rose:     { name: "Coral",   ground: "#F5DCDC", rule: "#B23A1F" },
+  lavender: { name: "Fathom",  ground: "#E2DCF6", rule: "#3B23B8" },
+  mint:     { name: "Silt",    ground: "#E4E2DC", rule: "#565E6D" }
 };
 
-// Swatch colours for the toolbar UI (solid, opaque enough to see).
-export const HIGHLIGHT_SWATCH: Record<HighlightColour, string> = {
-  amber:    "#F0C36A",
-  mint:     "#8FD3B3",
-  sky:      "#8FBBE6",
-  rose:     "#F2A6B6",
-  lavender: "#C1AFE8"
+export const HIGHLIGHT_DARK: Record<HighlightColour, HighlightPaint> = {
+  amber:    { name: "Shoal",   ground: "#2A2114", rule: "#C9A45E" },
+  sky:      { name: "Current", ground: "#14203A", rule: "#6FA8E8" },
+  rose:     { name: "Coral",   ground: "#2E1618", rule: "#E8735A" },
+  lavender: { name: "Fathom",  ground: "#221A3E", rule: "#A78BFF" },
+  mint:     { name: "Silt",    ground: "#1E1D22", rule: "#8B87A3" }
 };
+
+/** The reader-facing name for a stored colour. */
+export function highlightName(colour: HighlightColour): string {
+  return HIGHLIGHT_LIGHT[colour]?.name ?? "Highlight";
+}
+
+/** True for a value the palette knows. Guards rows written by older builds. */
+export function isHighlightColour(v: unknown): v is HighlightColour {
+  return typeof v === "string" && v in HIGHLIGHT_LIGHT;
+}
 
 export type Highlight = {
   id: string;
@@ -69,4 +104,41 @@ export function formatVerseReference(
     return `${book} ${chapter}:${verseStart}–${verseEnd}`;
   }
   return `${book} ${chapter}:${verseStart}`;
+}
+
+/**
+ * A reference for a set of verses that may have gaps in it.
+ *
+ * Tapping verses one at a time makes non-contiguous selections ordinary, and
+ * a range is a claim about the text: "Psalm 42:3–7" says five verses when the
+ * reader picked two. Runs are collapsed, gaps are kept:
+ *
+ *   [3]        -> "Psalm 42:3"
+ *   [3,4,5]    -> "Psalm 42:3–5"
+ *   [3,7]      -> "Psalm 42:3,7"
+ *   [3,4,5,9]  -> "Psalm 42:3–5,9"
+ */
+export function formatVerseList(
+  book: string,
+  chapter: number,
+  verses: number[]
+): string {
+  const sorted = Array.from(new Set(verses)).sort((a, b) => a - b);
+  if (sorted.length === 0) return `${book} ${chapter}`;
+
+  const parts: string[] = [];
+  let runStart = sorted[0];
+  let prev = sorted[0];
+
+  for (let i = 1; i <= sorted.length; i++) {
+    const v = sorted[i];
+    if (v === prev + 1) {
+      prev = v;
+      continue;
+    }
+    parts.push(runStart === prev ? `${runStart}` : `${runStart}–${prev}`);
+    runStart = v;
+    prev = v;
+  }
+  return `${book} ${chapter}:${parts.join(",")}`;
 }

@@ -11,7 +11,7 @@ import { resolveTranslation } from "@/lib/translations";
 import { wrapVersesInHtml } from "@/lib/verseParse";
 import Nav from "@/components/Nav";
 import ScriptureReader from "@/components/ScriptureReader";
-import TranslationSwitcher from "@/components/TranslationSwitcher";
+import ReadingHeader from "@/components/ReadingHeader";
 
 export default async function ReadPage({
   searchParams
@@ -82,23 +82,21 @@ export default async function ReadPage({
   return (
     <>
       <Nav />
-      <main data-surface="reading" className="max-w-3xl mx-auto px-6 py-10">
-        {/* The tab bar is hidden on this screen, so this link is the only
-            way out. It gets the metadata treatment like every other piece
-            of navigation furniture. */}
-        <Link href="/today" className="kicker hover:text-rog-purple">
-          &larr;&ensp;Day {day}
-        </Link>
-
-        <div className="mt-8 flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <p className="chapter-mark">Day {day} &middot; {label}</p>
-            <h1 className="mt-2 font-serif text-[26px] md:text-3xl font-semibold text-rog-ink leading-tight tracking-[-0.01em]">
-              {reference}
-            </h1>
-          </div>
-          <TranslationSwitcher userId={userId} currentId={resolved[0]?.chosen.id ?? profile.preferred_bible_id ?? ""} />
-        </div>
+      <main data-surface="reading" className="max-w-3xl mx-auto px-6 pt-0 pb-10">
+        {/* The tab bar is hidden on this screen, so this bar is the only
+            chrome on it: the way out, where you are, and the translation
+            you're in — the last of which now travels with you down the
+            chapter instead of waiting at the top of it. */}
+        <ReadingHeader
+          backHref="/today"
+          backLabel={`Back to day ${day}`}
+          kicker={`Day ${day} · ${label}`}
+          reference={reference}
+          userId={userId}
+          translationId={
+            resolved[0]?.chosen.id ?? profile.preferred_bible_id ?? ""
+          }
+        />
 
         {fallbackNote && (
           <p className="mt-6 surface-soft !py-3 !px-4 text-sm text-rog-muted">

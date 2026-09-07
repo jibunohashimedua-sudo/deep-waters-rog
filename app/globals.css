@@ -63,13 +63,24 @@
   --success-soft: rgba(6, 122, 90, 0.10);
   --warning: #8A6100;
 
-  /* Scripture highlight colours — cooled onto the new ground. Still
-     low-opacity paint, so the words stay the darkest thing on the page. */
-  --hl-amber:    rgba(214, 168, 74, 0.30);
-  --hl-mint:     rgba(6, 122, 90, 0.16);
-  --hl-sky:      rgba(72, 126, 200, 0.20);
-  --hl-rose:     rgba(198, 96, 128, 0.20);
-  --hl-lavender: rgba(59, 35, 184, 0.16);
+  /* Scripture highlight colours — the one exception to the single second
+     colour, because a highlight carries a reader's meaning rather than
+     decorating a screen. Each is a tinted ground with a 2px rule down the
+     left edge naming it. Solid, not translucent: opacity stacked on the
+     recess and the selection tint and turned to mud. None of the five is
+     green, so sonar keeps its exclusive job.
+
+     Named for the sounding instrument the mark comes from. The token keys
+     are the legacy database values (see lib/highlights.ts for why).
+       amber = Shoal   sky = Current   rose = Coral
+       lavender = Fathom   mint = Silt
+     Ink stays at full strength on every one: measured, the worst of the ten
+     is 12.87:1, against a 7:1 floor. */
+  --hl-amber-ground:    #F0E4CE;  --hl-amber-rule:    #C9A45E;
+  --hl-sky-ground:      #D8E4F4;  --hl-sky-rule:      #1E5AA8;
+  --hl-rose-ground:     #F5DCDC;  --hl-rose-rule:     #B23A1F;
+  --hl-lavender-ground: #E2DCF6;  --hl-lavender-rule: #3B23B8;
+  --hl-mint-ground:     #E4E2DC;  --hl-mint-rule:     #565E6D;
 
   /* =========================================================
      SPACING SCALE — 7 named steps, each with a job.
@@ -136,12 +147,15 @@
   --success-soft: rgba(70, 224, 168, 0.14);
   --warning: #E3B341;
 
-  /* Highlights: lower alpha on the dark ground, or they glow. */
-  --hl-amber:    rgba(240, 195, 106, 0.22);
-  --hl-mint:     rgba(70, 224, 168, 0.20);
-  --hl-sky:      rgba(143, 187, 230, 0.20);
-  --hl-rose:     rgba(242, 166, 182, 0.20);
-  --hl-lavender: rgba(167, 139, 255, 0.22);
+  /* Highlights on the dark ground. The tint is a deep, desaturated version
+     of the same colour rather than the light one at low alpha — a pale
+     wash over violet-black glows, and glow is decoration. The left rule
+     brightens instead, because it is the part doing the identifying. */
+  --hl-amber-ground:    #2A2114;  --hl-amber-rule:    #C9A45E;
+  --hl-sky-ground:      #14203A;  --hl-sky-rule:      #6FA8E8;
+  --hl-rose-ground:     #2E1618;  --hl-rose-rule:     #E8735A;
+  --hl-lavender-ground: #221A3E;  --hl-lavender-rule: #A78BFF;
+  --hl-mint-ground:     #1E1D22;  --hl-mint-rule:     #8B87A3;
 
   color-scheme: dark;
 }
@@ -191,14 +205,19 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Opt back in where copying is genuinely useful: scripture, anything
-   someone typed, and the .selectable class we put on user-written
-   content (reflections, comments, prayers, testimonies, notes, links). */
+/* Opt back in where copying is genuinely useful: anything someone typed,
+   and the .selectable class we put on user-written content (reflections,
+   comments, prayers, testimonies, notes, links).
+
+   Scripture is deliberately not on this list any more. Selecting a verse
+   is now a tap, and Copy is a button on the verse toolbar — so leaving
+   the text selectable would put two competing gestures on the same words
+   and hand the reader iOS's callout on top of our own toolbar. The verse
+   text quoted back on a highlight row is still .selectable, because
+   nothing there is tappable-to-select and copying it is the point. */
 .selectable,
 .selectable *,
 input, textarea,
-.bible-content,
-.bible-content *,
 [contenteditable="true"] {
   -webkit-user-select: text;
   user-select: text;
@@ -494,12 +513,6 @@ body {
 @media (min-width: 640px) {
   .bible-content { font-size: 19px; }
 }
-.bible-content p {
-  margin: 0 0 0.9em;
-}
-.bible-content p:last-child {
-  margin-bottom: 0;
-}
 /* Verse numbers are data, so they are set as data: monospaced, tabular,
    quiet. Raised slightly, never interrupting the serif line. */
 .bible-content .v {
@@ -514,61 +527,91 @@ body {
 }
 
 /* Per-verse wrappers, injected server-side by lib/verseParse.ts.
-   Selectable, no iOS callout on long-press (the callout kicks in a
-   custom toolbar instead — see components/ChapterReader.tsx). */
+   ------------------------------------------------------------------
+   Verses are blocks now, not inline spans. That follows from the
+   gesture: tapping a verse is the primary way to reach it, so a verse
+   has to be a thing you can hit — 44px of target, its own ground, its
+   own left edge for a rule to run down. An inline span can carry none
+   of those. `box-decoration-break: clone` painted a fresh left rule on
+   every wrapped line, which is four rules down a long verse, and a tap
+   target the height of one line of type is not a tap target.
+
+   Scripture is no longer user-selectable. Copying is a toolbar action
+   now, which is the honest place for it: the old text selection barely
+   worked on a phone, gave no feedback, and fought iOS's own callout. */
 .dw-verse {
+  display: block;
+  position: relative;
+  padding: 10px 12px 10px 14px;
+  /* Pull the tinted ground out past the measure so a highlight reads as
+     a band the verse sits on, not a box drawn round the words. */
+  margin: 0 -12px 0 -14px;
+  border-radius: 0;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
   -webkit-touch-callout: none;
-  -webkit-user-select: text;
-  user-select: text;
-  border-radius: 3px;
-  transition: background-color 0.15s ease;
-  padding: 0 1px;
-  margin: 0 -1px;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: inset 2px 0 0 transparent;
+  transition: background-color 160ms ease, box-shadow 160ms ease;
 }
 
-/* When a verse carries a highlight, --hl is set to a highlight token
-   from :root and painted here. Multiple overlapping highlights merge
-   by taking the most recent one applied (see ChapterReader). */
+/* A verse carrying a highlight: the tinted ground, and a 2px rule down
+   the left edge saying which of the five it is. Square, flat, no glow.
+   Overlaps don't blend — the newest highlight wins the verse outright
+   (decided in ScriptureReader, painted here). */
 .dw-verse[data-hl] {
-  background-color: var(--hl);
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
+  background-color: var(--hl-ground);
+  box-shadow: inset 2px 0 0 var(--hl-rule);
 }
+.dw-verse[data-hl="amber"]    { --hl-ground: var(--hl-amber-ground);    --hl-rule: var(--hl-amber-rule); }
+.dw-verse[data-hl="sky"]      { --hl-ground: var(--hl-sky-ground);      --hl-rule: var(--hl-sky-rule); }
+.dw-verse[data-hl="rose"]     { --hl-ground: var(--hl-rose-ground);     --hl-rule: var(--hl-rose-rule); }
+.dw-verse[data-hl="lavender"] { --hl-ground: var(--hl-lavender-ground); --hl-rule: var(--hl-lavender-rule); }
+.dw-verse[data-hl="mint"]     { --hl-ground: var(--hl-mint-ground);     --hl-rule: var(--hl-mint-rule); }
 
-/* A verse arrived at from a link — /bible/john/3/16. Marked so the eye finds
-   it after the scroll, then faded, because the mark is a pointer and not a
-   permanent state. Softer than a highlight on purpose: a highlight is
-   something the reader chose, this is only the app answering a question. */
-.dw-verse[data-focus] {
-  background-color: var(--accent-soft);
-  box-shadow: 0 0 0 4px var(--accent-soft);
-  transition: background-color 600ms ease, box-shadow 600ms ease;
-}
-.dw-verse[data-focus="fading"] {
-  background-color: transparent;
-  box-shadow: 0 0 0 4px transparent;
-}
+/* Selected. Sonar is right here and nowhere near decoration: this is
+   live state, the app reporting where your thumb has been. It wins over
+   a highlight underneath it for as long as the selection lasts.
 
-/* A verse the current selection sits inside gets a tiny inset ring —
-   quiet, so the selection colour still dominates. */
-/* Sonar marks position — including the position of your own thumb. */
-.dw-verse[data-selecting="true"] {
-  background-color: var(--sonar-soft);
+   Adjacent selected verses have no gap between them, so their grounds
+   meet and a run of them reads as one block rather than as a stack. */
+.dw-verse[data-sel="true"] {
+  background-color: var(--soft-bg);
   box-shadow: inset 2px 0 0 var(--sonar);
 }
 
-/* Verses that already carry a note get a small dot marker after them. */
+/* A verse arrived at from a link — /bible/john/3/16. Marked so the eye
+   finds it after the scroll, then faded, because the mark is a pointer
+   and not a state the reader chose. */
+.dw-verse[data-focus] {
+  background-color: var(--accent-soft);
+  transition: background-color 600ms ease;
+}
+.dw-verse[data-focus="fading"] {
+  background-color: transparent;
+}
+
+/* Verses that already carry a note get a small mark after them. */
 .dw-verse[data-note="true"]::after {
   content: "";
   display: inline-block;
   width: 6px;
   height: 6px;
-  border-radius: 999px;
   background-color: var(--sonar);
   opacity: 0.9;
-  margin-left: 4px;
-  vertical-align: super;
-  font-size: 0.6em;
+  margin-left: 6px;
+  vertical-align: 0.35em;
+}
+
+/* Paragraph structure still separates: the verses inside a paragraph sit
+   flush against each other, and one paragraph is set off from the next.
+   Poetry and prose keep the shape API.Bible sent them in. */
+.bible-content p {
+  margin: 0 0 1.1em;
+}
+.bible-content p:last-child {
+  margin-bottom: 0;
 }
 
 /* =========================================================
@@ -1167,4 +1210,296 @@ select:focus-visible {
   background: var(--bg);
   border-top: 1px solid var(--line);
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* =========================================================
+   THE READING HEADER
+   The one piece of chrome on a reading screen. The tab bar is gone
+   here — five ways to leave a page of scripture is four too many —
+   so this bar carries the whole job: the way out, where you are,
+   and which translation you're in.
+
+   Opaque ground with one hairline beneath it. No blur: a frosted bar
+   composites the words underneath it on every frame of a scroll, and
+   scripture swimming under its own header is the exact opposite of
+   what this system is for.
+   ========================================================= */
+
+.reading-bar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  margin: 0 -24px;           /* out to the page edges, past main's px-6 */
+  padding: 0 12px;
+  background: var(--bg);      /* opaque. Nothing is frosted anywhere. */
+  border-bottom: 1px solid var(--line);
+}
+
+/* The way out. A chevron, 44px of target, no label — the label was
+   the chapter you came from, and it is already written beside it. */
+.reading-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: var(--muted);
+  transition: color 0.15s ease;
+}
+.reading-back:hover { color: var(--text); }
+
+/* The condensed reference. It isn't a second title — it is the same
+   reference, arriving in the bar as the real one scrolls out of the
+   page. Mono at metadata size, because in the bar it is a position
+   read off an instrument rather than the name of what you're reading.
+   Only transform and opacity move, so it stays on the compositor. */
+.reading-ref {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9.5px;
+  line-height: 1.4;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+.reading-bar[data-condensed="true"] .reading-ref {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reading-ref { transition: opacity 200ms ease; transform: none; }
+  .reading-bar[data-condensed="true"] .reading-ref { transform: none; }
+}
+
+/* The large reference, in the page rather than the bar. It scrolls
+   away like everything else; the bar picks it up on the way past. */
+.reading-title {
+  font-family: var(--font-serif), Georgia, serif;
+  font-weight: 400;
+  font-size: 26px;
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+@media (min-width: 640px) {
+  .reading-title { font-size: 32px; }
+}
+
+/* =========================================================
+   THE VERSE TOOLBAR
+   It sits on the bottom edge, in the space the tab bar has vacated,
+   and never floats near the text. A toolbar that chases a selection
+   around the page covers the words you selected it for, and on a
+   phone it lands under your own thumb.
+   ========================================================= */
+
+.verse-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+  padding: 10px 14px 6px;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
+  transform: translateY(100%);
+  /* `visibility` rather than `inert`: React 18 has no typed prop for it.
+     It flips only once the slide has finished, so the bar animates all
+     the way out and *then* leaves the tab order and the accessibility
+     tree — a row of buttons parked off the bottom edge is still five
+     tab stops and five things a screen reader will read out. */
+  visibility: hidden;
+  transition: transform 200ms ease, visibility 0s linear 200ms;
+}
+.verse-bar[data-open="true"] {
+  transform: translateY(0);
+  visibility: visible;
+  transition: transform 200ms ease, visibility 0s linear 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .verse-bar { transition: visibility 0s linear 200ms; }
+  .verse-bar[data-open="true"] { transition: none; }
+}
+
+/* The reference line, updating live as verses are tapped. */
+.verse-bar-ref {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 0 2px 8px;
+}
+
+/* The actions. Pills, because you press them.
+   They wrap rather than scroll sideways. A horizontal scroller put
+   "Share as image" off the right-hand edge of a 380px phone, where it
+   is not so much a quiet action as a hidden one — and a toolbar you
+   have to swipe before you can read it is a toolbar that has failed. */
+.verse-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 4px;
+}
+
+.verse-action {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 20px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.verse-action:hover { border-color: var(--text); }
+.verse-action[data-on="true"] { border-color: var(--sonar); color: var(--sonar); }
+
+/* The five swatches. Square, because they are not the thing you press
+   so much as the colour itself — and every container in this system is
+   square. 44px of target, the colour drawn inside it with its own rule
+   down the left edge, exactly as it will look on the verse. */
+.hl-swatch {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--hl-rule);
+  border-radius: 0;
+  background: var(--hl-ground);
+  transition: border-color 0.15s ease;
+}
+.hl-swatch[data-on="true"] {
+  border-color: var(--text);
+  border-left-color: var(--hl-rule);
+}
+.hl-swatch[data-c="amber"]    { --hl-ground: var(--hl-amber-ground);    --hl-rule: var(--hl-amber-rule); }
+.hl-swatch[data-c="sky"]      { --hl-ground: var(--hl-sky-ground);      --hl-rule: var(--hl-sky-rule); }
+.hl-swatch[data-c="rose"]     { --hl-ground: var(--hl-rose-ground);     --hl-rule: var(--hl-rose-rule); }
+.hl-swatch[data-c="lavender"] { --hl-ground: var(--hl-lavender-ground); --hl-rule: var(--hl-lavender-rule); }
+.hl-swatch[data-c="mint"]     { --hl-ground: var(--hl-mint-ground);     --hl-rule: var(--hl-mint-rule); }
+
+/* =========================================================
+   SEGMENTED CONTROL — three ways
+   .segmented is fixed at two columns for the testament switch. Depth
+   needs three, so the column count comes off the element rather than
+   being baked into the class.
+   ========================================================= */
+.segmented[data-cols="3"] { grid-template-columns: repeat(3, 1fr); }
+
+/* =========================================================
+   HIGHLIGHT & NOTE ROWS
+   A list of things you marked is a list, not a gallery of cards.
+   Hairline between rows, a 2px rule on the left in the highlight's
+   own colour so the colour is identifiable at a glance, the reference
+   in mono above and the date in mono below.
+   ========================================================= */
+
+.mark-list { border-bottom: 1px solid var(--line); }
+
+.mark-row {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border-top: 1px solid var(--line);
+  padding: 14px 14px 14px 16px;
+  margin: 0 -14px 0 -16px;
+  box-shadow: inset 2px 0 0 var(--hl-rule, var(--line));
+  transition: background-color 0.12s ease;
+}
+.mark-row:hover { background-color: var(--soft-bg); }
+.mark-row[data-c="amber"]    { --hl-rule: var(--hl-amber-rule); }
+.mark-row[data-c="sky"]      { --hl-rule: var(--hl-sky-rule); }
+.mark-row[data-c="rose"]     { --hl-rule: var(--hl-rose-rule); }
+.mark-row[data-c="lavender"] { --hl-rule: var(--hl-lavender-rule); }
+.mark-row[data-c="mint"]     { --hl-rule: var(--hl-mint-rule); }
+
+/* The verse itself, in the reading serif at reading size. It is
+   scripture wherever it appears. Clamped to three lines until tapped,
+   because a list of a hundred full verses is not a list you can scan. */
+.mark-text {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 16px;
+  line-height: 1.62;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.mark-text[data-clamped="true"] {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* A note's body is something the reader typed, so it is set in the
+   interface sans — the serif is reserved for scripture. */
+.mark-note {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 13.5px;
+  line-height: 20px;
+  color: var(--text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* The colour filter. The same square swatch as the toolbar, smaller,
+   with All as a plain chip in front of it. */
+.hl-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.hl-filter .hl-swatch { width: 44px; height: 44px; }
+
+/* =========================================================
+   THE SQUARE PORTRAIT
+   A person is not a button, so an avatar is square like every other
+   container. With no photo it falls back to initials — set in mono,
+   because in that state it is a label standing in for a face.
+   ========================================================= */
+.portrait-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--soft-bg);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  text-transform: uppercase;
+}
+
+/* A row that is a person: portrait, name, one mono line under it. */
+.person-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 60px;
+  padding: 12px 0;
+  text-align: left;
+  border-top: 1px solid var(--line);
 }
