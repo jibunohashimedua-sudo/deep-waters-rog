@@ -120,6 +120,18 @@ html, body {
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.4s ease, color 0.3s ease;
   max-width: 100vw;
+}
+
+/* Prevent accidental horizontal overflow without making the root a
+   scroll container. `overflow-x: hidden` on <html> turns the document
+   itself into a scroll container in desktop Chrome, which then stops
+   the page from scrolling at all. `overflow-x: clip` clips overflow
+   without that side-effect. `overflow-x: hidden` on body is still fine
+   because the browser hoists body's scroll to the viewport. */
+html {
+  overflow-x: clip;
+}
+body {
   overflow-x: hidden;
   overscroll-behavior-y: none;
 }
