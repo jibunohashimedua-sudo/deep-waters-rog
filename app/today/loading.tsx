@@ -1,9 +1,28 @@
 import Nav from "@/components/Nav";
 
 /**
- * Shown while the server is fetching the day's data. Every block is the size
- * of the real thing it stands in for, so nothing moves when the content
- * lands — the greeting, the progress rule, the two reading tiles.
+ * Shown while the server is fetching the day's data.
+ *
+ * The blocks are sized from the real page rather than guessed at, and the
+ * reading rows borrow .read-list and .read-row themselves — so their grid,
+ * padding and rules are identical by construction instead of by a number
+ * copied across that goes stale the next time the row is touched.
+ *
+ * Measured against /today: the greeting is 31px over 20px, the gauge is
+ * 15px under a 14px kicker row, and each reading row is 70px — 15px of
+ * padding either side of a 21px reference over a 14px label.
+ *
+ * Two things genuinely can't be reserved, because nothing knows them until
+ * the data lands:
+ *
+ *   · the "Kept" chip, which only exists once today's reflection is saved
+ *     and adds 39px to the gauge block when it does
+ *   · the third reading row, which is the Rhapsody article and is absent on
+ *     any day without one
+ *
+ * Three rows are reserved because that is the ordinary day. A day without an
+ * article settles up by one row, which is a smaller and rarer movement than
+ * making every ordinary day push down by one.
  */
 export default function TodayLoading() {
   return (
@@ -11,26 +30,43 @@ export default function TodayLoading() {
       <Nav />
       <main data-surface="reading" className="max-w-3xl mx-auto px-6 py-10" aria-busy="true">
         <span className="sr-only">Loading today</span>
-        <div className="skeleton h-7 w-56" />
-        <div className="skeleton mt-3 h-4 w-40" />
 
-        <div className="mt-10 mb-10">
-          <div className="flex items-center justify-between">
-            <div className="skeleton h-3 w-28" />
-            <div className="skeleton h-3 w-24" />
+        {/* Greeting */}
+        <div className="mb-10">
+          <div className="skeleton h-[31px] w-56" />
+          <div className="skeleton mt-2 h-5 w-40" />
+        </div>
+
+        {/* Day counter and the gauge — a scale with ticks, not a capsule,
+            so the placeholder is a rule of the same 15px height. */}
+        <div className="mb-10">
+          <div className="flex items-baseline justify-between gap-3">
+            <div className="skeleton h-[14px] w-16" />
+            <div className="skeleton h-[14px] w-28" />
           </div>
-          <div className="skeleton mt-2 h-2 w-full" />
+          <div className="skeleton mt-2 h-[15px] w-full" />
         </div>
 
-        <div className="skeleton h-3 w-32" />
-        <div className="skeleton mt-3 h-9 w-28" />
-
-        <div className="mt-10 grid md:grid-cols-2 gap-4">
-          <div className="skeleton h-[132px] w-full" />
-          <div className="skeleton h-[132px] w-full" />
+        {/* The three readings, as list rows rather than cards. */}
+        <div className="read-list">
+          {Array.from({ length: 3 }, (_, i) => (
+            <div key={i} className="read-row">
+              <div className="skeleton h-[14px] w-7" />
+              <div>
+                <div className="skeleton h-[21px] w-40" />
+                <div className="skeleton mt-1 h-[14px] w-28" />
+              </div>
+              <div className="skeleton h-[14px] w-4" />
+            </div>
+          ))}
         </div>
 
-        <div className="skeleton mt-16 h-40 w-full" />
+        {/* Reflection. The only block here that can't be sized honestly: the
+            form is 733px once a reflection is kept and much shorter before,
+            so this reserves a plausible middle rather than pretending. */}
+        <div className="mt-16">
+          <div className="skeleton h-[200px] w-full" />
+        </div>
       </main>
     </>
   );
