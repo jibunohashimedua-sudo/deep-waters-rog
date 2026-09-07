@@ -28,10 +28,10 @@
 --              rows that already exist. From this moment either build can
 --              write a highlight and neither is rejected.
 --
---   PART TWO   Run it once the deploy is live and you have made a
---              highlight and seen it stick. It narrows the rule back down
---              to the five real names, so nothing can write an old one
---              again. It is at the bottom of this file, commented out.
+--   PART TWO   A separate file, run once the deploy is live and you have
+--              made a highlight and seen it stick. It narrows the rule
+--              back down to the five real names, so nothing can write an
+--              old one again.
 --
 -- If you only ever run Part One, everything works — the column is just
 -- looser than it needs to be. If you run Part Two too early, the old build
@@ -107,34 +107,13 @@ $$;
 
 
 -- ============================================================
--- PART TWO — run after the deploy is live
+-- PART TWO lives in its own file:
+--   2026_09_07_highlight_colour_names_part_two.sql
 --
--- Uncomment everything between the lines below and run it. It refuses to
--- narrow the rule while any row still carries an old name, so it cannot
--- leave the table in a state the constraint forbids.
--- ------------------------------------------------------------
---
--- do $$
--- declare
---   stale int;
--- begin
---   select count(*) into stale
---   from public.highlights
---   where colour in ('amber', 'sky', 'rose', 'lavender', 'mint');
---
---   if stale > 0 then
---     raise exception
---       'Not narrowing yet: % highlight(s) still carry a retired name. Re-run Part One.', stale;
---   end if;
--- end
--- $$;
---
--- alter table public.highlights
---   drop constraint if exists highlights_colour_check;
---
--- -- (Part One recreated it under this name, so here the plain drop is safe.)
--- alter table public.highlights
---   add constraint highlights_colour_check
---   check (colour in ('shoal', 'current', 'coral', 'fathom', 'silt'));
---
--- ------------------------------------------------------------
+-- It used to be at the bottom of this one, commented out, waiting to be
+-- uncommented. That was a bad way to ship it: a block of SQL that is
+-- entirely comments runs perfectly happily and reports "Success, no rows
+-- returned", so running it without uncommenting looks exactly like running
+-- it properly. Part two is now a file you paste and run whole, and it
+-- checks its own work before it says it is done.
+-- ============================================================
