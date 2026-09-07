@@ -5,6 +5,12 @@ import Image from "next/image";
 import Nav from "@/components/Nav";
 import PhotoCropper from "@/components/PhotoCropper";
 import { createClient } from "@/lib/supabase/client";
+import {
+  DEFAULT_BIBLE_ID,
+  TRANSLATIONS,
+  TRANSLATION_GROUPS,
+  translationById
+} from "@/lib/translations";
 
 export default function EditProfilePage() {
   const router = useRouter();
@@ -19,6 +25,7 @@ export default function EditProfilePage() {
   const [emailReminders, setEmailReminders] = useState(true);
   const [pushReminders, setPushReminders] = useState(true);
   const [reminderHour, setReminderHour] = useState(7);
+  const [bibleId, setBibleId] = useState<string>(DEFAULT_BIBLE_ID);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -48,6 +55,9 @@ export default function EditProfilePage() {
         setEmailReminders(p.email_reminders);
         setPushReminders(p.push_reminders);
         setReminderHour(p.reminder_hour);
+        // Absent until the translations migration has been run — the KJV
+        // default in state already covers that case.
+        if (p.preferred_bible_id) setBibleId(p.preferred_bible_id);
       }
       setLoading(false);
     })();
@@ -97,7 +107,8 @@ export default function EditProfilePage() {
         photo_url: finalPhoto,
         email_reminders: emailReminders,
         push_reminders: pushReminders,
-        reminder_hour: reminderHour
+        reminder_hour: reminderHour,
+        preferred_bible_id: bibleId
       })
       .eq("id", userId);
 
@@ -185,6 +196,39 @@ export default function EditProfilePage() {
               placeholder="A line about you"
               className="w-full border border-rog-line bg-white px-6 py-3 focus:border-rog-purple focus:outline-none"
             />
+          </div>
+
+          {/* Which translation scripture is shown in, everywhere: the daily
+              plan, the Bible browser, all of it. Stored on the profile rather
+              than in the browser so it follows you between devices. */}
+          <div className="card space-y-3">
+            <p className="kicker">Translation</p>
+            <label className="block">
+              <span className="sr-only">Bible translation</span>
+              <select
+                value={bibleId}
+                onChange={(e) => setBibleId(e.target.value)}
+                className="w-full min-h-[44px] rounded-full border border-rog-line bg-white px-5 py-2 text-sm focus:border-rog-purple focus:outline-none"
+              >
+                {TRANSLATION_GROUPS.map((g) => (
+                  <optgroup key={g} label={g}>
+                    {TRANSLATIONS.filter((t) => t.group === g).map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.abbr} — {t.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </label>
+            <p className="text-xs text-rog-muted leading-relaxed">
+              {translationById(bibleId).note}
+            </p>
+            <p className="text-xs text-rog-muted leading-relaxed">
+              Your 90 days stay exactly the same — same books, same chapters,
+              same days. Only the wording changes, and your highlights and
+              notes stay where you put them.
+            </p>
           </div>
 
           <div className="card space-y-4">

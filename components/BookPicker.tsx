@@ -44,24 +44,12 @@ export default function BookPicker() {
   // and verse has told us exactly where they want to be.
   const reference = useMemo(() => parseReference(query), [query]);
   const results = useMemo(() => searchBooks(query), [query]);
-  const matched = useMemo(() => new Set(results.map((b) => b.slug)), [results]);
 
-  const sectionsFor = (groups: BookGroup[], filter: boolean) =>
-    groups
-      .map((g) => ({
-        group: g,
-        books: BIBLE_BOOKS.filter(
-          (b) => b.group === g && (!filter || matched.has(b.slug))
-        )
-      }))
-      .filter((s) => s.books.length > 0);
-
-  const otHits = sectionsFor(OT_GROUPS, true);
-  const ntHits = sectionsFor(NT_GROUPS, true);
-  const browseSections = sectionsFor(
-    testament === "ot" ? OT_GROUPS : NT_GROUPS,
-    false
-  );
+  // Browsing only. Searching renders one ranked list instead, so there is
+  // nothing to group.
+  const browseSections = (testament === "ot" ? OT_GROUPS : NT_GROUPS)
+    .map((g) => ({ group: g, books: BIBLE_BOOKS.filter((b) => b.group === g) }))
+    .filter((s) => s.books.length > 0);
 
   // Enter takes the shortest road available: a parsed reference first, then
   // a single unambiguous book, then the best-ranked match. Doing nothing
@@ -165,16 +153,19 @@ export default function BookPicker() {
       )}
 
       {searching ? (
-        // Searching: both testaments at once, each labelled so a match is
-        // never ambiguous about which half of the Bible it came from.
-        <>
-          {otHits.length > 0 && (
-            <TestamentSections title="Old Testament" sections={otHits} />
-          )}
-          {ntHits.length > 0 && (
-            <TestamentSections title="New Testament" sections={ntHits} />
-          )}
-        </>
+        // Searching: one ranked list, best match first, both testaments
+        // together. Splitting the results into Old and New sections re-sorted
+        // them into canonical order and threw the ranking away — typing "jn"
+        // put Jonah first, purely because the Old Testament renders above the
+        // New, when "jn" is the ordinary abbreviation for John. Each card
+        // carries its own testament label instead, so a match is still never
+        // ambiguous about which half of the Bible it came from.
+        <section className="mt-8">
+          <h2 className="kicker">
+            {results.length} {results.length === 1 ? "book" : "books"}
+          </h2>
+          <BookGrid books={results} className="mt-3" showTestament />
+        </section>
       ) : (
         <div
           role="tabpanel"
@@ -201,25 +192,39 @@ function TestamentSections({
         <div key={s.group} className="mt-6">
           <h3 className="text-sm font-semibold text-rog-ink">{s.group}</h3>
           {/* Cards, not a list: two up on a narrow phone, more as it widens. */}
-          <ul className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-            {s.books.map((b) => (
-              <li key={b.slug}>
-                <Link
-                  href={`/bible/${b.slug}`}
-                  className="surface-soft !p-3 flex flex-col justify-between min-h-[64px] hover:border-rog-purple group select-none"
-                >
-                  <span className="font-serif text-base text-rog-ink leading-tight">
-                    {b.name}
-                  </span>
-                  <span className="mt-1 text-[11px] text-rog-muted group-hover:text-rog-purple transition-colors">
-                    {b.chapters} {b.chapters === 1 ? "chapter" : "chapters"}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <BookGrid books={s.books} className="mt-3" />
         </div>
       ))}
     </section>
+  );
+}
+
+function BookGrid({
+  books,
+  className = "",
+  showTestament = false
+}: {
+  books: BibleBook[];
+  className?: string;
+  showTestament?: boolean;
+}) {
+  return (
+    <ul className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 ${className}`}>
+      {books.map((b) => (
+        <li key={b.slug}>
+          <Link
+            href={`/bible/${b.slug}`}
+            className="surface-soft !p-3 flex flex-col justify-between min-h-[64px] hover:border-rog-purple group select-none"
+          >
+            <span className="font-serif text-base text-rog-ink leading-tight">{b.name}</span>
+            <span className="mt-1 text-[11px] text-rog-muted group-hover:text-rog-purple transition-colors">
+              {showTestament
+                ? `${b.testament === "ot" ? "Old" : "New"} Testament`
+                : `${b.chapters} ${b.chapters === 1 ? "chapter" : "chapters"}`}
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }

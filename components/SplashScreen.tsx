@@ -39,9 +39,10 @@ export default function SplashScreen() {
 
     // Failsafe for anything neither path covers — no getAnimations, a
     // stylesheet that never arrived, a tab restored mid-flight. It can only
-    // remove the overlay, never hold it: the stage-out is over by 2220ms, and
-    // this sits far enough past that it can't clip the end of the animation.
-    const failsafe = window.setTimeout(done, 3200);
+    // remove the overlay, never hold it: the stage-out is over by 1200ms, so
+    // this sits just past that — far enough not to clip the fade, close
+    // enough that a stuck overlay can't swallow taps for long.
+    const failsafe = window.setTimeout(done, 1800);
     return () => {
       cancelled = true;
       window.clearTimeout(failsafe);
