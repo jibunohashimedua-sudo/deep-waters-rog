@@ -540,7 +540,13 @@ body {
 .dw-verse {
   display: block;
   position: relative;
-  padding: 10px 12px 10px 14px;
+  /* 7px, down from 10px. A verse is 18px on 1.74, so the line box is 31px
+     and the block comes out at 45px — still over the 44px a thumb needs,
+     which is the floor this number is allowed to approach and not cross.
+     min-height states that outright rather than leaving it to arithmetic
+     that would quietly stop being true if the type ever changed. */
+  min-height: 44px;
+  padding: 7px 12px 7px 14px;
   /* Pull the tinted ground out past the measure so a highlight reads as
      a band the verse sits on, not a box drawn round the words. */
   margin: 0 -12px 0 -14px;
@@ -604,9 +610,14 @@ body {
 
 /* Paragraph structure still separates: the verses inside a paragraph sit
    flush against each other, and one paragraph is set off from the next.
-   Poetry and prose keep the shape API.Bible sent them in. */
+   Poetry and prose keep the shape API.Bible sent them in.
+
+   The gap between two paragraphs is this margin plus two verses' padding,
+   so it stays roughly twice the gap between two verses inside one — which
+   is what keeps a paragraph break reading as a break now that the verses
+   themselves have been pulled in. */
 .bible-content p {
-  margin: 0 0 1.1em;
+  margin: 0 0 0.9em;
 }
 .bible-content p:last-child {
   margin-bottom: 0;
