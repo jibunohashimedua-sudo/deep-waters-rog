@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Nav from "@/components/Nav";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth";
@@ -42,11 +41,8 @@ export default async function AdminRhapsodyPage({
     <>
       <Nav />
       <main className="max-w-3xl mx-auto px-6 py-10">
-        <Link href="/admin" className="text-sm text-rog-muted hover:text-rog-purple">
-          &larr; Admin
-        </Link>
         <div className="select-none">
-          <p className="mt-4 kicker">Admin</p>
+          <p className="kicker">Admin</p>
           <h1 className="mt-3 font-serif text-3xl md:text-4xl font-medium text-rog-ink leading-tight">
             Rhapsody of Realities
           </h1>

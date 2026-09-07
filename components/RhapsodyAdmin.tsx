@@ -286,7 +286,7 @@ export default function RhapsodyAdmin({
                   setUploadTitle(monthLabel(`${e.target.value}-01`));
                 }
               }}
-              className="w-full rounded-full border border-rog-line px-5 py-2.5 focus:border-rog-purple focus:outline-none"
+              className="w-full rounded-xl border border-rog-line px-4 py-2.5 text-left focus:border-rog-purple focus:outline-none"
             />
           </div>
           <div className="min-w-0">
@@ -295,7 +295,7 @@ export default function RhapsodyAdmin({
               value={uploadTitle}
               onChange={(e) => setUploadTitle(e.target.value)}
               placeholder="September 2026"
-              className="w-full rounded-full border border-rog-line px-5 py-2.5 focus:border-rog-purple focus:outline-none"
+              className="w-full rounded-xl border border-rog-line px-4 py-2.5 text-left focus:border-rog-purple focus:outline-none"
             />
           </div>
         </div>
@@ -415,7 +415,7 @@ export default function RhapsodyAdmin({
                     inputMode="numeric"
                     value={startPage}
                     onChange={(e) => setStartPage(e.target.value)}
-                    className="w-full rounded-full border border-rog-line px-4 py-2 text-sm focus:border-rog-purple focus:outline-none"
+                    className="w-full rounded-xl border border-rog-line px-4 py-2 text-sm focus:border-rog-purple focus:outline-none"
                   />
                 </div>
                 <div className="min-w-0">
@@ -424,7 +424,7 @@ export default function RhapsodyAdmin({
                     inputMode="numeric"
                     value={pagesPer}
                     onChange={(e) => setPagesPer(e.target.value)}
-                    className="w-full rounded-full border border-rog-line px-4 py-2 text-sm focus:border-rog-purple focus:outline-none"
+                    className="w-full rounded-xl border border-rog-line px-4 py-2 text-sm focus:border-rog-purple focus:outline-none"
                   />
                 </div>
               </div>
@@ -473,7 +473,7 @@ export default function RhapsodyAdmin({
                         setDrafts((p) => ({ ...p, [d]: { ...draft, title: e.target.value } }))
                       }
                       placeholder="Article title"
-                      className="flex-1 min-w-0 rounded-full border border-rog-line px-4 py-2 text-sm focus:border-rog-purple focus:outline-none"
+                      className="flex-1 min-w-0 rounded-xl border border-rog-line px-4 py-2 text-sm focus:border-rog-purple focus:outline-none"
                     />
                     <input
                       value={draft.page}
@@ -483,7 +483,7 @@ export default function RhapsodyAdmin({
                       inputMode="numeric"
                       placeholder="pg"
                       aria-label={`Page number for ${d}`}
-                      className="w-16 shrink-0 rounded-full border border-rog-line px-3 py-2 text-sm text-center focus:border-rog-purple focus:outline-none"
+                      className="w-16 shrink-0 rounded-xl border border-rog-line px-3 py-2 text-sm text-center focus:border-rog-purple focus:outline-none"
                     />
                   </li>
                 );
