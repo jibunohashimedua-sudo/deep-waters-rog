@@ -15,7 +15,7 @@ export default async function AdminUsersPage({
 
   let query = supabase
     .from("profiles")
-    .select("id, name, photo_url, role, approved, start_date, created_at")
+    .select("*")
     .order("created_at", { ascending: false })
     .limit(200);
 
@@ -67,6 +67,9 @@ export default async function AdminUsersPage({
                   {u.role === "admin" && (
                     <span className="ml-2 text-[10px] uppercase tracking-[0.2em] text-rog-purple font-medium">Admin</span>
                   )}
+                  {u.is_pastoral === true && (
+                    <span className="ml-2 text-[10px] uppercase tracking-[0.2em] text-rog-purple font-medium">Elite</span>
+                  )}
                   {!u.approved && (
                     <span className="ml-2 text-[10px] uppercase tracking-wider text-warning">Pending</span>
                   )}
@@ -76,7 +79,12 @@ export default async function AdminUsersPage({
                 </p>
               </div>
               {u.id !== me && (
-                <UserAdminControls userId={u.id} role={u.role} approved={u.approved} />
+                <UserAdminControls
+                  userId={u.id}
+                  role={u.role}
+                  approved={u.approved}
+                  isPastoral={u.is_pastoral === true}
+                />
               )}
             </div>
           ))}

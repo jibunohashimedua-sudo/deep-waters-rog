@@ -181,6 +181,7 @@ export default async function ReadPage({
             testament={testament}
             chapters={loaded}
             translationId={resolved[0]?.id}
+            isPastoral={profile.is_pastoral === true}
           />
         )}
 

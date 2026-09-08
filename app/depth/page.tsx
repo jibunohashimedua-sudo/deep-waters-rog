@@ -81,7 +81,7 @@ export default async function DepthPage() {
       .order("created_at", { ascending: false }),
     supabase
       .from("verse_notes")
-      .select("id, book, chapter, verse_start, verse_end, body, updated_at")
+      .select("id, book, chapter, verse_start, verse_end, body, created_at, updated_at")
       .eq("user_id", userId)
       .order("updated_at", { ascending: false }),
     // Chapter tick counts per day, so a partly-read day shows a partial
@@ -178,6 +178,7 @@ export default async function DepthPage() {
     book: n.book,
     reference: referenceOf(n.book, n.chapter, n.verse_start, n.verse_end),
     body: n.body,
+    createdAt: n.created_at,
     updatedAt: n.updated_at,
     href: hrefOf(n.book, n.chapter, n.verse_start, n.verse_end)
   }));

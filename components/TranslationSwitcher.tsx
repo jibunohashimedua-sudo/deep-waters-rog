@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/errors";
@@ -55,17 +56,18 @@ export default function TranslationSwitcher({
     window.scrollTo({ top: y, behavior: "auto" });
   }, [pending]);
 
+  // Counted, so a sheet opened on top of another one doesn't leave the
+  // body locked when the first of them closes. See lib/useLockBodyScroll.
+  useLockBodyScroll(open);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
     };
     window.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
     };
   }, [open]);
 

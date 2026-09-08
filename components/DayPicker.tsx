@@ -1,5 +1,6 @@
 "use client";
 import { useEffect } from "react";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { useRouter } from "next/navigation";
 
 type Props = {
@@ -36,17 +37,18 @@ export default function DayPicker({
 }: Props) {
   const router = useRouter();
 
+  // Counted, so a sheet opened on top of another one doesn't leave the
+  // body locked when the first of them closes. See lib/useLockBodyScroll.
+  useLockBodyScroll(open);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
     };
   }, [open, onClose]);
 

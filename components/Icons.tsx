@@ -41,6 +41,14 @@ export const ICONS = {
 
   // ---- the More sheet ----
   edit: <path d="M4 20h4L18 10l-4-4L4 16v4ZM14 6l4 4" />,
+  /** A manuscript: a page with a folded corner and two lines written on
+      it. Elite's Sermons row, and nothing else in the app uses it. */
+  sermon: (
+    <>
+      <path d="M6 3h8l4 4v14H6V3Z" />
+      <path d="M14 3v4h4M9.5 12h5M9.5 16h3.5" />
+    </>
+  ),
   /** The prayer wall is a wall. Brickwork is the same geometry as the gauge. */
   prayer: (
     <>

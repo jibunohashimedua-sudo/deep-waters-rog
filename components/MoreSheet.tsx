@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Avatar from "./Avatar";
@@ -24,11 +25,14 @@ type Props = {
   open: boolean;
   onClose: () => void;
   isAdmin: boolean;
+  /** The Elite gate. False means the Sermons row does not exist — no
+      locked row, no greyed row, nothing to notice. */
+  isPastoral: boolean;
 };
 
 type Me = { name: string; photoUrl: string | null; day: number; streak: number };
 
-export default function MoreSheet({ open, onClose, isAdmin }: Props) {
+export default function MoreSheet({ open, onClose, isAdmin, isPastoral }: Props) {
   const router = useRouter();
   const supabase = createClient();
   const [theme, setTheme] = useState<Choice>("system");
@@ -87,17 +91,18 @@ export default function MoreSheet({ open, onClose, isAdmin }: Props) {
     setTheme(stored);
   }, [open]);
 
+  // Counted, so a sheet opened on top of another one doesn't leave the
+  // body locked when the first of them closes. See lib/useLockBodyScroll.
+  useLockBodyScroll(open);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
     };
   }, [open, onClose]);
 
@@ -211,6 +216,14 @@ export default function MoreSheet({ open, onClose, isAdmin }: Props) {
               inside the Community tab now, but it stays one tap from here
               so nobody has to learn a new route to reach it. */}
           <div className={group}>
+            {/* Elite. Above the prayer wall because it is the pastor's own
+                work rather than the church's, and it only exists at all
+                when the flag is on. */}
+            {isPastoral && (
+              <Link href="/sermons" onClick={onClose} className={link}>
+                <Icon name="sermon" /> Sermons
+              </Link>
+            )}
             <Link href="/prayer" onClick={onClose} className={link}>
               <Icon name="prayer" /> Prayer wall
             </Link>

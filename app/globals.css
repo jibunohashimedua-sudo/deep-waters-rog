@@ -1780,3 +1780,542 @@ select:focus-visible {
   text-align: left;
   border-top: 1px solid var(--line);
 }
+
+/* =========================================================
+   DEEP WATERS ELITE
+
+   Elite is Deep Waters with more in it, not a second product bolted
+   on. Everything below is built from the tokens already here: the
+   accent violet for anything that belongs to Elite, sonar kept for
+   position and state only (the pinned verse's rule, the active lens's
+   underline), square containers, pills only on things you press, no
+   shadow, no blur, no gradient.
+   ========================================================= */
+
+/* ---- The header lockup ---------------------------------------------
+   The same size and the same place as the standard one, so the header
+   never changes shape when the flag is on. ELITE is set in mono with
+   the kicker's tracking — it is a label, and labels in this system are
+   mono. */
+.dw-elite-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent);
+}
+.dw-elite-word {
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+}
+.dw-elite-rule {
+  width: 1px;
+  height: 16px;
+  background: var(--accent);
+  opacity: 0.32;
+}
+.dw-elite-tag {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* ---- The Bench chip on the verse toolbar ---------------------------
+   The existing chip shape exactly, wearing the accent on its border and
+   its label. It reads as another kind of thing without raising its
+   voice, and it is never rendered at all for a reader without the
+   flag — there is no locked state here to style. */
+.verse-action[data-elite="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.verse-action[data-elite="true"]:hover {
+  border-color: var(--accent-strong);
+}
+
+/* The handle the Bench leaves on the toolbar when it collapses. Tapping
+   it is the second tap, and the one that closes. */
+.verse-grab {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-height: 24px;
+  padding: 4px 0 8px;
+  background: transparent;
+}
+.verse-grab-bar {
+  display: block;
+  width: 40px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--line);
+}
+
+/* =========================================================
+   THE BENCH
+   One component, four arrangements, chosen on the CSS viewport and
+   applied here. Nothing below detects a device, and nothing animates
+   on a layout change: a rotation that dissolves between two layouts
+   looks broken, and a fold is not a transition.
+   ========================================================= */
+.bench {
+  position: fixed;
+  z-index: 65;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  overscroll-behavior: contain;
+}
+
+/* ---- Sheet, under 600px wide and at least 500px tall ---------------
+   The verse sheet grown upward. The chapter stays visible behind it
+   and the selected verse stays lit, which is the whole reason it is a
+   sheet and not a page. */
+.bench[data-mode="sheet"] {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 86dvh;
+  max-height: 86dvh;
+  border-top: 1px solid var(--line);
+  border-top-left-radius: 28px;
+  border-top-right-radius: 28px;
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* ---- Split, 600–1023px, and any width under 500px tall -------------
+   A full-height column beside the reader rather than a sheet over it.
+   This is also what a phone in landscape gets: 86% of a 390px-tall
+   window would leave nothing of the chapter behind it. */
+.bench[data-mode="split"] {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(420px, 46vw);
+  border-left: 1px solid var(--line);
+  padding-right: env(safe-area-inset-right);
+  padding-top: env(safe-area-inset-top);
+}
+
+/* ---- Desk, 1024px and up: reader, panels, notepad ------------------ */
+.bench[data-mode="desk"],
+.bench[data-mode="wide"] {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  border-left: 1px solid var(--line);
+  padding-right: env(safe-area-inset-right);
+  padding-top: env(safe-area-inset-top);
+}
+.bench[data-mode="desk"] { width: min(760px, 62vw); }
+.bench[data-mode="wide"] { width: min(1040px, 66vw); }
+
+/* ---- Folding phones ------------------------------------------------
+   Where the browser reports segments, the boundary goes on the seam
+   rather than near it, and nothing — no control, no scrollbar, no word
+   rail — is placed across the gutter. The offsets come from the
+   viewport-segment environment variables, so a hinge is never assumed
+   to be any particular width. */
+@media (horizontal-viewport-segments: 2) {
+  .bench[data-segments="horizontal"] {
+    top: 0;
+    bottom: 0;
+    left: env(viewport-segment-left 1 0);
+    right: 0;
+    width: auto;
+    border-left: 1px solid var(--line);
+  }
+  html[data-bench="beside"] body {
+    padding-right: 0;
+    padding-left: 0;
+  }
+  html[data-bench="beside"] main[data-surface="reading"] {
+    max-width: env(viewport-segment-right 0 0);
+  }
+}
+@media (vertical-viewport-segments: 2) {
+  .bench[data-segments="vertical"] {
+    left: 0;
+    right: 0;
+    top: env(viewport-segment-top 0 1);
+    bottom: 0;
+    width: auto;
+    height: auto;
+    max-height: none;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    border-radius: 0;
+  }
+  html[data-bench="below"] body {
+    padding-bottom: calc(100dvh - env(viewport-segment-bottom 0 0));
+    padding-right: 0;
+  }
+}
+
+/* The reader gets out of the way of a Bench that is a column. Done with
+   padding on the body rather than by re-rendering the page, so the
+   chapter keeps its scroll position when the layout changes. */
+html[data-bench="beside"] body {
+  padding-right: min(420px, 46vw);
+}
+html[data-bench="beside"][data-bench-mode="desk"] body {
+  padding-right: min(760px, 62vw);
+}
+html[data-bench="beside"][data-bench-mode="wide"] body {
+  padding-right: min(1040px, 66vw);
+}
+html[data-bench="beside"] .verse-bar {
+  right: min(420px, 46vw);
+}
+html[data-bench="beside"][data-bench-mode="desk"] .verse-bar {
+  right: min(760px, 62vw);
+}
+html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
+  right: min(1040px, 66vw);
+}
+
+/* The grab handle. One tap collapses the Bench back onto the toolbar. */
+.bench-grab {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 0 6px;
+  background: transparent;
+}
+.bench-grab-bar {
+  display: block;
+  width: 44px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--line);
+}
+
+/* ---- The pinned verse ---------------------------------------------
+   Fixed while everything under it scrolls. The sonar rule is the same
+   rule a selected verse wears in the chapter: this is that verse, and
+   sonar is reporting a position, which is the only thing it ever does. */
+.bench-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 0 0 auto;
+  padding: 8px 16px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.bench-pinned {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-left: 12px;
+  box-shadow: inset 2px 0 0 var(--sonar);
+}
+.bench-pinned-text {
+  margin-top: 6px;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text);
+  max-height: 22vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.bench-close {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  color: var(--muted);
+}
+.bench-close:hover { color: var(--text); }
+
+/* ---- The word rail -------------------------------------------------
+   One row, scrolling sideways, never wrapping. */
+.bench-rail {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.bench-word {
+  flex: 0 0 auto;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  white-space: nowrap;
+}
+.bench-word:hover { border-color: var(--text); }
+.bench-word[data-on="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.bench-word-text { font-size: 13.5px; font-weight: 500; line-height: 1.1; }
+.bench-word-num {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.bench-word[data-on="true"] .bench-word-num { color: var(--accent); }
+
+/* ---- The lens strip ------------------------------------------------ */
+.bench-tabs {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--line);
+}
+.bench-tab {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 12px;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: inset 0 -2px 0 transparent;
+}
+.bench-tab:hover { color: var(--text); }
+/* Sonar, because the underline is reporting where you are. */
+.bench-tab[data-on="true"] {
+  color: var(--text);
+  box-shadow: inset 0 -2px 0 var(--sonar);
+}
+
+/* ---- The body ------------------------------------------------------
+   Its own scroller, contained, so it never chains into the page behind
+   the sheet or into the reader column beside it. */
+.bench-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 14px 16px 8px;
+}
+.bench[data-mode="desk"] .bench-body,
+.bench[data-mode="wide"] .bench-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 20px;
+  align-items: start;
+}
+.bench-rack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+}
+.bench[data-mode="wide"] .bench-rack {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.bench-notes-col {
+  position: sticky;
+  top: 0;
+  border-left: 1px solid var(--line);
+  padding-left: 16px;
+}
+.bench-panel { border-top: 1px solid var(--line); padding-top: 10px; }
+.bench-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 32px;
+}
+.bench-panel-controls { display: inline-flex; gap: 4px; }
+.bench-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 16px 0;
+}
+.bench-rack .bench-presets { padding: 8px 0 0; }
+.bench-preset {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.bench-preset:hover { color: var(--text); border-color: var(--text); }
+/* A panel that is open. Ink fill, the same as .chip[data-on] elsewhere in
+   the app — the accent is spent on Elite itself, not on a toggle. */
+.bench-preset[data-on="true"] {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
+}
+
+.bench-stack-section { border-top: 1px solid var(--line); padding-top: 12px; }
+.bench-stack-section:first-child { border-top: 0; padding-top: 0; }
+
+.bench-lens-body { padding-top: 8px; }
+.bench-rows { display: block; }
+.bench-row { border-top: 1px solid var(--line); padding: 12px 0; }
+.bench-row:first-child { border-top: 0; }
+.bench-scripture {
+  margin-top: 6px;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 15.5px;
+  line-height: 1.65;
+  color: var(--text);
+}
+/* Something a member wrote. The interface sans, not the reading serif —
+   the serif belongs to scripture. */
+.bench-said {
+  margin-top: 6px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+
+/* An empty lens says so, in mono, once. */
+.bench-empty {
+  margin-top: 8px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* Where a lens's content comes from. Every lens carries one. */
+.bench-source {
+  margin-top: 12px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.bench-more,
+.bench-primary,
+.bench-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.bench-more { width: 100%; margin-top: 12px; }
+.bench-more:hover,
+.bench-action:hover { border-color: var(--text); }
+.bench-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+.bench-primary:disabled { opacity: 0.5; }
+.bench-action[data-on="true"] { border-color: var(--sonar); color: var(--sonar); }
+
+/* Row-level actions: metadata sized, so a pair of them reads as a
+   footer under what somebody wrote rather than as a button bar. */
+.bench-row-actions { display: flex; gap: 14px; margin-top: 8px; }
+.bench-act {
+  min-height: 44px;
+  padding: 0 2px;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.bench-act:hover { color: var(--text); }
+.bench-act:disabled { opacity: 0.35; }
+.bench-act[data-danger="true"] { color: var(--danger); }
+
+/* ---- The notepad --------------------------------------------------- */
+.bench-notepad { padding-top: 4px; }
+.bench-composer { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 8px; }
+.bench-textarea {
+  width: 100%;
+  margin-top: 8px;
+  border: 1px solid var(--line);
+  background: var(--input-bg);
+  color: var(--text);
+  padding: 12px 14px;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+}
+.bench-textarea:focus { border-color: var(--accent); outline: none; }
+.bench-composer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* ---- The dock ------------------------------------------------------
+   One and Stack, and the two actions. It stays on the bottom edge of
+   the Bench in every layout, clear of the home indicator. */
+.bench-dock {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 16px;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+}
+.bench-dock-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.bench-toggle { display: flex; gap: 2px; }
+.bench-toggle-btn {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.bench-toggle-btn[data-on="true"] {
+  color: var(--text);
+  border-color: var(--text);
+}

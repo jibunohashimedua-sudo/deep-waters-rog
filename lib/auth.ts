@@ -9,6 +9,9 @@ export type Profile = {
   start_date: string;
   cohort_id: string | null;
   role: "member" | "admin";
+  /** The Elite gate. Optional until the pastoral migration has been run —
+      absent reads as false everywhere, so the layer simply doesn't appear. */
+  is_pastoral?: boolean | null;
   approved: boolean;
   email_reminders: boolean;
   push_reminders: boolean;
@@ -42,6 +45,21 @@ export async function requireProfile(): Promise<{ userId: string; profile: Profi
   }
   if (!profile) redirect("/onboarding");
   return { userId: user.id, profile: profile as Profile };
+}
+
+/** True when this profile carries the Elite gate. One reading of the flag,
+    used by every server surface that consults it. */
+export function isPastoral(profile: Pick<Profile, "is_pastoral">): boolean {
+  return profile.is_pastoral === true;
+}
+
+/** Require the Elite gate, else redirect to /today — the same shape as
+    requireAdmin, and the same silence: someone without the flag is never
+    told there was a door here. */
+export async function requirePastoral(): Promise<{ userId: string; profile: Profile }> {
+  const r = await requireProfile();
+  if (!isPastoral(r.profile)) redirect("/today");
+  return r;
 }
 
 /** Require admin, else redirect to /today. */

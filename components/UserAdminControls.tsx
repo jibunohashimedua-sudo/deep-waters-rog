@@ -7,11 +7,15 @@ import { friendlyError } from "@/lib/errors";
 export default function UserAdminControls({
   userId,
   role,
-  approved
+  approved,
+  isPastoral
 }: {
   userId: string;
   role: string;
   approved: boolean;
+  /** The Elite gate. Only an admin can move it, which is why the control
+      lives here beside Make admin and nowhere else in the app. */
+  isPastoral: boolean;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -51,6 +55,25 @@ export default function UserAdminControls({
       {!approved && (
         <button disabled={busy} onClick={() => update({ approved: true })} className="text-success font-semibold">
           Approve
+        </button>
+      )}
+      {/* Elite. Same shape as the admin control next to it: one word that
+          says what pressing it will do. */}
+      {isPastoral ? (
+        <button
+          disabled={busy}
+          onClick={() => update({ is_pastoral: false })}
+          className="text-rog-muted"
+        >
+          Remove Elite
+        </button>
+      ) : (
+        <button
+          disabled={busy}
+          onClick={() => update({ is_pastoral: true })}
+          className="text-rog-purple font-semibold"
+        >
+          Grant Elite
         </button>
       )}
       {role === "admin" ? (

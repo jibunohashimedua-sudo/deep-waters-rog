@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/errors";
 import {
@@ -15,6 +16,7 @@ import { verseFragments, verseTextOnPage } from "@/lib/verseFragments";
 import VerseToolbar from "./VerseToolbar";
 import VerseNoteSheet from "./VerseNoteSheet";
 import CompareSheet from "./CompareSheet";
+import BenchLayer, { type BenchPhase } from "./BenchLayer";
 import { DEFAULT_BIBLE_ID } from "@/lib/translations";
 
 type ChapterInput = {
@@ -37,6 +39,12 @@ type Props = {
   focusVerse?: { start: number; end: number };
   /** The edition on screen. Compare leads its list with it. */
   translationId?: string;
+  /** The Elite gate. False means the Bench chip is not rendered — see the
+      note in VerseToolbar. Defaults to false so a surface that hasn't been
+      told is a surface without Elite on it. */
+  isPastoral?: boolean;
+  /** Elite is suppressed on licensed third-party content. */
+  suppressBench?: boolean;
 };
 
 /** How far below the top edge a focused verse settles — clears the sticky
@@ -78,9 +86,12 @@ export default function ScriptureReader({
   testament,
   chapters,
   focusVerse,
-  translationId
+  translationId,
+  isPastoral = false,
+  suppressBench = false
 }: Props) {
   const supabase = useMemo(() => createClient(), []);
+  const pathname = usePathname();
 
   const rootRef = useRef<HTMLDivElement>(null);
   const chapterRefs = useRef<Map<string, HTMLElement>>(new Map());
@@ -90,6 +101,10 @@ export default function ScriptureReader({
   const [selected, setSelected] = useState<SelKey[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
+  // closed → open → collapsed. Collapsing puts the six-chip toolbar back
+  // with the verse still selected; the toolbar's own handle is what closes
+  // the rest of the way.
+  const [benchPhase, setBenchPhase] = useState<BenchPhase>("closed");
   const [sheetSaving, setSheetSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [atCap, setAtCap] = useState(false);
@@ -302,11 +317,37 @@ export default function ScriptureReader({
   // sheet excepted, since a tap on those is the whole point of selecting.
   useEffect(() => {
     if (selected.length === 0) return;
+    /** Is this element the reading area, the toolbar, or a sheet? */
+    function isInside(n: EventTarget | null): boolean {
+      if (!(n instanceof HTMLElement)) return false;
+      if (n === rootRef.current) return true;
+      if (n.classList.contains("verse-bar")) return true;
+      return n.hasAttribute("data-verse-sheet");
+    }
+
     function onDocClick(e: MouseEvent) {
-      const t = e.target as HTMLElement | null;
-      if (!t) return;
-      if (rootRef.current?.contains(t)) return;
-      if (t.closest(".verse-bar") || t.closest("[data-verse-sheet]")) return;
+      // "Inside" is decided from the event's own path, which the browser
+      // captured when the event was dispatched — not by walking up from
+      // e.target now.
+      //
+      // This listener runs on the document, above React's own. By the time
+      // it fires, React may already have re-rendered, and a control that
+      // removes itself when you press it is gone: the Bench's panel chips
+      // do exactly that, since opening a panel takes its chip out of the
+      // closed list. A detached node has no ancestors, so closest() called
+      // "outside" on a tap that was plainly inside the Bench, the selection
+      // was cleared, and the Bench went down with it. The path still holds
+      // the ancestors the node had when it was pressed.
+      const path = typeof e.composedPath === "function" ? e.composedPath() : [];
+      if (path.length > 0) {
+        if (path.some(isInside)) return;
+      } else {
+        // Only for an engine with no composedPath. Same rule, same risk.
+        const t = e.target as HTMLElement | null;
+        if (!t) return;
+        if (rootRef.current?.contains(t)) return;
+        if (t.closest(".verse-bar") || t.closest("[data-verse-sheet]")) return;
+      }
       setSelected([]);
       setAtCap(false);
     }
@@ -329,7 +370,10 @@ export default function ScriptureReader({
   // "which book is this?" state, which is a true answer to a question
   // nobody asked.
   useEffect(() => {
-    if (selected.length === 0) setCompareOpen(false);
+    if (selected.length === 0) {
+      setCompareOpen(false);
+      setBenchPhase("closed");
+    }
   }, [selected.length]);
 
   // Escape clears, for anyone reading on a keyboard.
@@ -426,7 +470,12 @@ export default function ScriptureReader({
     [selected]
   );
   const anchor = sortedSelected[0] ?? null;
-  const verseNumbers = sortedSelected.map((s) => s.verse);
+  // Memoised because the Bench takes this list as a prop, and a fresh array
+  // on every render would re-enter its effects on every render.
+  const verseNumbers = useMemo(
+    () => sortedSelected.map((s) => s.verse),
+    [sortedSelected]
+  );
   const spanStart = verseNumbers[0] ?? 0;
   const spanEnd = verseNumbers[verseNumbers.length - 1] ?? 0;
 
@@ -623,32 +672,17 @@ export default function ScriptureReader({
     }
   }
 
-  async function saveNote(body: string) {
-    if (!anchor) return;
-    setSheetSaving(true);
-    if (existingNote) {
+  /**
+   * The three note operations, written once.
+   *
+   * The note sheet and the Bench both act on the same rows, so create,
+   * update and delete live here rather than twice. Each returns true when
+   * it stuck, so a caller can decide what to clear.
+   */
+  const createNote = useCallback(
+    async (body: string, verseText: string): Promise<boolean> => {
+      if (!anchor) return false;
       const prev = notes;
-      setNotes(
-        notes.map((n) =>
-          n.id === existingNote.id ? { ...n, body, updated_at: new Date().toISOString() } : n
-        )
-      );
-      // Server-side length cap and validation live in /api/verse-note.
-      const res = await fetch("/api/verse-note", {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ id: existingNote.id, body })
-      });
-      setSheetSaving(false);
-      if (!res.ok) {
-        setNotes(prev);
-        const j = await res.json().catch(() => ({}));
-        showToast(friendlyError(j.error));
-        return;
-      }
-    } else {
-      const prev = notes;
-      const text = selectionText();
       const optimistic: VerseNote = {
         id: `optimistic-${Date.now()}`,
         user_id: userId,
@@ -658,12 +692,12 @@ export default function ScriptureReader({
         chapter: anchor.chapter,
         verse_start: spanStart,
         verse_end: spanEnd,
-        verse_text: text,
+        verse_text: verseText,
         body,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
-      setNotes([...notes, optimistic]);
+      setNotes([...prev, optimistic]);
       const res = await fetch("/api/verse-note", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -674,43 +708,88 @@ export default function ScriptureReader({
           chapter: anchor.chapter,
           verse_start: spanStart,
           verse_end: spanEnd,
-          verse_text: text,
+          verse_text: verseText,
           body
         })
       });
-      setSheetSaving(false);
       if (!res.ok) {
         setNotes(prev);
         const j = await res.json().catch(() => ({}));
         showToast(friendlyError(j.error));
-        return;
+        return false;
       }
       const j = await res.json();
       setNotes([...prev, j.note as VerseNote]);
-    }
+      showToast("Note saved.");
+      return true;
+    },
+    [anchor, notes, userId, dayNumber, testament, spanStart, spanEnd, showToast]
+  );
+
+  const updateNote = useCallback(
+    async (id: string, body: string): Promise<boolean> => {
+      const prev = notes;
+      setNotes(
+        notes.map((n) =>
+          n.id === id ? { ...n, body, updated_at: new Date().toISOString() } : n
+        )
+      );
+      // Server-side length cap and validation live in /api/verse-note.
+      const res = await fetch("/api/verse-note", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id, body })
+      });
+      if (!res.ok) {
+        setNotes(prev);
+        const j = await res.json().catch(() => ({}));
+        showToast(friendlyError(j.error));
+        return false;
+      }
+      showToast("Note updated.");
+      return true;
+    },
+    [notes, showToast]
+  );
+
+  const removeNote = useCallback(
+    async (id: string): Promise<boolean> => {
+      const prev = notes;
+      setNotes(notes.filter((n) => n.id !== id));
+      const { error } = await supabase.from("verse_notes").delete().eq("id", id);
+      if (error) {
+        setNotes(prev);
+        showToast(friendlyError(error.message));
+        return false;
+      }
+      showToast("Note deleted.");
+      return true;
+    },
+    [notes, supabase, showToast]
+  );
+
+  /** The note sheet's Save. Create or update, then close and let go. */
+  async function saveNote(body: string) {
+    if (!anchor) return;
+    setSheetSaving(true);
+    const ok = existingNote
+      ? await updateNote(existingNote.id, body)
+      : await createNote(body, selectionText());
+    setSheetSaving(false);
+    if (!ok) return;
     setSheetOpen(false);
     clearSelection();
-    showToast("Note saved.");
   }
 
+  /** The note sheet's Delete. */
   async function deleteNote() {
     if (!existingNote) return;
     setSheetSaving(true);
-    const prev = notes;
-    setNotes(notes.filter((n) => n.id !== existingNote.id));
-    const { error } = await supabase
-      .from("verse_notes")
-      .delete()
-      .eq("id", existingNote.id);
+    const ok = await removeNote(existingNote.id);
     setSheetSaving(false);
-    if (error) {
-      setNotes(prev);
-      showToast(friendlyError(error.message));
-      return;
-    }
+    if (!ok) return;
     setSheetOpen(false);
     clearSelection();
-    showToast("Note deleted.");
   }
 
   /**
@@ -817,6 +896,24 @@ export default function ScriptureReader({
     ? formatVerseReference(anchor.book, anchor.chapter, spanStart, spanEnd)
     : "";
 
+  /** Elite's one condition on this surface: the flag, and a surface that
+      isn't licensed third-party content.
+     
+      Rhapsody of Realities is named here rather than left to the caller.
+      The devotional does not mount this reader today, so the prop alone
+      would be a promise about a page that could quietly stop being true if
+      it ever did — and the one surface Elite must never appear on is not
+      the place for a promise that depends on nobody changing their mind. */
+  const licensed = pathname?.startsWith("/rhapsody") ?? false;
+  const showBench = isPastoral && !suppressBench && !licensed;
+
+  /** The pinned verse's words. Read off the page only while the Bench is
+      up — it walks the DOM, and there is no reason to walk it otherwise. */
+  const benchText = useMemo(
+    () => (benchPhase === "open" ? selectionText() : ""),
+    [benchPhase, selectionText]
+  );
+
   // -------------------------------------------------------------- render
 
   return (
@@ -860,6 +957,10 @@ export default function ScriptureReader({
         onRemoveHighlight={removeHighlight}
         onNote={() => setSheetOpen(true)}
         onCompare={() => setCompareOpen(true)}
+        showBench={showBench}
+        onBench={() => setBenchPhase("open")}
+        benchCollapsed={benchPhase === "collapsed"}
+        onCloseAll={clearSelection}
         onCopy={copy}
         onShare={share}
         onShareImage={shareImage}
@@ -879,6 +980,33 @@ export default function ScriptureReader({
         currentId={translationId ?? DEFAULT_BIBLE_ID}
         onToast={showToast}
       />
+
+      {/* The Bench. Opened from the chip, never navigated to: it is a layer
+          over the chapter you are already in. It mounts only for a pastoral
+          reader with a verse held, so a member's reading screen has exactly
+          the components it had before. */}
+      {showBench && anchor && (
+        <BenchLayer
+          phase={benchPhase}
+          userId={userId}
+          book={anchor.book}
+          chapter={anchor.chapter}
+          spanStart={spanStart}
+          spanEnd={spanEnd}
+          verses={verseNumbers}
+          reference={reference}
+          text={benchText}
+          dayNumber={dayNumber}
+          testament={testament}
+          translationId={translationId ?? DEFAULT_BIBLE_ID}
+          notes={notes}
+          onCreateNote={createNote}
+          onUpdateNote={updateNote}
+          onDeleteNote={removeNote}
+          onCollapse={() => setBenchPhase("collapsed")}
+          onToast={showToast}
+        />
+      )}
 
       <VerseNoteSheet
         open={sheetOpen}

@@ -8,6 +8,8 @@ type Props = {
   /** Both come from Nav, which has already looked them up. Fetching them again
       here cost a second getUser + profiles round trip on every page load. */
   isAdmin: boolean;
+  /** The Elite gate, read once in Nav and handed down. */
+  isPastoral: boolean;
   hasUser: boolean;
   /** The More sheet is owned by Nav, because the wide-screen bar opens the
       same one. Two copies of it meant two queries and two z-50 layers. */
@@ -17,6 +19,7 @@ type Props = {
 
 export default function BottomNav({
   isAdmin,
+  isPastoral,
   hasUser,
   moreOpen,
   onOpenMore

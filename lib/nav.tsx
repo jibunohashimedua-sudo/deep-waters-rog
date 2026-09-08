@@ -123,6 +123,7 @@ export function moreMatches(pathname: string): boolean {
   return (
     pathname.startsWith("/announcements") ||
     pathname.startsWith("/testimonials") ||
+    pathname.startsWith("/sermons") ||
     pathname.startsWith("/admin")
   );
 }

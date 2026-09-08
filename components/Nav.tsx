@@ -7,6 +7,7 @@ import Avatar from "./Avatar";
 import BottomNav from "./BottomNav";
 import MoreSheet from "./MoreSheet";
 import Mark from "./Mark";
+import EliteLockup from "./EliteLockup";
 import { backHrefFor, isReadingRoute } from "@/lib/routes";
 import { NAV_TABS, MORE_ICON, moreMatches } from "@/lib/nav";
 
@@ -21,6 +22,9 @@ export default function Nav() {
   const supabase = createClient();
   const [unread, setUnread] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
+  // The Elite gate, read in the same breath as the role so there is one
+  // place in the client that decides who is pastoral.
+  const [isPastoral, setIsPastoral] = useState(false);
   const [hasUser, setHasUser] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [me, setMe] = useState<{ name: string; photoUrl: string | null } | null>(null);
@@ -36,16 +40,24 @@ export default function Nav() {
       setHasUser(!!user);
       if (!user) return;
       // Widened from just the role: the bar carries the portrait now, and
-      // asking for two more columns on a query already going out costs
-      // nothing, where a second round trip would cost a round trip.
+      // asking for more columns on a query already going out costs nothing,
+      // where a second round trip would cost a round trip.
+      //
+      // `*` rather than a column list on purpose. is_pastoral arrives with a
+      // migration, and a named select for a column that isn't there yet is a
+      // 400 that would take the name and the portrait down with it. A row
+      // without the column simply reads as false, which is the right answer
+      // for every member and for the minutes between a deploy and a
+      // migration.
       const { data: p, error } = await supabase
         .from("profiles")
-        .select("role, name, photo_url")
+        .select("*")
         .eq("id", user.id)
         .maybeSingle();
       if (cancelled) return;
       if (error) console.error("[deep-waters] nav profile:", error.message);
       setIsAdmin(p?.role === "admin");
+      setIsPastoral(p?.is_pastoral === true);
       if (p) setMe({ name: p.name, photoUrl: p.photo_url ?? null });
       const refresh = async () => {
         const { count } = await supabase
@@ -131,9 +143,18 @@ export default function Nav() {
                   <span className="hidden sm:inline">Back</span>
                 </button>
               ))}
-            <Link href="/today" className="flex items-center gap-2">
-              <Mark size={22} />
-              <span className="font-bold text-rog-purple text-lg tracking-tight">Deep Waters</span>
+            {/* The one always-on signal that Elite is active. Same size,
+                same place, same tokens as the standard lockup — it is the
+                same app with more in it. A member never sees it. */}
+            <Link href="/today" className="flex items-center gap-2 text-rog-purple">
+              {isPastoral ? (
+                <EliteLockup size={22} />
+              ) : (
+                <>
+                  <Mark size={22} />
+                  <span className="font-bold text-rog-purple text-lg tracking-tight">Deep Waters</span>
+                </>
+              )}
             </Link>
           </div>
 
@@ -218,6 +239,7 @@ export default function Nav() {
 
       <BottomNav
         isAdmin={isAdmin}
+        isPastoral={isPastoral}
         hasUser={hasUser}
         moreOpen={moreOpen}
         onOpenMore={() => setMoreOpen(true)}
@@ -230,6 +252,7 @@ export default function Nav() {
         open={moreOpen}
         onClose={() => setMoreOpen(false)}
         isAdmin={isAdmin}
+        isPastoral={isPastoral}
       />
     </>
   );

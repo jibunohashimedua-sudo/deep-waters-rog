@@ -1,0 +1,140 @@
+/**
+ * The Bench's shared vocabulary: its lenses, and the layout it is in.
+ *
+ * Both live here rather than inside a component so the sheet, the split
+ * column and the desk rack are all describing the same seven things in the
+ * same order, and so a layout mode can be reasoned about without opening
+ * the renderer.
+ */
+
+export type LensId =
+  | "translations"
+  | "words"
+  | "vines"
+  | "concordance"
+  | "crossrefs"
+  | "commentary"
+  | "house";
+
+export type Lens = {
+  id: LensId;
+  /** The tab label. Mono, uppercase, as every label in this system is. */
+  label: string;
+  /** Where this lens's content comes from, printed at its foot. */
+  source: string;
+  /** True while the dataset behind it has not been loaded. */
+  pending?: boolean;
+  /** Lenses the word rail aims at. */
+  takesWord?: boolean;
+};
+
+export const LENSES: Lens[] = [
+  {
+    id: "translations",
+    label: "Translations",
+    source: "API.Bible, the same editions as Compare"
+  },
+  {
+    id: "words",
+    label: "Words",
+    source: "Strong's concordance — not yet loaded",
+    pending: true,
+    takesWord: true
+  },
+  {
+    id: "vines",
+    label: "Vine's",
+    source: "Vine's Expository Dictionary — not yet loaded",
+    pending: true,
+    takesWord: true
+  },
+  {
+    id: "concordance",
+    label: "Concordance",
+    source: "Strong's concordance — not yet loaded",
+    pending: true,
+    takesWord: true
+  },
+  {
+    id: "crossrefs",
+    label: "Cross refs",
+    source: "Treasury of Scripture Knowledge — not yet loaded",
+    pending: true
+  },
+  {
+    id: "commentary",
+    label: "Commentary",
+    source: "Public-domain commentary — not yet loaded",
+    pending: true
+  },
+  {
+    id: "house",
+    label: "The house",
+    source: "Reflections your church shared to the community feed"
+  }
+];
+
+export const LENS_BY_ID = new Map(LENSES.map((l) => [l.id, l]));
+
+/** The word rail shows on these, and in Stack. */
+export const WORD_LENSES: LensId[] = LENSES.filter((l) => l.takesWord).map(
+  (l) => l.id
+);
+
+/**
+ * The four layouts, chosen on the CSS viewport and never on a user agent.
+ *
+ *   sheet  — under 600px wide and at least 500px tall. A phone held upright.
+ *   split  — 600–1023px, and *any* width under 500px tall. Two columns.
+ *   desk   — 1024px and up. Reader, panels, notepad.
+ *   wide   — 1500px and up. Desk, with the panels in two columns.
+ *
+ * The height rule beats the width rule on purpose: a sheet at 86% of a
+ * 390px-tall window leaves nothing of the chapter behind it, which is the
+ * one thing the sheet exists to keep.
+ */
+export type BenchMode = "sheet" | "split" | "desk" | "wide";
+
+/** Where the fold is, when the browser will tell us. */
+export type Segments = "none" | "horizontal" | "vertical";
+
+export function modeForViewport(
+  width: number,
+  height: number,
+  segments: Segments = "none"
+): BenchMode {
+  // A folded-open phone hands us two segments. Follow them rather than the
+  // width, and let the CSS align the boundary to the seam.
+  if (segments === "horizontal" && width < 1024) return "split";
+  if (segments === "vertical" && width < 1024) return "split";
+  if (width >= 1500) return "wide";
+  if (width >= 1024) return "desk";
+  if (width >= 600) return "split";
+  return height < 500 ? "split" : "sheet";
+}
+
+/** True where the Bench is a sheet over the chapter rather than a column. */
+export function isSheetMode(mode: BenchMode): boolean {
+  return mode === "sheet";
+}
+
+/** True where every panel is on screen at once, so tabs give way to a rack. */
+export function isRackMode(mode: BenchMode): boolean {
+  return mode === "desk" || mode === "wide";
+}
+
+/** Desk presets. Each is an ordered set of panels, nothing more. */
+export const PRESETS: { id: string; label: string; panels: LensId[] }[] = [
+  {
+    id: "sermon",
+    label: "Sermon prep",
+    panels: ["translations", "crossrefs", "commentary", "house"]
+  },
+  { id: "word", label: "Word study", panels: ["words", "vines", "concordance"] },
+  { id: "devotional", label: "Devotional", panels: ["translations", "house"] },
+  {
+    id: "everything",
+    label: "Everything",
+    panels: LENSES.map((l) => l.id)
+  }
+];

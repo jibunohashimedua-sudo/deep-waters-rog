@@ -1,6 +1,8 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { TRANSLATIONS, translationById, type Translation } from "@/lib/translations";
+import { useParallelRows } from "@/lib/parallelVerse";
 
 type Props = {
   open: boolean;
@@ -24,11 +26,6 @@ const FIRST_BATCH = 5;
 
 /** How many more each press of "Show more" adds. */
 const MORE_STEP = 5;
-
-type Row =
-  | { status: "loading" }
-  | { status: "ready"; text: string }
-  | { status: "error"; message: string };
 
 /**
  * One passage, several translations, stacked.
@@ -64,85 +61,32 @@ export default function CompareSheet({
   }, [currentId]);
 
   const [shown, setShown] = useState(FIRST_BATCH);
-  const [rows, setRows] = useState<Map<string, Row>>(new Map());
-
-  // Everything fetched for this exact passage, so reopening the sheet on a
-  // verse you've already compared is instant.
-  const fetchedFor = useRef<string | null>(null);
 
   const passageKey = `${bookSlug}|${chapter}|${start}|${end}`;
-  const visible = ordered.slice(0, shown);
+  const visible = useMemo(() => ordered.slice(0, shown), [ordered, shown]);
 
-  // A new passage empties the sheet; the same passage keeps what it has.
+  // The rows themselves — and the "everything fetched for this exact
+  // passage" cache behind them — live in lib/parallelVerse now, shared with
+  // the Bench's Translations lens so there is one fetcher for parallel text.
+  const rows = useParallelRows({
+    active: open,
+    bookSlug,
+    chapter,
+    start,
+    end,
+    visible
+  });
+
+  // A new passage starts the list back at the first batch. Emptying the
+  // rows is the hook's job.
   useEffect(() => {
     if (!open) return;
-    if (fetchedFor.current !== passageKey) {
-      fetchedFor.current = passageKey;
-      setRows(new Map());
-      setShown(FIRST_BATCH);
-    }
+    setShown(FIRST_BATCH);
   }, [open, passageKey]);
 
-  useEffect(() => {
-    if (!open || !bookSlug) return;
-
-    const wanted = visible.filter((t) => !rows.has(t.id));
-    if (wanted.length === 0) return;
-
-    // Mark them loading in one pass so the sheet draws its placeholders
-    // before a single request comes back.
-    setRows((prev) => {
-      const next = new Map(prev);
-      for (const t of wanted) next.set(t.id, { status: "loading" });
-      return next;
-    });
-
-    let cancelled = false;
-    const forPassage = passageKey;
-
-    for (const t of wanted) {
-      (async () => {
-        let row: Row;
-        try {
-          const params = new URLSearchParams({
-            book: bookSlug,
-            chapter: String(chapter),
-            start: String(start),
-            end: String(end),
-            bible: t.id
-          });
-          const res = await fetch(`/api/bible/verse-text?${params.toString()}`);
-          const json = await res.json();
-          row =
-            res.ok && json?.ok && typeof json.text === "string"
-              ? { status: "ready", text: json.text }
-              : {
-                  status: "error",
-                  message:
-                    typeof json?.message === "string"
-                      ? json.message
-                      : "This one wouldn’t load just now."
-                };
-        } catch {
-          row = {
-            status: "error",
-            message: "This one wouldn’t load just now. Check your connection."
-          };
-        }
-        // Don't write into a sheet that has since moved to another verse.
-        if (cancelled || fetchedFor.current !== forPassage) return;
-        setRows((prev) => new Map(prev).set(t.id, row));
-      })();
-    }
-
-    return () => {
-      cancelled = true;
-    };
-    // `rows` is deliberately out of the dependency list: it is written by
-    // this effect, and reading it here is only to skip what is already in
-    // flight. Including it would re-enter on every arriving translation.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, bookSlug, chapter, start, end, shown, passageKey, ordered]);
+  // Counted, so a sheet opened on top of another one doesn't leave the
+  // body locked when the first of them closes. See lib/useLockBodyScroll.
+  useLockBodyScroll(open);
 
   useEffect(() => {
     if (!open) return;
@@ -150,11 +94,8 @@ export default function CompareSheet({
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
     };
   }, [open, onClose]);
 

@@ -24,6 +24,15 @@ type Props = {
   onRemoveHighlight: () => void;
   onNote: () => void;
   onCompare: () => void;
+  /** Elite only. False means the chip does not exist — there is no locked
+      button here for a member to find. */
+  showBench: boolean;
+  onBench: () => void;
+  /** True once the Bench has been collapsed back down onto this toolbar.
+      The handle it leaves behind is the second tap that closes everything;
+      the Bench never jumps straight from open to closed. */
+  benchCollapsed: boolean;
+  onCloseAll: () => void;
   onCopy: () => void;
   onShare: () => void;
   onShareImage: () => void;
@@ -53,6 +62,10 @@ export default function VerseToolbar({
   onRemoveHighlight,
   onNote,
   onCompare,
+  showBench,
+  onBench,
+  benchCollapsed,
+  onCloseAll,
   onCopy,
   onShare,
   onShareImage
@@ -73,6 +86,19 @@ export default function VerseToolbar({
       aria-label="Verse actions"
       aria-hidden={!open}
     >
+      {/* Left behind when the Bench collapses onto this bar. Tapping it is
+          the second tap: it lets the verse go and takes the bar with it. */}
+      {benchCollapsed && (
+        <button
+          type="button"
+          className="verse-grab"
+          onClick={onCloseAll}
+          aria-label="Close"
+        >
+          <span className="verse-grab-bar" aria-hidden />
+        </button>
+      )}
+
       <div className="verse-bar-ref">
         <span className="kicker kicker-strong" aria-live="polite">
           {reference}
@@ -106,6 +132,21 @@ export default function VerseToolbar({
           <button type="button" className="verse-action" onClick={onCompare}>
             Compare
           </button>
+          {/* The seventh chip. It sits after Compare because comparing and
+              opening the Bench are the same motion — you are still with the
+              verse — and it carries the Fathom violet on its border and its
+              label so it reads as another kind of thing without shouting.
+              A reader without the flag never sees it at all. */}
+          {showBench && (
+            <button
+              type="button"
+              className="verse-action"
+              data-elite="true"
+              onClick={onBench}
+            >
+              Bench
+            </button>
+          )}
           <button type="button" className="verse-action" onClick={onCopy}>
             Copy
           </button>

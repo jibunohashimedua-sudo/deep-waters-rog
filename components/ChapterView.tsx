@@ -80,6 +80,7 @@ export default async function ChapterView({ bookSlug, chapter, focus }: Props) {
             testament={planDay?.testament ?? book.testament}
             focusVerse={focus}
             translationId={resolved.id}
+            isPastoral={profile.is_pastoral === true}
             chapters={[
               {
                 book: book.name,

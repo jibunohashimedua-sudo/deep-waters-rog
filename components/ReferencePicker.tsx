@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { useRouter } from "next/navigation";
 import {
   BIBLE_BOOKS,
@@ -81,18 +82,19 @@ export default function ReferencePicker({
   }, [open, startStep, initialBook, chapter]);
 
   // The sheet holds the page still underneath it, and Escape closes it.
+  // Counted, so a sheet opened on top of another one doesn't leave the
+  // body locked when the first of them closes. See lib/useLockBodyScroll.
+  useLockBodyScroll(open);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     panelRef.current?.focus();
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
     };
   }, [open, onClose]);
 
