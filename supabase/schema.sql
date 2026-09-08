@@ -580,7 +580,20 @@ create policy "reactions_insert_own" on public.reactions for insert with check (
 create policy "reactions_delete_own" on public.reactions for delete using (auth.uid() = user_id);
 
 -- Prayer requests
-create policy "prayer_read" on public.prayer_requests for select using (true);
+-- Cohort-scoped read: own prayers + global (cohort_id null) + prayers from
+-- cohorts the reader is currently a member of + admin (moderation reach,
+-- matching the OR-admin pattern elsewhere in this file). Tightened by
+-- migration 2026_09_08_prayer_requests_cohort_scoped_read.sql. STRESS_AUDIT T3-A.
+create policy "prayer_read" on public.prayer_requests for select using (
+  auth.uid() = user_id
+  or cohort_id is null
+  or exists (
+    select 1 from public.cohort_members cm
+    where cm.cohort_id = prayer_requests.cohort_id
+      and cm.user_id = auth.uid()
+  )
+  or public.is_admin()
+);
 create policy "prayer_insert_own" on public.prayer_requests for insert with check (auth.uid() = user_id);
 create policy "prayer_update_own" on public.prayer_requests for update using (auth.uid() = user_id);
 create policy "prayer_delete_own_or_admin" on public.prayer_requests for delete
