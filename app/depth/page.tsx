@@ -8,7 +8,7 @@ import ResetMyData from "@/components/ResetMyData";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { BADGES, BADGE_ORDER } from "@/lib/badges";
-import { currentDayNumber } from "@/lib/plan";
+import { READING_PLAN, currentDayNumber } from "@/lib/plan";
 import { bookByName } from "@/lib/bibleBooks";
 import {
   normaliseHighlightColour,
@@ -59,11 +59,12 @@ export default async function DepthPage() {
     leaderboardResult,
     cohortsResult,
     highlightsResult,
-    notesResult
+    notesResult,
+    chapterReadsResult
   ] = await Promise.all([
     supabase
       .from("completions")
-      .select("id, day_number, verse_reference, verse_text, reflection, completed_at")
+      .select("id, day_number, verse_reference, verse_text, reflection, completed_at, is_full")
       .eq("user_id", userId)
       .order("day_number", { ascending: false }),
     supabase.from("badges").select("badge, earned_at").eq("user_id", userId),
@@ -81,7 +82,13 @@ export default async function DepthPage() {
       .from("verse_notes")
       .select("id, book, chapter, verse_start, verse_end, body, updated_at")
       .eq("user_id", userId)
-      .order("updated_at", { ascending: false })
+      .order("updated_at", { ascending: false }),
+    // Chapter tick counts per day, so a partly-read day shows a partial
+    // fill on the grid rather than reading as untouched.
+    supabase
+      .from("chapter_reads")
+      .select("day_number")
+      .eq("user_id", userId)
   ]);
 
   // Errors are logged rather than dropped. A page that renders an empty
@@ -93,7 +100,8 @@ export default async function DepthPage() {
     ["leaderboard", leaderboardResult],
     ["cohorts", cohortsResult],
     ["highlights", highlightsResult],
-    ["verse_notes", notesResult]
+    ["verse_notes", notesResult],
+    ["chapter_reads", chapterReadsResult]
   ] as const) {
     if (result.error) {
       console.error(`[deep-waters] depth ${label}:`, result.error.message);
@@ -106,10 +114,26 @@ export default async function DepthPage() {
   const cohorts = cohortsResult.data ?? [];
   const rawHighlights = (highlightsResult.data ?? []) as Highlight[];
   const rawNotes = (notesResult.data ?? []) as VerseNote[];
+  const chapterReadRows = chapterReadsResult.data ?? [];
 
   const day = currentDayNumber(profile.start_date);
   const earned = new Map(badges.map((b) => [b.badge, b.earned_at]));
-  const doneDays = new Set(completions.map((c) => c.day_number));
+  // "Done" is now the fully-kept days only — partial days show separately
+  // on the grid rather than counting here.
+  const doneDays = new Set(
+    completions.filter((c) => (c as any).is_full !== false).map((c) => c.day_number)
+  );
+
+  // Partial ticks per day, for the fractional fill on the grid.
+  const ticksByDay = new Map<number, number>();
+  for (const r of chapterReadRows) {
+    const d = r.day_number as number;
+    ticksByDay.set(d, (ticksByDay.get(d) ?? 0) + 1);
+  }
+  const chaptersPerDay = (d: number) => {
+    const p = READING_PLAN[d - 1];
+    return p ? p.ot.length + p.nt.length : 0;
+  };
 
   // A highlight written by the previous build, in the minutes between the
   // colour migration running and this deploy going live, arrives carrying a
@@ -168,27 +192,57 @@ export default async function DepthPage() {
           {Array.from({ length: 90 }, (_, i) => i + 1).map((d) => {
             const done = doneDays.has(d);
             const isToday = d === day;
+            const ticks = ticksByDay.get(d) ?? 0;
+            const total = chaptersPerDay(d);
+            // Partial only when the day isn't already fully kept and has
+            // at least one tick. A day that's fully ticked lands as done
+            // through the API's is_full path — partial is by definition
+            // < 100%.
+            const partial = !done && total > 0 && ticks > 0;
+            const pct = partial ? Math.min(100, Math.round((ticks / total) * 100)) : 0;
+            const label = done
+              ? "kept"
+              : isToday
+                ? "today"
+                : partial
+                  ? `${ticks} of ${total} chapters read`
+                  : d < day
+                    ? "not kept"
+                    : "upcoming";
             return (
               <Link
                 key={d}
                 href={`/day/${d}`}
-                title={`Day ${d}`}
-                aria-label={`Open day ${d}${done ? ", kept" : ""}${isToday ? ", today" : ""}`}
-                className="aspect-square flex items-center justify-center font-mono text-[9.5px] tabular-nums transition-opacity hover:opacity-80"
+                title={`Day ${d} — ${label}`}
+                aria-label={`Open day ${d}, ${label}`}
+                className="relative aspect-square flex items-center justify-center font-mono text-[9.5px] tabular-nums transition-opacity hover:opacity-80"
                 style={{
                   background: done
                     ? "var(--accent)"
                     : isToday
-                    ? "var(--sonar)"
-                    : d < day
-                    ? "var(--soft-bg)"
-                    : "var(--bg)",
-                  color:
-                    done || isToday ? "var(--on-accent)" : "var(--muted)",
+                      ? "var(--sonar)"
+                      : d < day
+                        ? "var(--soft-bg)"
+                        : "var(--bg)",
+                  color: done || isToday ? "var(--on-accent)" : "var(--muted)",
                   boxShadow: isToday ? "inset 0 0 0 1px var(--sonar)" : undefined
                 }}
               >
-                {d}
+                {/* Partial fill from the bottom of the cell, proportional
+                    to chapters read. Absolutely positioned under the
+                    number so a half-read day reads as half-violet. */}
+                {partial && (
+                  <span
+                    aria-hidden
+                    className="absolute left-0 right-0 bottom-0 pointer-events-none"
+                    style={{
+                      height: `${pct}%`,
+                      background: "var(--accent)",
+                      opacity: 0.55
+                    }}
+                  />
+                )}
+                <span className="relative">{d}</span>
               </Link>
             );
           })}

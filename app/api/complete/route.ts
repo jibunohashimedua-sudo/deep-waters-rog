@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { recordMentions } from "@/lib/mentions";
-import { currentDayNumber } from "@/lib/plan";
+import { READING_PLAN, currentDayNumber } from "@/lib/plan";
 
 export async function POST(request: Request) {
   const supabase = createClient();
@@ -35,6 +35,25 @@ export async function POST(request: Request) {
     );
   }
 
+  // is_full is true when the reader has either written a reflection or
+  // ticked every chapter for this day. Either signal counts as "day
+  // done" — a reflection saved without ticking chapters is still the
+  // reader saying "I'm done here", and unticking a chapter doesn't
+  // demote a day they wrote about.
+  const reflectionText = typeof reflection === "string" ? reflection.trim() : "";
+  const hasReflection = reflectionText.length > 0;
+
+  const reading = READING_PLAN[day_number - 1];
+  const totalChapters = reading.ot.length + reading.nt.length;
+  const { count: ticks } = await supabase
+    .from("chapter_reads")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("day_number", day_number);
+  const chaptersFull = (ticks ?? 0) >= totalChapters;
+
+  const isFull = hasReflection || chaptersFull;
+
   const { data: row, error } = await supabase
     .from("completions")
     .upsert(
@@ -44,6 +63,7 @@ export async function POST(request: Request) {
         verse_reference,
         verse_text,
         reflection,
+        is_full: isFull,
         completed_at: new Date().toISOString()
       },
       { onConflict: "user_id,day_number" }

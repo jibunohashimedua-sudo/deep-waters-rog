@@ -7,6 +7,7 @@ import ReflectionForm from "@/components/ReflectionForm";
 import NudgeBanner from "@/components/NudgeBanner";
 import Greeting from "@/components/Greeting";
 import DayHeader from "@/components/DayHeader";
+import ChapterTicker from "@/components/ChapterTicker";
 
 /**
  * Any day, 1–90.
@@ -39,7 +40,7 @@ export default async function DayPage({
     supabase.from("profiles").select("*").eq("id", user.id).single(),
     supabase
       .from("completions")
-      .select("day_number, verse_reference, verse_text, reflection")
+      .select("day_number, verse_reference, verse_text, reflection, is_full")
       .eq("user_id", user.id)
       .order("day_number", { ascending: false })
   ]);
@@ -68,8 +69,16 @@ export default async function DayPage({
     console.error("[deep-waters] completions lookup:", completionsError.message);
   }
 
-  const doneDays = new Set((completions ?? []).map((c) => c.day_number));
+  // doneDays only counts fully-read days now (is_full=true). A day with
+  // some ticks and no reflection isn't in this set — it's a partial, and
+  // the Depth grid draws it differently, but it doesn't count as kept.
+  const doneDays = new Set(
+    (completions ?? [])
+      .filter((c) => c.is_full !== false)
+      .map((c) => c.day_number)
+  );
   const existing = (completions ?? []).find((c) => c.day_number === day) ?? null;
+  const existingIsFull = existing?.is_full !== false;
 
   // Streak still counts back from today, or yesterday when today isn't in
   // yet — the streak is a fact about the reader, not about the day being
@@ -103,6 +112,39 @@ export default async function DayPage({
     .eq("date", dayDateIso)
     .maybeSingle();
 
+  // Chapter ticks for this day — the ChapterTicker seeds itself with
+  // whatever the reader has already marked so a page reload isn't a
+  // fresh slate.
+  const { data: ticksRows } = await supabase
+    .from("chapter_reads")
+    .select("book, chapter")
+    .eq("user_id", user.id)
+    .eq("day_number", day);
+  const initialTicks = new Set(
+    (ticksRows ?? []).map((r) => `${r.book}|${r.chapter}`)
+  );
+  const otChapters = reading.ot.map((c) => ({
+    book: c.book,
+    chapter: c.chapter,
+    testament: "ot" as const
+  }));
+  const ntChapters = reading.nt.map((c) => ({
+    book: c.book,
+    chapter: c.chapter,
+    testament: "nt" as const
+  }));
+  const allDayChapters = [...otChapters, ...ntChapters];
+
+  // A small "N/M" chip on each testament's tile — a partly-read day
+  // looks different from an untouched one from the day view too, not
+  // just on the Depth grid.
+  const otTicksCount = otChapters.filter((c) =>
+    initialTicks.has(`${c.book}|${c.chapter}`)
+  ).length;
+  const ntTicksCount = ntChapters.filter((c) =>
+    initialTicks.has(`${c.book}|${c.chapter}`)
+  ).length;
+
   const otRef = formatReading(reading.ot);
   const ntRef = formatReading(reading.nt);
 
@@ -120,7 +162,7 @@ export default async function DayPage({
           <Greeting
             name={profile.name}
             day={day}
-            completedToday={!!existing}
+            completedToday={existingIsFull && !!existing}
             streak={streak}
             returning={returning}
           />
@@ -130,7 +172,7 @@ export default async function DayPage({
           </p>
         )}
 
-        {isCurrent && <NudgeBanner completed={!!existing} day={day} />}
+        {isCurrent && <NudgeBanner completed={existingIsFull && !!existing} day={day} />}
 
         {/* The gauge always marks the reader's current day, whichever day
             they happen to be reading — it is a report about them, not
@@ -163,7 +205,7 @@ export default async function DayPage({
               />
             )}
           </div>
-          {existing && isCurrent && (
+          {existingIsFull && existing && isCurrent && (
             <div className="mt-3">
               <span className="kept-chip" aria-label="Reflection saved for today">
                 <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden>
@@ -173,7 +215,7 @@ export default async function DayPage({
               </span>
             </div>
           )}
-          {existing && !isCurrent && (
+          {existingIsFull && existing && !isCurrent && (
             <div className="mt-3">
               <span className="kept-chip">
                 <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden>
@@ -186,13 +228,17 @@ export default async function DayPage({
         </div>
 
         {/* Readings. The /read page carries the day through as ?d= so any
-            day's chapters land here. */}
+            day's chapters land here. Each row now shows how much of that
+            testament's chapters have been ticked. */}
         <div className="read-list">
           <Link href={`/read?t=ot&d=${day}`} className="read-row select-none">
             <span className="kicker">OT</span>
             <span>
               <span className="read-ref block">{otRef}</span>
-              <span className="kicker block mt-1">Old Testament</span>
+              <span className="kicker block mt-1">
+                Old Testament
+                {otChapters.length > 0 && ` · ${otTicksCount}/${otChapters.length}`}
+              </span>
             </span>
             <span className="read-arrow" aria-hidden>&rarr;</span>
           </Link>
@@ -200,7 +246,10 @@ export default async function DayPage({
             <span className="kicker">NT</span>
             <span>
               <span className="read-ref block">{ntRef}</span>
-              <span className="kicker block mt-1">New Testament</span>
+              <span className="kicker block mt-1">
+                New Testament
+                {ntChapters.length > 0 && ` · ${ntTicksCount}/${ntChapters.length}`}
+              </span>
             </span>
             <span className="read-arrow" aria-hidden>&rarr;</span>
           </Link>
@@ -216,6 +265,21 @@ export default async function DayPage({
               <span className="read-arrow" aria-hidden>&rarr;</span>
             </Link>
           )}
+        </div>
+
+        {/* Chapter progress — ticks auto-complete the day when they hit
+            the total. On a future day the ticker is disabled with a note
+            (the API refuses too, so nobody can sneak ahead). */}
+        <div className="mt-16">
+          <ChapterTicker
+            dayNumber={day}
+            chapters={allDayChapters}
+            initialTicks={initialTicks}
+            disabled={isFuture}
+            disabledReason={
+              isFuture ? `You can tick these on ${dayDateHuman}.` : undefined
+            }
+          />
         </div>
 
         {/* Reflection. Future days show it disabled with a note; past and

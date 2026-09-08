@@ -1115,6 +1115,81 @@ select:focus-visible {
 .gauge-today[data-kept="true"] { background: var(--sonar); }
 
 /* =========================================================
+   CHAPTER TICKS
+   A row per chapter. Big square check-box, reference in the reading
+   serif, testament in mono. Same rule grammar as everything else in
+   the app: rows separated by a hairline, no cards inside a card.
+   ========================================================= */
+
+.chapter-tick-row {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  min-height: 48px;
+}
+.chapter-tick-row:last-child {
+  border-bottom: 1px solid var(--line);
+}
+
+.chapter-tick-box {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.chapter-tick-box:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.chapter-tick-box:checked::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 8px;
+  height: 13px;
+  border-right: 2px solid var(--on-accent);
+  border-bottom: 2px solid var(--on-accent);
+  transform: rotate(45deg);
+}
+.chapter-tick-box:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.chapter-tick-box:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.chapter-tick-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  min-height: 44px;
+  padding: 8px 0;
+  margin: -8px 0;
+}
+.chapter-tick-ref {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 17px;
+  color: var(--text);
+}
+.chapter-tick-testament {
+  flex-shrink: 0;
+}
+
+/* =========================================================
    READING ROWS
    The three daily readings were three plates in a grid. They are one
    list now: a mono index, the reference in the reading serif, and the
