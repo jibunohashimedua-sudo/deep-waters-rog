@@ -166,6 +166,23 @@ export function currentDayNumber(
   return Math.max(1, Math.min(90, diff + 1));
 }
 
+/**
+ * True when the reader has walked past the last day of the plan.
+ *
+ * `currentDayNumber` clamps at 90 so every downstream that indexes into
+ * READING_PLAN stays in bounds; this looks at the raw, unclamped answer
+ * so the /today shortcut can send someone who finished to a "you reached
+ * the end" page instead of parking them on Day 90 forever.
+ */
+export function hasFinishedPlan(
+  startDate: string | Date,
+  todayISO?: string
+): boolean {
+  const startISO = normaliseStart(startDate);
+  const today = todayISO ?? todayISOForUser(null);
+  return daysBetweenLocal(startISO, today) + 1 > 90;
+}
+
 function normaliseStart(v: string | Date): string {
   if (typeof v === "string") {
     // Trust the ISO date prefix; parseISODate throws on anything malformed.

@@ -1,9 +1,9 @@
-import { notFound } from "next/navigation";
 import Avatar from "@/components/Avatar";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import CohortShareBox from "@/components/CohortShareBox";
 import BackButton from "@/components/BackButton";
+import CohortGone from "@/components/CohortGone";
 import Mark from "@/components/Mark";
 
 export default async function CohortLandingPage({
@@ -17,11 +17,16 @@ export default async function CohortLandingPage({
     .select("*")
     .eq("slug", params.slug)
     .maybeSingle();
-  if (!cohort) notFound();
 
   const {
     data: { user }
   } = await supabase.auth.getUser();
+
+  // Notifications and shared links outlive the cohort they point at, so
+  // land the reader on a friendly page instead of a raw 404.
+  if (!cohort) {
+    return <CohortGone signedIn={!!user} />;
+  }
 
   let membership: { role: string } | null = null;
   let isLeader = false;

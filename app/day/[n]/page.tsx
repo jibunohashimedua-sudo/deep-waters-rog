@@ -158,6 +158,17 @@ export default async function DayPage({
             weeks after deploy — see components/TimezoneNotice.tsx. */}
         <TimezoneNotice />
 
+        {/* Reader on Day 90, and it's already kept — a subtle line pointing
+            at the "you finished" page. Non-blocking; the day view still
+            renders in full underneath. */}
+        {day === 90 && existingIsFull && !!existing && (
+          <p className="kicker mb-4">
+            <a href="/finished" className="underline" style={{ color: "var(--accent)" }}>
+              You finished the plan
+            </a>
+          </p>
+        )}
+
         {/* Chrome: previous day, this day (opens the picker), next day,
             and a quiet "back to today" pill when off-day. */}
         <DayHeader day={day} currentDay={currentDay} doneDays={doneDays} />

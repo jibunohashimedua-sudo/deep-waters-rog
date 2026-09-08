@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { friendlyError } from "@/lib/errors";
 
 export default function UserAdminControls({
   userId,
@@ -16,9 +17,11 @@ export default function UserAdminControls({
   const supabase = createClient();
   const [busy, setBusy] = useState(false);
   const [confirmDel, setConfirmDel] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   async function update(patch: Record<string, unknown>) {
     setBusy(true);
+    setErr(null);
     await supabase.from("profiles").update(patch).eq("id", userId);
     setBusy(false);
     router.refresh();
@@ -26,12 +29,20 @@ export default function UserAdminControls({
 
   async function del() {
     setBusy(true);
-    await fetch("/api/admin/delete-user", {
+    setErr(null);
+    const res = await fetch("/api/admin/delete-user", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ user_id: userId })
     });
     setBusy(false);
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      setErr(friendlyError(j.error));
+      return;
+    }
+    // Success in both cases — user deleted, or already gone and profile
+    // cleaned up. Refresh the list so the row drops.
     router.refresh();
   }
 
@@ -61,6 +72,7 @@ export default function UserAdminControls({
           <button onClick={() => setConfirmDel(false)} className="text-rog-muted">Cancel</button>
         </>
       )}
+      {err && <span className="ml-1 text-[10px] text-danger">{err}</span>}
     </div>
   );
 }

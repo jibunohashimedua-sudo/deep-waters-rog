@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import Avatar from "@/components/Avatar";
 import Nav from "@/components/Nav";
 import { createClient } from "@/lib/supabase/server";
@@ -6,6 +6,7 @@ import { requireProfile, isCohortLeader } from "@/lib/auth";
 import CohortSettingsForm from "@/components/CohortSettingsForm";
 import AnnouncementForm from "@/components/AnnouncementForm";
 import RemoveMemberButton from "@/components/RemoveMemberButton";
+import CohortGone from "@/components/CohortGone";
 
 export default async function CohortManagePage({
   params
@@ -20,7 +21,12 @@ export default async function CohortManagePage({
     .select("*")
     .eq("slug", params.slug)
     .maybeSingle();
-  if (!cohort) notFound();
+  // A leader whose cohort was deleted while a tab was open used to hit
+  // the raw 404 here; friendly page instead. requireProfile above means
+  // signedIn is always true on this route.
+  if (!cohort) {
+    return <CohortGone signedIn={true} />;
+  }
 
   const leader = await isCohortLeader(userId, cohort.id);
   if (!leader) redirect(`/c/${params.slug}`);

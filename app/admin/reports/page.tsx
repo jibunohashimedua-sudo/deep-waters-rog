@@ -92,7 +92,11 @@ export default async function AdminReportsPage() {
     const hit = byType.get(r.target_type as TargetType)?.get(r.target_id);
     return {
       ...r,
-      content: hit?.text || "(deleted)",
+      // `targetGone` distinguishes "row exists, body was empty" from "row
+      // is gone" so the queue can render each honestly instead of both
+      // as the same "(deleted)" line.
+      targetGone: !hit,
+      content: hit?.text ?? "",
       author: hit ? names.get(hit.userId) ?? "unknown" : "unknown",
       reporter: names.get(r.reporter_id) ?? "unknown"
     };
@@ -122,15 +126,27 @@ export default async function AdminReportsPage() {
               <div key={r.id} className={`card ${r.resolved ? "opacity-50" : ""}`}>
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-xs uppercase tracking-[0.2em] text-rog-muted font-medium">
-                    {r.target_type} by {r.author}
+                    {r.target_type}
+                    {!r.targetGone && <> by {r.author}</>}
                   </p>
                   <p className="text-xs text-rog-muted shrink-0">
                     {new Date(r.created_at).toLocaleDateString("en-GB")}
                   </p>
                 </div>
-                <p className="selectable mt-2 text-sm whitespace-pre-wrap break-words surface-soft !p-3">
-                  {r.content}
-                </p>
+                {r.targetGone ? (
+                  // Report referring to a row that no longer exists. Kept
+                  // in the queue so an admin can resolve it; not auto-deleted.
+                  <p
+                    className="mt-2 text-sm text-rog-muted surface-soft !p-3"
+                    style={{ fontStyle: "italic" }}
+                  >
+                    Target already removed
+                  </p>
+                ) : (
+                  <p className="selectable mt-2 text-sm whitespace-pre-wrap break-words surface-soft !p-3">
+                    {r.content}
+                  </p>
+                )}
                 <p className="mt-2 text-xs text-rog-muted">
                   Reported by {r.reporter}
                   {r.reason && <> &bull; Reason: {r.reason}</>}
