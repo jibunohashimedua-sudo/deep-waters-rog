@@ -53,5 +53,4 @@ create policy "chapter_reads_delete_own" on public.chapter_reads
 -- that pre-dates chapter ticks). Existing rows default to true — they
 -- were treated as complete under the old model, and this keeps every
 -- streak and badge intact through the migration.
-alter table public.completions
-  add column if not exists is_full boolean not null default true;
+alter table public.completions add column if not exists is_full boolean not null default true;
