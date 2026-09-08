@@ -10,7 +10,7 @@
 export type LensId =
   | "translations"
   | "words"
-  | "vines"
+  | "wordstudy"
   | "concordance"
   | "crossrefs"
   | "commentary"
@@ -42,11 +42,10 @@ export const LENSES: Lens[] = [
     takesWord: true
   },
   {
-    id: "vines",
-    label: "Vine's",
+    id: "wordstudy",
+    label: "Word study",
     source:
-      "Vine's Expository Dictionary — not loaded. No edition could be found under a licence clean enough to import, and no other dictionary is standing in for it",
-    pending: true,
+      "Keil and Delitzsch, Biblical Commentary on the Old Testament (1864), public domain — CrossWire Sword module KD. New Testament word studies are not loaded: see the note in scripts/import-word-study.mjs",
     takesWord: true
   },
   {
@@ -131,7 +130,7 @@ export const PRESETS: { id: string; label: string; panels: LensId[] }[] = [
     label: "Sermon prep",
     panels: ["translations", "crossrefs", "commentary", "house"]
   },
-  { id: "word", label: "Word study", panels: ["words", "vines", "concordance"] },
+  { id: "word", label: "Word study", panels: ["words", "wordstudy", "concordance"] },
   { id: "devotional", label: "Devotional", panels: ["translations", "house"] },
   {
     id: "everything",

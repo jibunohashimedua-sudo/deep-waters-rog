@@ -3,7 +3,8 @@ import { LENS_BY_ID, type LensId } from "@/lib/bench";
 import type { Translation } from "@/lib/translations";
 import type { ParallelRow } from "@/lib/parallelVerse";
 import type {
-  CommentaryEntry, ConcordanceHit, CrossRef, StrongsEntry, TaggedWord
+  CommentaryEntry, ConcordanceHit, CrossRef, StrongsEntry, TaggedWord,
+  WordStudyEntry
 } from "@/lib/studyData";
 import BenchTranslations from "./BenchTranslations";
 import BenchHouse, { type HouseRow } from "./BenchHouse";
@@ -11,6 +12,7 @@ import BenchWords from "./BenchWords";
 import BenchConcordance from "./BenchConcordance";
 import BenchCrossRefs from "./BenchCrossRefs";
 import BenchCommentary from "./BenchCommentary";
+import BenchWordStudy from "./BenchWordStudy";
 
 export type LensData = {
   visibleTranslations: Translation[];
@@ -34,9 +36,12 @@ export type LensData = {
   onConcordanceMore: () => void;
   crossRefs: CrossRef[] | null;
   crossRefsLoading: boolean;
+  wordStudy: WordStudyEntry[] | null;
+  wordStudyLoading: boolean;
   commentary: CommentaryEntry[] | null;
   commentaryLoading: boolean;
   verse: number;
+  onPickWord: (word: TaggedWord) => void;
 };
 
 /**
@@ -75,6 +80,7 @@ export default function BenchLensBody({
           entries={data.strongsEntries}
           activeKey={data.activeWordKey}
           loading={data.wordsLoading}
+          onPick={data.onPickWord}
         />
       )}
 
@@ -92,6 +98,14 @@ export default function BenchLensBody({
 
       {lens === "crossrefs" && (
         <BenchCrossRefs refs={data.crossRefs} loading={data.crossRefsLoading} />
+      )}
+
+      {lens === "wordstudy" && (
+        <BenchWordStudy
+          entries={data.wordStudy}
+          loading={data.wordStudyLoading}
+          verse={data.verse}
+        />
       )}
 
       {lens === "commentary" && (

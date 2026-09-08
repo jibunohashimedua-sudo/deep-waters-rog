@@ -2365,3 +2365,25 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   padding-top: 16px;
   border-top: 1px solid var(--line);
 }
+
+/* The word's heading in the Words lens is the control that chooses it, so
+   it is a target rather than a caption. Full width and left aligned: the
+   whole line is pressable, which on a phone is the difference between
+   choosing a word and missing it. */
+.bench-word-head {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 0;
+  margin: -10px 0 0;
+  text-align: left;
+  background: transparent;
+}
+
+/* Room to scroll past the last entry, so it can reach the top of the pane
+   when a word is chosen. Spans the whole grid in the desk layouts, where
+   the body is two columns. */
+.bench-scroll-tail {
+  height: 55vh;
+  grid-column: 1 / -1;
+}

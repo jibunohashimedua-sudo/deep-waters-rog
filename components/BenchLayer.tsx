@@ -24,11 +24,12 @@ import {
 } from "@/lib/bench";
 import {
   fetchCommentary, fetchConcordance, fetchCrossRefs,
-  fetchStrongsEntries, fetchTaggedWords,
+  fetchStrongsEntries, fetchTaggedWords, fetchWordStudy,
   type CommentaryEntry, type ConcordanceHit, type CrossRef,
-  type StrongsEntry, type TaggedWord
+  type StrongsEntry, type TaggedWord, type WordStudyEntry
 } from "@/lib/studyData";
 import { useStudyLens } from "@/lib/useStudyLens";
+import { scrollPaneTo } from "@/lib/scrollPane";
 import BenchPinned from "./BenchPinned";
 import BenchWordRail from "./BenchWordRail";
 import BenchLensBody, { type LensData } from "./BenchLensBody";
@@ -123,6 +124,8 @@ export default function BenchLayer(props: Props) {
 
   const open = phase === "open";
   const supabase = useMemo(() => createClient(), []);
+  /** The Bench's own scroller. Only this element is ever scrolled. */
+  const bodyRef = useRef<HTMLDivElement>(null);
   const { mode, segments } = useBenchLayout();
   const rack = isRackMode(mode);
   const sheet = isSheetMode(mode);
@@ -143,6 +146,10 @@ export default function BenchLayer(props: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [focusSignal, setFocusSignal] = useState(0);
+  // Bumped whenever a word is chosen, from the rail or from the Words
+  // lens. The effect below reads it and brings that word's entry up to the
+  // top of the pane.
+  const [wordScrollSignal, setWordScrollSignal] = useState(0);
   const [shown, setShown] = useState(FIRST_BATCH);
   const [sermonState, setSermonState] = useState<"idle" | "saving" | "added">(
     "idle"
@@ -181,7 +188,7 @@ export default function BenchLayer(props: Props) {
   // Words. The rail is built from this, so it loads whenever any lens that
   // uses a word is on screen.
   const wantsWords =
-    lensVisible("words") || lensVisible("vines") || lensVisible("concordance");
+    lensVisible("words") || lensVisible("wordstudy") || lensVisible("concordance");
 
   const wordsLens = useStudyLens<{ words: TaggedWord[]; entries: Map<string, StrongsEntry> }>({
     active: wantsWords,
@@ -246,6 +253,14 @@ export default function BenchLayer(props: Props) {
     load: () => fetchCrossRefs(book, chapter, spanStart, CROSSREF_LIMIT)
   });
 
+  const wordStudy = useStudyLens<WordStudyEntry[]>({
+    active: lensVisible("wordstudy"),
+    key: passageKey,
+    onError: onToast,
+    onSettled: stack ? advanceStack : undefined,
+    load: () => fetchWordStudy(book, chapter, spanStart)
+  });
+
   const commentary = useStudyLens<CommentaryEntry[]>({
     active: lensVisible("commentary"),
     key: passageKey,
@@ -287,6 +302,34 @@ export default function BenchLayer(props: Props) {
     if (!rack) return;
     setPanels((prev) => (prev.includes(activeLens) ? prev : [activeLens, ...prev]));
   }, [rack, activeLens]);
+
+  // Bring the chosen word's entry to the top of the pane.
+  //
+  // Two frames: the first lets the lens render whatever the new word
+  // changed, the second measures a layout that has settled. In Stack the
+  // entry is inside the Words block, so the same query finds it and the
+  // pane lands on it there. Where the pane has no entry for a word at all
+  // — the Concordance and Word study are wholly about the chosen word —
+  // the pane goes to its own top instead, which is where the new content
+  // begins.
+  useEffect(() => {
+    if (wordScrollSignal === 0 || !open) return;
+    let inner = 0;
+    const outer = requestAnimationFrame(() => {
+      inner = requestAnimationFrame(() => {
+        const pane = bodyRef.current;
+        if (!pane) return;
+        const entry = activeWordKey
+          ? pane.querySelector<HTMLElement>(`[data-word-key="${CSS.escape(activeWordKey)}"]`)
+          : null;
+        scrollPaneTo(pane, entry);
+      });
+    });
+    return () => {
+      cancelAnimationFrame(outer);
+      cancelAnimationFrame(inner);
+    };
+  }, [wordScrollSignal, activeWordKey, open]);
 
   // The reader column gets out of the way of a Bench that is a column.
   // Done on <html> with a width variable rather than by re-rendering the
@@ -552,9 +595,15 @@ export default function BenchLayer(props: Props) {
     onConcordanceMore: () => setConcordancePage((n) => n + 1),
     crossRefs: crossRefs.data,
     crossRefsLoading: crossRefs.loading,
+    wordStudy: wordStudy.data,
+    wordStudyLoading: wordStudy.loading,
     commentary: commentary.data,
     commentaryLoading: commentary.loading,
-    verse: spanStart
+    verse: spanStart,
+    onPickWord: (w: TaggedWord) => {
+      setActiveWordKey(`${w.verse}|${w.wordIndex}`);
+      setWordScrollSignal((n) => n + 1);
+    }
   };
 
   const railWanted =
@@ -645,10 +694,11 @@ export default function BenchLayer(props: Props) {
             // the one already chosen used to unchoose it, which left the
             // three word lenses with nothing to be about.
             setActiveWordKey(`${w.verse}|${w.wordIndex}`);
+            setWordScrollSignal((n) => n + 1);
             // Aim the two lenses the rail is for, without moving anyone
             // away from a lens that has nothing to do with a word.
             if (!rack && !stack && !LENS_BY_ID.get(activeLens)?.takesWord) {
-              setActiveLens("vines");
+              setActiveLens("wordstudy");
             }
           }}
         />
@@ -744,7 +794,7 @@ export default function BenchLayer(props: Props) {
         </>
       )}
 
-      <div className="bench-body">
+      <div className="bench-body" ref={bodyRef}>
         {rack ? (
           <>
             <div className="bench-rack">
@@ -824,6 +874,13 @@ export default function BenchLayer(props: Props) {
             {sheet && notepad}
           </>
         )}
+
+        {/* Room to scroll past the end.
+            Without it the last word in the rail can never reach the top of
+            the pane: the scroller is already at its limit, so the browser
+            clamps and the entry sits wherever it fell. This is empty space
+            below the last entry, and only while a word lens is open. */}
+        {railWanted && <div className="bench-scroll-tail" aria-hidden />}
       </div>
 
       <div className="bench-dock">

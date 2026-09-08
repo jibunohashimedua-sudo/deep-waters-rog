@@ -46,6 +46,10 @@ const SOURCES = [
 
 const MH_REPO = "https://codeberg.org/revisedcommonversion/matthew-henry-commentary";
 
+/** The Keil and Delitzsch Sword module. Its own kd.conf states
+    DistributionLicense=Public Domain. */
+const KD_URL = "https://crosswire.org/ftpmirror/pub/sword/packages/rawzip/KD.zip";
+
 mkdirSync(DATA, { recursive: true });
 
 for (const s of SOURCES) {
@@ -64,6 +68,16 @@ for (const s of SOURCES) {
     if (!res.ok) throw new Error(`${s.url} responded ${res.status}`);
     writeFileSync(out, Buffer.from(await res.arrayBuffer()));
   }
+}
+
+const kd = join(DATA, "KD");
+if (existsSync(kd)) {
+  console.log("have  KD (Keil and Delitzsch on the OT, public domain)");
+} else {
+  console.log("fetch KD.zip — Keil and Delitzsch Commentary on the Old Testament (CrossWire, public domain)");
+  const zip = join(DATA, "KD.zip");
+  execFileSync("curl", ["-sL", "-o", zip, KD_URL]);
+  execFileSync("unzip", ["-o", "-q", zip, "-d", kd]);
 }
 
 const mh = join(DATA, "matthew-henry");

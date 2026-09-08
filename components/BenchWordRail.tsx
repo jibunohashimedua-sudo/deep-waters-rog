@@ -1,5 +1,7 @@
 "use client";
+import { useEffect, useRef } from "react";
 import type { TaggedWord } from "@/lib/studyData";
+import { scrollRailTo } from "@/lib/scrollPane";
 
 type Props = {
   words: TaggedWord[];
@@ -21,9 +23,26 @@ type Props = {
  * anything here — see .bench[data-segments] in globals.css.
  */
 export default function BenchWordRail({ words, activeKey, onPick }: Props) {
+  const railRef = useRef<HTMLDivElement>(null);
+
+  // The chosen chip stays where it can be seen. Chosen from the Words lens
+  // rather than the rail, it may be off the right-hand edge; this brings it
+  // just inside, scrolling the strip alone.
+  useEffect(() => {
+    if (!activeKey) return;
+    const rail = railRef.current;
+    const chip = rail?.querySelector<HTMLElement>(`[data-chip-key="${CSS.escape(activeKey)}"]`);
+    scrollRailTo(rail ?? null, chip ?? null);
+  }, [activeKey]);
+
   if (words.length === 0) return null;
   return (
-    <div className="bench-rail no-scrollbar" role="group" aria-label="Words in this verse">
+    <div
+      className="bench-rail no-scrollbar"
+      role="group"
+      aria-label="Words in this verse"
+      ref={railRef}
+    >
       {words.map((w) => {
         const key = `${w.verse}|${w.wordIndex}`;
         return (
@@ -31,6 +50,7 @@ export default function BenchWordRail({ words, activeKey, onPick }: Props) {
             key={key}
             type="button"
             className="bench-word"
+            data-chip-key={key}
             data-on={activeKey === key ? "true" : undefined}
             aria-pressed={activeKey === key}
             onClick={() => onPick(w)}

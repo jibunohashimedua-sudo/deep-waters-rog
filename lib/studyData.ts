@@ -39,6 +39,14 @@ export type CrossRef = {
   text: string | null;
 };
 
+export type WordStudyEntry = {
+  source: string;
+  verse_start: number;
+  verse_end: number;
+  strongs_id: string | null;
+  body: string;
+};
+
 export type CommentaryEntry = {
   verse_start: number;
   verse_end: number;
@@ -172,6 +180,26 @@ export async function fetchCrossRefs(
     votes: r.votes,
     text: texts.get(`${r.target_book}|${r.target_chapter}|${r.target_verse_start}`) ?? null
   }));
+}
+
+/** Word study on the passage containing this verse. */
+export async function fetchWordStudy(
+  book: string,
+  chapter: number,
+  verse: number
+): Promise<WordStudyEntry[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("word_study_entries")
+    .select("source, verse_start, verse_end, strongs_id, body")
+    .eq("book", book)
+    .eq("chapter", chapter)
+    .lte("verse_start", verse)
+    .gte("verse_end", verse)
+    .order("verse_start")
+    .limit(3);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as WordStudyEntry[];
 }
 
 /** Matthew Henry on the passage containing this verse. */
