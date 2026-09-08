@@ -341,16 +341,15 @@ begin
     from public.pulse_member_activity a
   ),
   waiting as (
-    -- An open prayer, old enough to have been seen, that nobody has
-    -- responded to. Oldest per author.
-    select pr.user_id, min(pr.created_at) as oldest_at
+    -- Authors of an open prayer, old enough to have been seen, that
+    -- nobody has responded to.
+    select distinct pr.user_id
     from public.prayer_requests pr
     where pr.is_answered = false
       and pr.created_at < (p_today)::timestamptz
       and not exists (
         select 1 from public.prayer_prayed pp where pp.prayer_id = pr.id
       )
-    group by pr.user_id
   ),
   cohort_of as (
     -- Their primary cohort if they have one, otherwise the first they
