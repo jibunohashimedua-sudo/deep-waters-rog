@@ -106,6 +106,7 @@ export default function VerseNoteSheet({
             value={body}
             onChange={(e) => setBody(e.target.value)}
             rows={6}
+            enterKeyHint="done"
             placeholder="What did this stir? What are you carrying?"
             className="w-full border border-rog-line bg-white px-4 py-3 font-serif text-[15px] leading-relaxed focus:border-rog-purple focus:outline-none"
           />

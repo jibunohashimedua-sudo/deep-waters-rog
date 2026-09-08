@@ -76,6 +76,8 @@ function SignupPageInner() {
               type="email"
               required
               autoComplete="email"
+              inputMode="email"
+              enterKeyHint="next"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
@@ -87,6 +89,7 @@ function SignupPageInner() {
                 required
                 minLength={MIN_PASSWORD}
                 autoComplete="new-password"
+                enterKeyHint="go"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Choose a password"

@@ -214,6 +214,7 @@ export default function PrayerWall() {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           rows={3}
+          enterKeyHint="send"
           placeholder="What can we pray about with you? Use @name to mention someone."
           className="w-full border border-rog-line bg-white px-5 py-3 focus:border-rog-purple focus:outline-none"
         />
@@ -297,6 +298,8 @@ export default function PrayerWall() {
                     answering === p.id ? (
                       <div className="flex-1 flex gap-2">
                         <input
+                          type="text"
+                          enterKeyHint="done"
                           value={answerNote}
                           onChange={(e) => setAnswerNote(e.target.value)}
                           placeholder="How was it answered? (optional)"

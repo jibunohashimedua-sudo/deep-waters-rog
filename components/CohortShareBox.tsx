@@ -25,6 +25,9 @@ export default function CohortShareBox({ slug }: { slug: string }) {
       <div className="mt-4 flex gap-2">
         <input
           readOnly
+          type="url"
+          inputMode="url"
+          autoComplete="off"
           value={url}
           className="flex-1 rounded-full border border-rog-line bg-rog-cream px-4 py-2 text-sm truncate"
         />

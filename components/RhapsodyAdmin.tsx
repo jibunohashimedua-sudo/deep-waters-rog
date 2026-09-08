@@ -371,6 +371,8 @@ export default function RhapsodyAdmin({
           <div className="min-w-0">
             <label className="block text-sm font-medium mb-1">Title</label>
             <input
+              type="text"
+              enterKeyHint="done"
               value={uploadTitle}
               onChange={(e) => setUploadTitle(e.target.value)}
               placeholder="September 2026"
@@ -501,6 +503,8 @@ export default function RhapsodyAdmin({
                   <label className="block text-xs text-rog-muted mb-1">Day 1 starts on page</label>
                   <input
                     inputMode="numeric"
+                    pattern="[0-9]*"
+                    enterKeyHint="next"
                     value={startPage}
                     onChange={(e) => setStartPage(e.target.value)}
                     className="w-full border border-rog-line px-4 py-2 text-sm focus:border-rog-purple focus:outline-none"
@@ -510,6 +514,8 @@ export default function RhapsodyAdmin({
                   <label className="block text-xs text-rog-muted mb-1">Pages per article</label>
                   <input
                     inputMode="numeric"
+                    pattern="[0-9]*"
+                    enterKeyHint="done"
                     value={pagesPer}
                     onChange={(e) => setPagesPer(e.target.value)}
                     className="w-full border border-rog-line px-4 py-2 text-sm focus:border-rog-purple focus:outline-none"
@@ -524,6 +530,7 @@ export default function RhapsodyAdmin({
                   value={titleList}
                   onChange={(e) => setTitleList(e.target.value)}
                   rows={4}
+                  enterKeyHint="enter"
                   placeholder={"The Name That Rules Heaven And Earth\nFulfil Your Purpose To His Glory\n..."}
                   className="w-full border border-rog-line px-4 py-2.5 text-sm focus:border-rog-purple focus:outline-none"
                 />
@@ -568,6 +575,8 @@ export default function RhapsodyAdmin({
                         </span>
                       </div>
                       <input
+                        type="text"
+                        enterKeyHint="next"
                         value={draft.title}
                         onChange={(e) => edit({ title: e.target.value })}
                         placeholder="Article title"
@@ -577,6 +586,8 @@ export default function RhapsodyAdmin({
                         value={draft.page}
                         onChange={(e) => edit({ page: e.target.value })}
                         inputMode="numeric"
+                        pattern="[0-9]*"
+                        enterKeyHint="done"
                         placeholder="pg"
                         aria-label={`Page number for ${d}`}
                         className="w-16 shrink-0 border border-rog-line px-3 py-2 text-sm text-center focus:border-rog-purple focus:outline-none"
@@ -603,6 +614,7 @@ export default function RhapsodyAdmin({
                             value={draft.verse}
                             onChange={(e) => edit({ verse: e.target.value })}
                             rows={3}
+                            enterKeyHint="next"
                             className="w-full border border-rog-line px-4 py-2.5 text-sm focus:border-rog-purple focus:outline-none"
                           />
                         </div>
@@ -614,6 +626,7 @@ export default function RhapsodyAdmin({
                             value={draft.body}
                             onChange={(e) => edit({ body: e.target.value })}
                             rows={12}
+                            enterKeyHint="enter"
                             className="w-full border border-rog-line px-4 py-2.5 text-sm leading-relaxed focus:border-rog-purple focus:outline-none"
                           />
                           <p className="mt-1 text-xs text-rog-muted">{draft.body.length} characters</p>
@@ -622,6 +635,9 @@ export default function RhapsodyAdmin({
                           <div className="min-w-0">
                             <label className="block text-xs text-rog-muted mb-1">Heading</label>
                             <input
+                              type="text"
+                              autoCapitalize="characters"
+                              enterKeyHint="next"
                               value={draft.prayerLabel}
                               onChange={(e) => edit({ prayerLabel: e.target.value })}
                               placeholder="PRAYER"
@@ -634,6 +650,7 @@ export default function RhapsodyAdmin({
                               value={draft.prayer}
                               onChange={(e) => edit({ prayer: e.target.value })}
                               rows={4}
+                              enterKeyHint="done"
                               className="w-full border border-rog-line px-4 py-2.5 text-sm focus:border-rog-purple focus:outline-none"
                             />
                           </div>

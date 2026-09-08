@@ -58,6 +58,8 @@ export default function CohortSettingsForm({
         <label className="block text-sm font-medium mb-1">Name</label>
         <input
           required
+          type="text"
+          enterKeyHint="next"
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="w-full rounded-full border border-rog-line bg-white px-5 py-2.5 focus:border-rog-purple focus:outline-none"
@@ -69,6 +71,7 @@ export default function CohortSettingsForm({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={2}
+          enterKeyHint="next"
           placeholder="Shown on the join page"
           className="w-full border border-rog-line bg-white px-5 py-2.5 focus:border-rog-purple focus:outline-none"
         />
@@ -79,6 +82,7 @@ export default function CohortSettingsForm({
           value={welcome}
           onChange={(e) => setWelcome(e.target.value)}
           rows={3}
+          enterKeyHint="done"
           placeholder="Shown to members after they join"
           className="w-full border border-rog-line bg-white px-5 py-2.5 focus:border-rog-purple focus:outline-none"
         />

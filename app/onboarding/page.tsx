@@ -165,6 +165,9 @@ function OnboardingPageInner() {
             <label className="block text-sm font-medium mb-1">Your name</label>
             <input
               required
+              type="text"
+              autoComplete="name"
+              enterKeyHint="next"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="How should we call you?"

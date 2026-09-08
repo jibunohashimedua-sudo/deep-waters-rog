@@ -210,6 +210,8 @@ export default function ReflectionCard({
           {currentUserId && (
             <form onSubmit={postComment} className="flex gap-2">
               <input
+                type="text"
+                enterKeyHint="send"
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 placeholder="Add a comment... use @name to mention"

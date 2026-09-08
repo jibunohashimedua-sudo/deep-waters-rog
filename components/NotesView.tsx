@@ -82,6 +82,9 @@ export default function NotesView({ rows }: { rows: NoteRow[] }) {
       <input
         id="note-search"
         type="search"
+        inputMode="search"
+        enterKeyHint="search"
+        autoComplete="off"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search"

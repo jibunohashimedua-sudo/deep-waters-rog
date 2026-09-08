@@ -42,6 +42,8 @@ export default function ReportButton({
   return (
     <div className="mt-2 flex gap-2 items-center">
       <input
+        type="text"
+        enterKeyHint="send"
         value={reason}
         onChange={(e) => setReason(e.target.value)}
         placeholder="Reason (optional)"

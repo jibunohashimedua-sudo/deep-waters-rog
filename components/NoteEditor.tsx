@@ -43,6 +43,8 @@ export default function NoteEditor({
       <div>
         <label className="block text-sm font-medium mb-1">Title</label>
         <input
+          type="text"
+          enterKeyHint="next"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. In the beginning"
@@ -55,6 +57,7 @@ export default function NoteEditor({
           value={body}
           onChange={(e) => setBody(e.target.value)}
           rows={14}
+          enterKeyHint="done"
           placeholder="Write the day's study note. Plain text, line breaks are kept."
           className="w-full border border-rog-line bg-white px-5 py-3 focus:border-rog-purple focus:outline-none font-sans leading-relaxed"
         />

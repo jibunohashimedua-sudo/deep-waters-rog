@@ -50,6 +50,8 @@ function LoginPageInner() {
             type="email"
             required
             autoComplete="email"
+            inputMode="email"
+            enterKeyHint="next"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
@@ -59,6 +61,7 @@ function LoginPageInner() {
             type="password"
             required
             autoComplete="current-password"
+            enterKeyHint="go"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Your password"

@@ -253,6 +253,7 @@ export default function ReferencePicker({
                 id="picker-book-search"
                 type="search"
                 inputMode="search"
+                enterKeyHint="search"
                 autoComplete="off"
                 autoCorrect="off"
                 autoCapitalize="none"

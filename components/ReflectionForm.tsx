@@ -88,6 +88,10 @@ export default function ReflectionForm({
                 The verse that stood out
               </label>
               <input
+                type="text"
+                autoComplete="off"
+                autoCapitalize="words"
+                enterKeyHint="next"
                 value={verseRef}
                 onChange={(e) => setVerseRef(e.target.value)}
                 placeholder="e.g. Genesis 1:3"
@@ -106,6 +110,7 @@ export default function ReflectionForm({
                 onChange={(e) => setVerseText(e.target.value)}
                 placeholder="From today's reading, or type it in."
                 rows={2}
+                enterKeyHint="next"
                 className="w-full border border-rog-line px-4 py-3 font-serif text-[15px] leading-relaxed focus:border-rog-purple focus:outline-none"
               />
             </div>
@@ -124,6 +129,7 @@ export default function ReflectionForm({
               onChange={(e) => setReflection(e.target.value)}
               placeholder="In a sentence, or a paragraph."
               rows={5}
+              enterKeyHint="done"
               className="w-full border border-rog-line px-4 py-3 font-serif text-[15px] leading-relaxed focus:border-rog-purple focus:outline-none"
             />
           </div>

@@ -54,6 +54,18 @@ export function chapterErrorMessage(kind: ChapterFailure): string {
 
 const memoryCache = new Map<string, ChapterText>();
 
+/**
+ * In-flight requests, keyed by cache id. When two identical calls arrive at
+ * once — /read fetching 13 chapters in parallel, or two readers opening the
+ * same page seconds apart in the same lambda — both used to sail past the
+ * memory cache and both hit API.Bible before either wrote back. That's a
+ * wasted round trip and, on cold cache with a hot chapter, two-for-one
+ * against the daily rate limit. Sharing the promise collapses concurrent
+ * misses onto one fetch. The entry is dropped as soon as it resolves, so a
+ * later miss reruns the fetch rather than clinging to a stale promise.
+ */
+const inflight = new Map<string, Promise<ChapterOutcome>>();
+
 const cacheKey = (bibleId: string, book: string, chapter: number) =>
   `${bibleId}|${book}|${chapter}`;
 
@@ -154,6 +166,26 @@ export async function fetchChapter(
   const hot = memoryCache.get(key);
   if (hot) return { ok: true, chapter: hot };
 
+  // Coalesce concurrent misses on the same key onto one fetch. The check
+  // here happens synchronously after the memory-cache miss, so two callers
+  // arriving in the same tick see the same promise even before either has
+  // reached readSharedCache.
+  const pending = inflight.get(key);
+  if (pending) return pending;
+
+  const request = doFetchChapter(book, chapter, bibleId, key).finally(() => {
+    inflight.delete(key);
+  });
+  inflight.set(key, request);
+  return request;
+}
+
+async function doFetchChapter(
+  book: string,
+  chapter: number,
+  bibleId: string,
+  key: string
+): Promise<ChapterOutcome> {
   const shared = await readSharedCache(bibleId, book, chapter);
   if (shared) {
     memoryCache.set(key, shared);

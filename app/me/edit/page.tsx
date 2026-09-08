@@ -219,6 +219,9 @@ export default function EditProfilePage() {
             <input
               id="pf-name"
               required
+              type="text"
+              autoComplete="name"
+              enterKeyHint="next"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="mt-2 w-full min-h-[44px] border px-4 py-3 text-[13.5px]"
@@ -236,6 +239,7 @@ export default function EditProfilePage() {
               onChange={(e) => setBio(e.target.value)}
               rows={2}
               maxLength={160}
+              enterKeyHint="done"
               placeholder="A line about you"
               className="mt-2 w-full border px-4 py-3 text-[13.5px] leading-5"
             />

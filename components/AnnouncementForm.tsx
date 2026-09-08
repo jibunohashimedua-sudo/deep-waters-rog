@@ -38,6 +38,8 @@ export default function AnnouncementForm({ cohortId }: { cohortId: string | null
   return (
     <form onSubmit={post} className="card space-y-3">
       <input
+        type="text"
+        enterKeyHint="next"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Title (optional)"
@@ -48,6 +50,7 @@ export default function AnnouncementForm({ cohortId }: { cohortId: string | null
         value={body}
         onChange={(e) => setBody(e.target.value)}
         rows={3}
+        enterKeyHint="send"
         placeholder="Write your announcement..."
         className="w-full border border-rog-line bg-white px-5 py-2.5 focus:border-rog-purple focus:outline-none"
       />

@@ -180,6 +180,9 @@ export default function HighlightsView({ rows, textError }: Props) {
         <input
           id="hl-search"
           type="search"
+          inputMode="search"
+          enterKeyHint="search"
+          autoComplete="off"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search"

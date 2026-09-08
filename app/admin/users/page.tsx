@@ -34,6 +34,10 @@ export default async function AdminUsersPage({
         <form className="mt-6 flex flex-wrap gap-2">
           <input
             name="q"
+            type="search"
+            inputMode="search"
+            enterKeyHint="search"
+            autoComplete="off"
             defaultValue={searchParams.q ?? ""}
             placeholder="Search by name"
             aria-label="Search users by name"

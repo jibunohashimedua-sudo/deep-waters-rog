@@ -91,6 +91,7 @@ export default function BookPicker() {
           id="book-search"
           type="search"
           inputMode="search"
+          enterKeyHint="search"
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="none"

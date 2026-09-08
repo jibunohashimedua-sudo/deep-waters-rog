@@ -82,6 +82,8 @@ export default function NewCohortPage() {
             <label className="block text-sm font-medium mb-1">Cohort name</label>
             <input
               required
+              type="text"
+              enterKeyHint="next"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. August 2026, Youth Church, Christ Embassy Luton"

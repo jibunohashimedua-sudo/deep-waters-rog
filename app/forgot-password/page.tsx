@@ -58,6 +58,8 @@ function ForgotPasswordInner() {
               type="email"
               required
               autoComplete="email"
+              inputMode="email"
+              enterKeyHint="send"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"

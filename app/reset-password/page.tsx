@@ -138,6 +138,7 @@ export default function ResetPasswordPage() {
                   required
                   minLength={MIN_PASSWORD}
                   autoComplete="new-password"
+                  enterKeyHint="go"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="New password"

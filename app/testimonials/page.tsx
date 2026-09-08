@@ -49,6 +49,7 @@ export default function TestimonialPage() {
               onChange={(e) => setBody(e.target.value)}
               rows={8}
               maxLength={1500}
+              enterKeyHint="enter"
               placeholder="Write freely..."
               className="w-full border border-rog-line bg-white px-6 py-4 focus:border-rog-purple focus:outline-none leading-relaxed"
             />
