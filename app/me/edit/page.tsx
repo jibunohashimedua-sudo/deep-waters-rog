@@ -22,6 +22,7 @@ const PhotoCropper = dynamic(() => import("@/components/PhotoCropper"), {
   )
 });
 import { createClient } from "@/lib/supabase/client";
+import { friendlyError } from "@/lib/errors";
 import {
   DEFAULT_BIBLE_ID,
   TRANSLATIONS,
@@ -45,7 +46,7 @@ export default function EditProfilePage() {
   const [bibleId, setBibleId] = useState<string>(DEFAULT_BIBLE_ID);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
+  const [msg, setMsg] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
@@ -108,7 +109,7 @@ export default function EditProfilePage() {
         .from("avatars")
         .upload(path, newPhoto, { upsert: true });
       if (upErr) {
-        setMsg(upErr.message);
+        setMsg({ kind: "error", text: friendlyError(upErr.message) });
         setSaving(false);
         return;
       }
@@ -130,11 +131,11 @@ export default function EditProfilePage() {
       .eq("id", userId);
 
     setSaving(false);
-    if (error) setMsg(error.message);
+    if (error) setMsg({ kind: "error", text: friendlyError(error.message) });
     else {
-      setMsg("Saved");
+      setMsg({ kind: "ok", text: "Saved." });
       router.refresh();
-      setTimeout(() => router.push("/me"), 600);
+      setTimeout(() => router.push("/depth"), 600);
     }
   }
 
@@ -145,7 +146,7 @@ export default function EditProfilePage() {
         <main className="max-w-lg mx-auto px-6 py-10">
           <div className="skeleton h-4 w-24" />
           <div className="skeleton mt-3 h-9 w-64" />
-          <div className="skeleton mt-8 h-32 w-32 !rounded-full mx-auto" />
+          <div className="skeleton mt-8 h-32 w-32" />
           <div className="skeleton mt-6 h-12 w-full" />
           <div className="skeleton mt-4 h-24 w-full" />
         </main>
@@ -158,12 +159,12 @@ export default function EditProfilePage() {
       <>
         <Nav />
         <main className="max-w-lg mx-auto px-6 py-10">
-          <div className="card text-center">
-            <p className="font-semibold text-rog-purple">Couldn&rsquo;t load your profile</p>
-            <p className="mt-2 text-sm text-rog-muted">
-              Nothing has been changed. Refresh to try again.
-            </p>
-          </div>
+          <h1 className="text-[27px] font-semibold tracking-[-0.025em] text-rog-ink leading-[1.14]">
+            Couldn&rsquo;t load your profile
+          </h1>
+          <p className="mt-3 text-[13.5px] leading-5 text-rog-muted">
+            Nothing has been changed. Refresh to try again.
+          </p>
         </main>
       </>
     );
@@ -175,105 +176,134 @@ export default function EditProfilePage() {
     <>
       <Nav />
       <main className="max-w-lg mx-auto px-6 py-10">
-        <p className="kicker">Profile</p>
-        <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Edit your profile</h1>
+        {/* No kicker over the heading. "Profile" named the one thing
+            directly beneath it, which is the heading saying what the
+            heading says. */}
+        <h1 className="text-[27px] font-semibold tracking-[-0.025em] text-rog-ink leading-[1.14]">
+          Edit your profile
+        </h1>
 
-        <form onSubmit={handleSave} className="mt-8 space-y-6">
+        <form onSubmit={handleSave} className="mt-10">
+          {/* Square, like every portrait in the app. It was a 128px circle
+              with a dashed ring, which is two things this system doesn't
+              have: a round person, and a dashed border. */}
           <div className="flex flex-col items-center">
             <label className="cursor-pointer">
-              <div className="w-32 h-32 rounded-full bg-rog-cream border-2 border-dashed border-rog-line flex items-center justify-center overflow-hidden">
+              <div className="portrait-fallback w-32 h-32 text-[10px] overflow-hidden">
                 {displayPhoto ? (
-                  <Image src={displayPhoto} alt="" width={128} height={128} className="w-full h-full object-cover" />
+                  <Image
+                    src={displayPhoto}
+                    alt=""
+                    width={128}
+                    height={128}
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
-                  <span className="text-rog-muted text-sm">Add photo</span>
+                  <span>Add photo</span>
                 )}
               </div>
               <input type="file" accept="image/*" onChange={handlePhoto} className="hidden" />
             </label>
-            <p className="mt-2 text-xs text-rog-muted">Tap to change</p>
+            <p className="kicker mt-3">Tap to change</p>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">Name</label>
+          {/* Fields are square recessed plates — the global input rules in
+              globals.css already say so. They were carrying `rounded-full`,
+              which beat those rules and made every text field a pill. A pill
+              means "press me"; a field you type into is a container, and
+              containers in this system have corners. */}
+          <div className="mt-10">
+            <label htmlFor="pf-name" className="block text-[13.5px] leading-5 font-medium text-rog-ink">
+              Name
+            </label>
             <input
+              id="pf-name"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-full border border-rog-line bg-white px-6 py-3 focus:border-rog-purple focus:outline-none"
+              className="mt-2 w-full min-h-[44px] border px-4 py-3 text-[13.5px]"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">Bio (optional)</label>
+          <div className="mt-6">
+            <label htmlFor="pf-bio" className="block text-[13.5px] leading-5 font-medium text-rog-ink">
+              Bio
+            </label>
+            <p className="kicker mt-1">Optional &middot; 160 characters</p>
             <textarea
+              id="pf-bio"
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               rows={2}
               maxLength={160}
               placeholder="A line about you"
-              className="w-full border border-rog-line bg-white px-6 py-3 focus:border-rog-purple focus:outline-none"
+              className="mt-2 w-full border px-4 py-3 text-[13.5px] leading-5"
             />
           </div>
 
           {/* Which translation scripture is shown in, everywhere: the daily
               plan, the Bible browser, all of it. Stored on the profile rather
               than in the browser so it follows you between devices. */}
-          <div className="card space-y-3">
-            <p className="kicker">Translation</p>
+          <section className="mt-10 border-t border-rog-line pt-6">
+            <h2 className="text-[13.5px] leading-5 font-medium text-rog-ink">Translation</h2>
             <label className="block">
               <span className="sr-only">Bible translation</span>
               <select
                 value={bibleId}
                 onChange={(e) => setBibleId(e.target.value)}
-                className="w-full min-h-[44px] rounded-full border border-rog-line bg-white px-5 py-2 text-sm focus:border-rog-purple focus:outline-none"
+                className="mt-3 w-full min-h-[44px] border px-4 py-2 text-[13.5px]"
               >
                 {TRANSLATION_GROUPS.map((g) => (
                   <optgroup key={g} label={g}>
                     {TRANSLATIONS.filter((t) => t.group === g).map((t) => (
                       <option key={t.id} value={t.id}>
-                        {t.abbr} — {t.name}
+                        {t.abbr} &mdash; {t.name}
                       </option>
                     ))}
                   </optgroup>
                 ))}
               </select>
             </label>
-            <p className="text-xs text-rog-muted leading-relaxed">
+            <p className="mt-3 text-[13.5px] leading-5 text-rog-muted">
               {translationById(bibleId).note}
             </p>
-            <p className="text-xs text-rog-muted leading-relaxed">
-              Your 90 days stay exactly the same — same books, same chapters,
-              same days. Only the wording changes, and your highlights and
-              notes stay where you put them.
+            <p className="mt-2 text-[13.5px] leading-5 text-rog-muted">
+              Your 90 days stay exactly the same &mdash; same books, same
+              chapters, same days. Only the wording changes, and your
+              highlights and notes stay where you put them.
             </p>
-          </div>
+          </section>
 
-          <div className="card space-y-4">
-            <p className="kicker">Reminders</p>
-            <label className="flex items-center justify-between">
-              <span className="text-sm">Email reminders</span>
+          <section className="mt-10 border-t border-rog-line pt-6">
+            <h2 className="text-[13.5px] leading-5 font-medium text-rog-ink">Reminders</h2>
+
+            {/* 44px rows. A 20px checkbox with no row height around it is a
+                20px target, whatever the label next to it suggests. */}
+            <label className="mt-3 flex min-h-[44px] items-center justify-between gap-4">
+              <span className="text-[13.5px] leading-5 text-rog-ink">Email reminders</span>
               <input
                 type="checkbox"
                 checked={emailReminders}
                 onChange={(e) => setEmailReminders(e.target.checked)}
-                className="w-5 h-5 accent-rog-purple"
+                className="w-5 h-5 accent-rog-purple shrink-0"
               />
             </label>
-            <label className="flex items-center justify-between">
-              <span className="text-sm">Push notifications</span>
+            <label className="flex min-h-[44px] items-center justify-between gap-4 border-t border-rog-line">
+              <span className="text-[13.5px] leading-5 text-rog-ink">Push notifications</span>
               <input
                 type="checkbox"
                 checked={pushReminders}
                 onChange={(e) => setPushReminders(e.target.checked)}
-                className="w-5 h-5 accent-rog-purple"
+                className="w-5 h-5 accent-rog-purple shrink-0"
               />
             </label>
-            <label className="block">
-              <span className="text-sm">Remind me at</span>
+
+            <label className="block border-t border-rog-line pt-4">
+              <span className="text-[13.5px] leading-5 text-rog-ink">Remind me at</span>
               <select
                 value={reminderHour}
                 onChange={(e) => setReminderHour(Number(e.target.value))}
-                className="mt-1 w-full rounded-full border border-rog-line bg-white px-4 py-2 text-sm"
+                className="mt-2 w-full min-h-[44px] border px-4 py-2 text-[13.5px] font-mono tabular-nums"
               >
                 {Array.from({ length: 24 }, (_, h) => (
                   <option key={h} value={h}>
@@ -282,12 +312,26 @@ export default function EditProfilePage() {
                 ))}
               </select>
             </label>
-          </div>
+          </section>
 
-          <button type="submit" disabled={saving} className="btn-primary w-full disabled:opacity-50">
-            {saving ? "Saving..." : "Save changes"}
+          <button
+            type="submit"
+            disabled={saving}
+            className="btn-primary mt-10 w-full disabled:opacity-50"
+          >
+            {saving ? "Saving\u2026" : "Save changes"}
           </button>
-          {msg && <p className="text-sm text-center text-rog-purple">{msg}</p>}
+          {msg && (
+            <p
+              role="status"
+              aria-live="polite"
+              className={`mt-4 text-center text-[13.5px] leading-5 ${
+                msg.kind === "ok" ? "text-success" : "text-danger"
+              }`}
+            >
+              {msg.text}
+            </p>
+          )}
         </form>
       </main>
 
