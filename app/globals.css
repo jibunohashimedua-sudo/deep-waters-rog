@@ -925,6 +925,12 @@ select:focus-visible {
   align-items: center;
   justify-content: center;
   background: #0C0A18;
+  /* The splash has nothing to press — every child is decorative and the
+     whole overlay is aria-hidden — so it must never catch a tap. Without
+     this a tap during the opening or the 280ms fade-out lands on the
+     overlay instead of the button underneath, which reads as an
+     unresponsive first tap. */
+  pointer-events: none;
   /* Everything is over by 1200ms — bars settle at 700, the wordmark at
      780, a 140ms beat to let the finished mark register, then out.
      The brief caps the opening at 1.2s and this is that budget spent,

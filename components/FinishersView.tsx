@@ -20,7 +20,13 @@ export default function FinishersView() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data, error: err } = await supabase.from("finishers").select("*");
+      // Bounded in practice — the finishers view is people who kept all 90
+      // days — but every other list surface caps its query, and one that
+      // grew unbounded would drag the whole page down. Match the pattern.
+      const { data, error: err } = await supabase
+        .from("finishers")
+        .select("*")
+        .limit(500);
       if (cancelled) return;
       if (err) setError(friendlyError(err.message));
       else setFinishers((data ?? []) as Finisher[]);
