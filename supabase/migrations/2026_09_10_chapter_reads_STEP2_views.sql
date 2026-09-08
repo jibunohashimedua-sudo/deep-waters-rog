@@ -1,48 +1,21 @@
 -- ============================================================
--- Deep Waters — chapter-level reading progress
--- Adds per-chapter tick marks, an is_full flag on completions, and
--- updates streaks + badges to only count fully-read days.
+-- Deep Waters — chapter progress, STEP 2 of 2: the views
 --
--- Run: paste into Supabase SQL Editor and press Run once. Safe to
--- re-run — everything is idempotent.
+-- Run STEP 1 first and check it succeeded. This half only changes how
+-- streaks, the finisher wall and the cohort averages are counted, so
+-- that a part-read day stops counting as a full one. The app works
+-- without it; the numbers are just still counted the old way.
+--
+-- Run the three blocks BELOW ONE AT A TIME rather than all at once —
+-- same reason as above. If one errors, the others still land, and you
+-- can tell me which one failed and what it said.
+--
+-- Block 3 is dropped and recreated rather than replaced, because it
+-- changes a column's type (avg_days_completed becomes numeric(5,1)),
+-- and CREATE OR REPLACE VIEW refuses to change a column's type. That is
+-- the most likely thing that took the original file down with it.
 -- ============================================================
 
--- ---------- CHAPTER READS ----------
--- One row per (user, day, book, chapter) that the reader has ticked
--- as read. Auto-completes the day when the count matches the plan.
-create table if not exists public.chapter_reads (
-  id          uuid primary key default gen_random_uuid(),
-  user_id     uuid not null references public.profiles(id) on delete cascade,
-  day_number  int  not null check (day_number between 1 and 90),
-  book        text not null,
-  chapter     int  not null check (chapter >= 1),
-  read_at     timestamptz not null default now(),
-  unique (user_id, day_number, book, chapter)
-);
-
-create index if not exists chapter_reads_user_day_idx
-  on public.chapter_reads(user_id, day_number);
-
-alter table public.chapter_reads enable row level security;
-
-drop policy if exists "chapter_reads_select_own" on public.chapter_reads;
-drop policy if exists "chapter_reads_insert_own" on public.chapter_reads;
-drop policy if exists "chapter_reads_delete_own" on public.chapter_reads;
-
-create policy "chapter_reads_select_own" on public.chapter_reads
-  for select using (auth.uid() = user_id);
-create policy "chapter_reads_insert_own" on public.chapter_reads
-  for insert with check (auth.uid() = user_id);
-create policy "chapter_reads_delete_own" on public.chapter_reads
-  for delete using (auth.uid() = user_id);
-
--- ---------- COMPLETIONS · is_full flag ----------
--- A day counts as "full" when the reader has either ticked every
--- chapter for it, or written a reflection on it (the legacy shortcut
--- that pre-dates chapter ticks). Existing rows default to true — they
--- were treated as complete under the old model, and this keeps every
--- streak and badge intact through the migration.
-alter table public.completions
   add column if not exists is_full boolean not null default true;
 
 -- ---------- Leaderboard · only full days count for streak & totals ----------
@@ -128,7 +101,14 @@ having count(distinct c.day_number) >= 90
 order by finished_at asc;
 
 -- ---------- Cohort summary · only full days count ----------
-create or replace view public.cohort_summary as
+
+
+-- ===== BLOCK 3 — run this one on its own =====
+-- Dropped first: CREATE OR REPLACE cannot change a column type, and
+-- this view changes avg_days_completed to numeric(5,1).
+drop view if exists public.cohort_summary;
+
+create view public.cohort_summary as
 select
   co.id,
   co.slug,
