@@ -6,9 +6,10 @@
 -- that a part-read day stops counting as a full one. The app works
 -- without it; the numbers are just still counted the old way.
 --
--- Run the three blocks BELOW ONE AT A TIME rather than all at once —
--- same reason as above. If one errors, the others still land, and you
--- can tell me which one failed and what it said.
+-- There are FOUR blocks below, each marked with a ===== BLOCK n =====
+-- line. Run them ONE AT A TIME rather than pasting the whole file: same
+-- reason as above, a failure in one would otherwise roll back the rest.
+-- If one errors, the others still land — tell me which and what it said.
 --
 -- Block 3 is dropped and recreated rather than replaced, because it
 -- changes a column's type (avg_days_completed becomes numeric(5,1)),
@@ -21,6 +22,7 @@
 -- ---------- Leaderboard · only full days count for streak & totals ----------
 -- Re-declared in one CREATE OR REPLACE so re-runs stay clean. The
 -- streak windowing is unchanged; only the source rows are narrower.
+-- ===== BLOCK 1 of 4 — the leaderboard, and with it every streak =====
 create or replace view public.leaderboard as
 with completed as (
   select user_id, day_number
@@ -86,6 +88,7 @@ left join current_streak cs on cs.user_id = t.user_id
 order by t.days_completed desc, cs.current_streak desc nulls last;
 
 -- ---------- Finishers · only full 90 counts ----------
+-- ===== BLOCK 2 of 4 — the finisher wall =====
 create or replace view public.finishers as
 select
   p.id,
@@ -103,7 +106,7 @@ order by finished_at asc;
 -- ---------- Cohort summary · only full days count ----------
 
 
--- ===== BLOCK 3 — run this one on its own =====
+-- ===== BLOCK 3 of 4 — the cohort averages =====
 -- Dropped first: CREATE OR REPLACE cannot change a column type, and
 -- this view changes avg_days_completed to numeric(5,1).
 drop view if exists public.cohort_summary;
@@ -132,6 +135,8 @@ group by co.id;
 -- Rewritten so partial completions (is_full=false) don't award
 -- milestones. Existing awarded badges aren't revoked — the badges
 -- table is its own history.
+-- ===== BLOCK 4 of 4 — badges only fire on a fully-read day =====
+-- Run this last. It is one statement, ending in $$;
 create or replace function public.award_badges()
 returns trigger
 language plpgsql security definer
