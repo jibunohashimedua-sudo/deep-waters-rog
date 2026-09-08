@@ -4,33 +4,73 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Nav from "@/components/Nav";
 import CommunityFeed from "@/components/CommunityFeed";
 import PrayerWall from "@/components/PrayerWall";
+import LeaderboardView from "@/components/LeaderboardView";
+import FinishersView from "@/components/FinishersView";
+import CohortsView from "@/components/CohortsView";
 
-type View = "reflections" | "prayer";
+type View = "feed" | "prayer" | "leaderboard" | "finishers" | "cohorts";
 
-const VIEWS: { key: View; label: string }[] = [
-  { key: "reflections", label: "Reflections" },
-  { key: "prayer", label: "Prayer" }
+const VIEWS: { key: View; label: string; title: string; blurb: string }[] = [
+  {
+    key: "feed",
+    label: "Feed",
+    title: "People",
+    blurb: "What today’s reading stirred in us."
+  },
+  {
+    key: "prayer",
+    label: "Prayer",
+    title: "Prayer",
+    blurb: "Bear one another’s burdens."
+  },
+  {
+    key: "leaderboard",
+    label: "Leaderboard",
+    title: "Leaderboard",
+    blurb: ""
+  },
+  {
+    key: "finishers",
+    label: "Finishers",
+    title: "Finishers",
+    blurb: ""
+  },
+  {
+    key: "cohorts",
+    label: "Cohorts",
+    title: "Cohorts",
+    blurb: ""
+  }
 ];
 
 /**
- * Community holds both "together" features. Reflections is the front door;
- * Prayer moved in here when the Bible tab took the fifth slot in the bar.
+ * People — the "together" side of the app. One page, five views.
  *
- * The view lives in ?view= rather than in state alone so a link to the
- * prayer wall still lands on the prayer wall — /prayer redirects here.
+ * The four surfaces that used to live at their own routes (feed, prayer,
+ * leaderboard, finishers, cohorts) are now one destination with a
+ * segmented control at the top. Old routes redirect here with a `?view=`
+ * so bookmarks and home-screen shortcuts keep working.
+ *
+ * The view lives in `?view=` rather than pure state so a shared link
+ * lands where you meant it to.
  */
-function CommunityView() {
+function PeopleView() {
   const router = useRouter();
   const params = useSearchParams();
-  const view: View = params.get("view") === "prayer" ? "prayer" : "reflections";
+  const raw = params.get("view") ?? "feed";
+  const view: View =
+    raw === "prayer" || raw === "leaderboard" || raw === "finishers" || raw === "cohorts"
+      ? (raw as View)
+      : "feed";
+
+  const active = VIEWS.find((v) => v.key === view)!;
 
   const pick = useCallback(
     (next: View) => {
-      // replace, not push: flipping the segment shouldn't build up history
-      // the back button then has to chew through.
-      router.replace(next === "prayer" ? "/community?view=prayer" : "/community", {
-        scroll: false
-      });
+      // Replace, not push — flipping tabs shouldn't build up history the
+      // back button then has to chew through.
+      const url = next === "feed" ? "/community" : `/community?view=${next}`;
+      router.replace(url, { scroll: false });
     },
     [router]
   );
@@ -38,30 +78,31 @@ function CommunityView() {
   return (
     <main className="max-w-3xl mx-auto px-6 py-10">
       <h1 className="text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">
-        {view === "prayer" ? "Prayer" : "Community"}
+        {active.title}
       </h1>
-      <p className="mt-2 text-sm text-rog-muted">
-        {view === "prayer"
-          ? "Bear one another’s burdens."
-          : "What today’s reading stirred in us."}
-      </p>
+      {active.blurb && (
+        <p className="mt-2 text-sm text-rog-muted">{active.blurb}</p>
+      )}
 
+      {/* Segmented control. Horizontally scrollable on narrow screens so
+          all five chips stay reachable at 380 px without wrapping into
+          two rows. */}
       <div
         role="tablist"
-        aria-label="Community views"
-        className="mt-6 flex gap-2"
+        aria-label="People views"
+        className="mt-6 flex gap-2 overflow-x-auto -mx-6 px-6 pb-1 no-scrollbar"
       >
         {VIEWS.map((v) => {
-          const active = view === v.key;
+          const on = view === v.key;
           return (
             <button
               key={v.key}
               type="button"
               role="tab"
-              aria-selected={active}
+              aria-selected={on}
               onClick={() => pick(v.key)}
-              className="chip !min-h-[44px] px-5"
-              data-on={active ? "true" : undefined}
+              className="chip !min-h-[44px] px-4 shrink-0"
+              data-on={on ? "true" : undefined}
             >
               {v.label}
             </button>
@@ -69,9 +110,13 @@ function CommunityView() {
         })}
       </div>
 
-      {/* Only the chosen view mounts, so the other one isn't running a
-          realtime subscription and a feed query in the background. */}
-      {view === "prayer" ? <PrayerWall /> : <CommunityFeed />}
+      {/* Only the chosen view mounts, so the other four aren't running
+          realtime subscriptions or list queries in the background. */}
+      {view === "feed" && <CommunityFeed />}
+      {view === "prayer" && <PrayerWall />}
+      {view === "leaderboard" && <LeaderboardView />}
+      {view === "finishers" && <FinishersView />}
+      {view === "cohorts" && <CohortsView />}
     </main>
   );
 }
@@ -90,7 +135,7 @@ export default function CommunityPage() {
           </main>
         }
       >
-        <CommunityView />
+        <PeopleView />
       </Suspense>
     </>
   );

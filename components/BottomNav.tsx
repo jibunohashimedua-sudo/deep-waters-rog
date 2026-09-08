@@ -44,9 +44,17 @@ const tabs: Tab[] = [
       p === "/community" ||
       p.startsWith("/community/") ||
       p.startsWith("/c/") ||
-      // /prayer redirects into the Community tab, so it lights up here.
+      // Everything that redirects into People — prayer wall, leaderboard,
+      // finisher wall, cohorts list, and the cohort management flow — lights
+      // up here now.
       p === "/prayer" ||
-      p.startsWith("/prayer/"),
+      p.startsWith("/prayer/") ||
+      p === "/leaderboard" ||
+      p.startsWith("/leaderboard/") ||
+      p === "/finishers" ||
+      p.startsWith("/finishers/") ||
+      p === "/cohorts" ||
+      p.startsWith("/cohorts/"),
     icon: (
       <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
         <circle cx="9" cy="9" r="3" />
@@ -63,11 +71,7 @@ const tabs: Tab[] = [
       p === "/depth" ||
       p.startsWith("/depth/") ||
       p === "/me" ||
-      p.startsWith("/me/") ||
-      p === "/leaderboard" ||
-      p.startsWith("/leaderboard/") ||
-      p === "/finishers" ||
-      p.startsWith("/finishers/"),
+      p.startsWith("/me/"),
     icon: (
       <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
         <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />

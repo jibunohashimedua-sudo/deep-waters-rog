@@ -466,6 +466,18 @@ body {
    The rule for adding one: if it names a number or a state, it is a
    kicker. If it names the thing below it, delete it and let the heading
    be the heading. */
+
+/* Horizontal scrollers whose scrollbar is noise — the People page's
+   five-chip segmented control is the main one. Content still scrolls
+   naturally on touch, just without the bar. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 .kicker {
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 10px;
