@@ -6,3 +6,6 @@ node_modules
 *.log
 .vercel
 .env*
+
+# Downloaded study datasets — large, and not ours to redistribute
+scripts/.data/

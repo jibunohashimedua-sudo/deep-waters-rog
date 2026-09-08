@@ -22,7 +22,13 @@ import {
   isSheetMode,
   type LensId
 } from "@/lib/bench";
-import { significantWords, type BenchWord } from "@/lib/benchWords";
+import {
+  fetchCommentary, fetchConcordance, fetchCrossRefs,
+  fetchStrongsEntries, fetchTaggedWords,
+  type CommentaryEntry, type ConcordanceHit, type CrossRef,
+  type StrongsEntry, type TaggedWord
+} from "@/lib/studyData";
+import { useStudyLens } from "@/lib/useStudyLens";
 import BenchPinned from "./BenchPinned";
 import BenchWordRail from "./BenchWordRail";
 import BenchLensBody, { type LensData } from "./BenchLensBody";
@@ -64,6 +70,17 @@ const MORE_STEP = 6;
 
 /** The most reflections the house lens will ask for. */
 const HOUSE_LIMIT = 40;
+
+/** How many concordance verses arrive at a time. Some numbers run to
+    thousands, so the lens states the count and pages through them. */
+const CONCORDANCE_PAGE = 12;
+
+/** How many cross references the lens shows, strongest first. */
+const CROSSREF_LIMIT = 14;
+
+/** Stable empties, so "no data yet" isn't a new object every render. */
+const EMPTY_WORDS: TaggedWord[] = [];
+const EMPTY_ENTRIES = new Map<string, StrongsEntry>();
 
 /** How long "Added" stays on the sermon button before it goes back. */
 const ADDED_MS = 2600;
@@ -131,15 +148,111 @@ export default function BenchLayer(props: Props) {
     "idle"
   );
 
-  const words = useMemo(() => significantWords(text), [text]);
-  const activeWord: BenchWord | null =
-    words.find((w) => w.key === activeWordKey) ?? null;
 
   const bookSlug = bookByName(book)?.slug ?? null;
   const abbr = bookByName(book)?.abbr ?? null;
   const planDay = planDayForChapter(book, chapter)?.day ?? null;
 
   const passageKey = `${book}|${chapter}|${spanStart}|${spanEnd}`;
+
+  // ------------------------------------------------------- the study data
+  // Which lenses are on screen. In tabs that is one lens; in a rack it is
+  // every open panel; in Stack it is all of them, and `stackReady` lets
+  // them in one at a time so a stacked Bench fills from the top rather
+  // than firing every query at once.
+  const [stackReady, setStackReady] = useState(0);
+  useEffect(() => {
+    setStackReady(0);
+  }, [passageKey, stack]);
+  const advanceStack = useCallback(() => setStackReady((n) => n + 1), []);
+
+  const lensVisible = useCallback(
+    (id: LensId) => {
+      if (!open) return false;
+      if (rack) return panels.includes(id);
+      if (notesTab) return false;
+      if (!stack) return activeLens === id;
+      const order = LENSES.findIndex((l) => l.id === id);
+      return order <= stackReady;
+    },
+    [open, rack, panels, notesTab, stack, activeLens, stackReady]
+  );
+
+  // Words. The rail is built from this, so it loads whenever any lens that
+  // uses a word is on screen.
+  const wantsWords =
+    lensVisible("words") || lensVisible("vines") || lensVisible("concordance");
+
+  const wordsLens = useStudyLens<{ words: TaggedWord[]; entries: Map<string, StrongsEntry> }>({
+    active: wantsWords,
+    key: passageKey,
+    onError: onToast,
+    onSettled: stack ? advanceStack : undefined,
+    load: async () => {
+      const words = await fetchTaggedWords(book, chapter, spanStart, spanEnd);
+      const ids = Array.from(new Set(words.flatMap((w) => w.strongsIds)));
+      const entries = await fetchStrongsEntries(ids);
+      return { words, entries };
+    }
+  });
+
+  // Memoised: both are read by effects below, and a fresh [] or Map on
+  // every render would re-enter them on every render.
+  const taggedWords = useMemo(
+    () => wordsLens.data?.words ?? EMPTY_WORDS,
+    [wordsLens.data]
+  );
+  const strongsEntries = useMemo(
+    () => wordsLens.data?.entries ?? EMPTY_ENTRIES,
+    [wordsLens.data]
+  );
+
+  // One word is always the word, once there are words to choose from.
+  useEffect(() => {
+    if (taggedWords.length === 0) return;
+    setActiveWordKey((k) =>
+      k !== null && taggedWords.some((w) => `${w.verse}|${w.wordIndex}` === k)
+        ? k
+        : `${taggedWords[0].verse}|${taggedWords[0].wordIndex}`
+    );
+  }, [taggedWords]);
+
+  const activeTagged =
+    taggedWords.find((w) => `${w.verse}|${w.wordIndex}` === activeWordKey) ?? null;
+  const activeStrongsId = activeTagged?.strongsIds[0] ?? null;
+
+  // Concordance. Paged, and only for the word actually chosen.
+  const [concordancePage, setConcordancePage] = useState(1);
+  useEffect(() => {
+    setConcordancePage(1);
+  }, [activeStrongsId, passageKey]);
+
+  const concordance = useStudyLens<{ total: number; hits: ConcordanceHit[] }>({
+    active: lensVisible("concordance") && !!activeStrongsId,
+    key: `${activeStrongsId}|${passageKey}|${concordancePage}`,
+    onError: onToast,
+    onSettled: stack ? advanceStack : undefined,
+    load: () =>
+      fetchConcordance(activeStrongsId!, 0, CONCORDANCE_PAGE * concordancePage, {
+        book, chapter, verse: spanStart
+      })
+  });
+
+  const crossRefs = useStudyLens<CrossRef[]>({
+    active: lensVisible("crossrefs"),
+    key: passageKey,
+    onError: onToast,
+    onSettled: stack ? advanceStack : undefined,
+    load: () => fetchCrossRefs(book, chapter, spanStart, CROSSREF_LIMIT)
+  });
+
+  const commentary = useStudyLens<CommentaryEntry[]>({
+    active: lensVisible("commentary"),
+    key: passageKey,
+    onError: onToast,
+    onSettled: stack ? advanceStack : undefined,
+    load: () => fetchCommentary(book, chapter, spanStart)
+  });
 
   // A new verse is a new question. The lens you were in stays — that is
   // continuity — but the word you had chosen belonged to the old verse.
@@ -148,21 +261,6 @@ export default function BenchLayer(props: Props) {
     setEditingId(null);
     setSermonState("idle");
   }, [passageKey]);
-
-  // The rail always has one word chosen. A rail with nothing selected asks
-  // the reader to make a choice before it will say anything, and the answer
-  // it gives for the first word is the one it would have given anyway —
-  // so it gives it. This also carries the choice across a new verse: the
-  // old word is not in the new verse's list, so the first one takes over.
-  useEffect(() => {
-    if (words.length === 0) {
-      setActiveWordKey((k) => (k === null ? k : null));
-      return;
-    }
-    setActiveWordKey((k) =>
-      k !== null && words.some((w) => w.key === k) ? k : words[0].key
-    );
-  }, [words]);
 
   // Escape closes the Bench back to the toolbar, the same as the handle.
   useEffect(() => {
@@ -440,12 +538,30 @@ export default function BenchLayer(props: Props) {
     houseRows,
     houseLoading,
     planDay,
-    activeWord
+    taggedWords,
+    wordsLoading: wordsLens.loading,
+    strongsEntries,
+    activeWordKey,
+    activeWord: activeTagged?.word ?? null,
+    activeStrongsId,
+    concordanceTotal: concordance.data?.total ?? 0,
+    concordanceHits: concordance.data?.hits ?? [],
+    concordanceLoading: concordance.loading,
+    concordanceMore:
+      (concordance.data?.total ?? 0) > CONCORDANCE_PAGE * concordancePage,
+    onConcordanceMore: () => setConcordancePage((n) => n + 1),
+    crossRefs: crossRefs.data,
+    crossRefsLoading: crossRefs.loading,
+    commentary: commentary.data,
+    commentaryLoading: commentary.loading,
+    verse: spanStart
   };
 
-  const railWanted = rack
-    ? panels.some((p) => LENS_BY_ID.get(p)?.takesWord)
-    : stack || LENS_BY_ID.get(activeLens)?.takesWord === true;
+  const railWanted =
+    taggedWords.length > 0 &&
+    (rack
+      ? panels.some((p) => LENS_BY_ID.get(p)?.takesWord)
+      : stack || LENS_BY_ID.get(activeLens)?.takesWord === true);
 
   const notepad = (
     <BenchNotepad
@@ -522,13 +638,13 @@ export default function BenchLayer(props: Props) {
 
       {railWanted && (
         <BenchWordRail
-          words={words}
+          words={taggedWords}
           activeKey={activeWordKey}
           onPick={(w) => {
             // A radio, not a checkbox: one word is always the word. Tapping
             // the one already chosen used to unchoose it, which left the
             // three word lenses with nothing to be about.
-            setActiveWordKey(w.key);
+            setActiveWordKey(`${w.verse}|${w.wordIndex}`);
             // Aim the two lenses the rail is for, without moving anyone
             // away from a lens that has nothing to do with a word.
             if (!rack && !stack && !LENS_BY_ID.get(activeLens)?.takesWord) {

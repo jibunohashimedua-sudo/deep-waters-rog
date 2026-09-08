@@ -2,9 +2,15 @@
 import { LENS_BY_ID, type LensId } from "@/lib/bench";
 import type { Translation } from "@/lib/translations";
 import type { ParallelRow } from "@/lib/parallelVerse";
-import type { BenchWord } from "@/lib/benchWords";
+import type {
+  CommentaryEntry, ConcordanceHit, CrossRef, StrongsEntry, TaggedWord
+} from "@/lib/studyData";
 import BenchTranslations from "./BenchTranslations";
 import BenchHouse, { type HouseRow } from "./BenchHouse";
+import BenchWords from "./BenchWords";
+import BenchConcordance from "./BenchConcordance";
+import BenchCrossRefs from "./BenchCrossRefs";
+import BenchCommentary from "./BenchCommentary";
 
 export type LensData = {
   visibleTranslations: Translation[];
@@ -15,18 +21,33 @@ export type LensData = {
   houseRows: HouseRow[] | null;
   houseLoading: boolean;
   planDay: number | null;
-  activeWord: BenchWord | null;
+  taggedWords: TaggedWord[];
+  wordsLoading: boolean;
+  strongsEntries: Map<string, StrongsEntry>;
+  activeWordKey: string | null;
+  activeWord: string | null;
+  activeStrongsId: string | null;
+  concordanceTotal: number;
+  concordanceHits: ConcordanceHit[];
+  concordanceLoading: boolean;
+  concordanceMore: boolean;
+  onConcordanceMore: () => void;
+  crossRefs: CrossRef[] | null;
+  crossRefsLoading: boolean;
+  commentary: CommentaryEntry[] | null;
+  commentaryLoading: boolean;
+  verse: number;
 };
 
 /**
  * One lens's content, and the line at its foot saying where that content
  * came from.
  *
- * Five of the seven are honest about being empty. They are not hidden and
- * they are not filled with something plausible: the tab is there, the lens
- * opens, and it says in one mono line that its dataset has not been loaded
- * yet. A study tool that invents a cross reference is worse than one that
- * hasn't got any.
+ * Six of the seven now carry real data. Vine's is still honest about being
+ * empty: no edition of it could be found under a licence clean enough to
+ * import, and rather than put a different dictionary behind its name, the
+ * tab opens and says so. A study tool that quietly substitutes one
+ * reference work for another is worse than one that admits a gap.
  */
 export default function BenchLensBody({
   lens,
@@ -48,6 +69,39 @@ export default function BenchLensBody({
         />
       )}
 
+      {lens === "words" && (
+        <BenchWords
+          words={data.taggedWords}
+          entries={data.strongsEntries}
+          activeKey={data.activeWordKey}
+          loading={data.wordsLoading}
+        />
+      )}
+
+      {lens === "concordance" && (
+        <BenchConcordance
+          strongsId={data.activeStrongsId}
+          word={data.activeWord}
+          total={data.concordanceTotal}
+          hits={data.concordanceHits}
+          loading={data.concordanceLoading}
+          canShowMore={data.concordanceMore}
+          onShowMore={data.onConcordanceMore}
+        />
+      )}
+
+      {lens === "crossrefs" && (
+        <BenchCrossRefs refs={data.crossRefs} loading={data.crossRefsLoading} />
+      )}
+
+      {lens === "commentary" && (
+        <BenchCommentary
+          entries={data.commentary}
+          loading={data.commentaryLoading}
+          verse={data.verse}
+        />
+      )}
+
       {lens === "house" && (
         <BenchHouse
           rows={data.houseRows}
@@ -66,7 +120,7 @@ export default function BenchLensBody({
           </p>
           {meta.takesWord && data.activeWord && (
             <p className="bench-empty">
-              Aimed at &ldquo;{data.activeWord.word}&rdquo;.
+              Aimed at &ldquo;{data.activeWord}&rdquo;.
             </p>
           )}
         </>

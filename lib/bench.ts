@@ -37,35 +37,36 @@ export const LENSES: Lens[] = [
   {
     id: "words",
     label: "Words",
-    source: "Strong's concordance — not yet loaded",
-    pending: true,
+    source:
+      "Strong's tagging of the KJV (CrossWire Sword module, public domain, via scrollmapper/bible_databases, MIT). Greek: TBESG/Abbott-Smith, STEPBible.org, CC BY 4.0. Hebrew: Strong's + Brown-Driver-Briggs, OpenScriptures Hebrew Bible, CC BY 4.0",
     takesWord: true
   },
   {
     id: "vines",
     label: "Vine's",
-    source: "Vine's Expository Dictionary — not yet loaded",
+    source:
+      "Vine's Expository Dictionary — not loaded. No edition could be found under a licence clean enough to import, and no other dictionary is standing in for it",
     pending: true,
     takesWord: true
   },
   {
     id: "concordance",
     label: "Concordance",
-    source: "Strong's concordance — not yet loaded",
-    pending: true,
+    source:
+      "Strong's tagging of the KJV (CrossWire Sword module, public domain, via scrollmapper/bible_databases, MIT)",
     takesWord: true
   },
   {
     id: "crossrefs",
     label: "Cross refs",
-    source: "Treasury of Scripture Knowledge — not yet loaded",
-    pending: true
+    source:
+      "Treasury of Scripture Knowledge, ranked by readers — OpenBible.info, CC BY 4.0"
   },
   {
     id: "commentary",
     label: "Commentary",
-    source: "Public-domain commentary — not yet loaded",
-    pending: true
+    source:
+      "Matthew Henry's Commentary on the Whole Bible, public domain — revisedcommonversion/matthew-henry-commentary, CC0 1.0"
   },
   {
     id: "house",

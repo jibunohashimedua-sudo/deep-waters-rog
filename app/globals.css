@@ -2319,3 +2319,49 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   color: var(--text);
   border-color: var(--text);
 }
+
+/* ---- The study lenses ----------------------------------------------
+   Words, Concordance, Cross refs and Commentary. Nothing new in the
+   palette: scripture is the reading serif, what a lexicon says is the
+   interface sans, and every label is mono, exactly as everywhere else. */
+
+/* The lemma line under a tagged word: the Greek or Hebrew itself, set
+   larger than the definition because it is the word being discussed. */
+.bench-lemma {
+  margin-top: 6px;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text);
+}
+.bench-word-entry + .bench-word-entry {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+
+/* The word the concordance was asked about, where it stands in the verse.
+   A mark, not a highlight: the reader's own highlights own the tinted
+   grounds, so this is weight and the accent, and it stays out of their way. */
+.bench-hit {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* The row for the word currently aimed at, in the Words lens. Sonar,
+   because it is reporting a position — the same thing it reports on the
+   selected verse and on the active lens. */
+.bench-row[data-on="true"] {
+  box-shadow: inset 2px 0 0 var(--sonar);
+  padding-left: 12px;
+  margin-left: -12px;
+}
+
+/* Henry runs long. The passage keeps its own heading and the paragraph
+   sits under it; the pane scrolls, as it does for every other lens. */
+.bench-commentary + .bench-commentary {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}

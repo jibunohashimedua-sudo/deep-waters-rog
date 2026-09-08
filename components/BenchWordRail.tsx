@@ -1,20 +1,20 @@
 "use client";
-import { STRONGS_PLACEHOLDER, type BenchWord } from "@/lib/benchWords";
+import type { TaggedWord } from "@/lib/studyData";
 
 type Props = {
-  words: BenchWord[];
+  words: TaggedWord[];
   activeKey: string | null;
-  onPick: (word: BenchWord) => void;
+  onPick: (word: TaggedWord) => void;
 };
 
 /**
- * The significant words in the pinned verse, in the order they are written.
+ * The tagged words of the pinned verse, in the order the KJV sets them,
+ * each under its Strong's number.
  *
- * Tapping one aims Vine's and the Concordance at it. Each carries its
- * Strong's number underneath — a placeholder for now, and written as one:
- * an em dash where a number will be, rather than a number that might be
- * wrong. A wrong Strong's number is worse than a missing one, because it
- * looks right.
+ * These are the real tags, not a guess made by splitting the sentence: one
+ * button is one <w> element from the tagged text, so "only begotten" is one
+ * word here because it is one word in the Greek. Tapping one aims Vine's
+ * and the Concordance at it.
  *
  * It scrolls sideways and never wraps, so the row stays one row on a phone.
  * On a folding phone the rail is kept out of the seam by the layout, not by
@@ -24,19 +24,22 @@ export default function BenchWordRail({ words, activeKey, onPick }: Props) {
   if (words.length === 0) return null;
   return (
     <div className="bench-rail no-scrollbar" role="group" aria-label="Words in this verse">
-      {words.map((w) => (
-        <button
-          key={w.key}
-          type="button"
-          className="bench-word"
-          data-on={activeKey === w.key ? "true" : undefined}
-          aria-pressed={activeKey === w.key}
-          onClick={() => onPick(w)}
-        >
-          <span className="bench-word-text">{w.word}</span>
-          <span className="bench-word-num">{w.strongs ?? STRONGS_PLACEHOLDER}</span>
-        </button>
-      ))}
+      {words.map((w) => {
+        const key = `${w.verse}|${w.wordIndex}`;
+        return (
+          <button
+            key={key}
+            type="button"
+            className="bench-word"
+            data-on={activeKey === key ? "true" : undefined}
+            aria-pressed={activeKey === key}
+            onClick={() => onPick(w)}
+          >
+            <span className="bench-word-text">{w.word}</span>
+            <span className="bench-word-num">{w.strongsIds.join("·")}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
