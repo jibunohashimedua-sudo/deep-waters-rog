@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import ThemeToggle from "./ThemeToggle";
+import Avatar from "./Avatar";
 import BottomNav from "./BottomNav";
 import Mark from "./Mark";
 import { isReadingRoute } from "@/lib/routes";
@@ -26,6 +27,7 @@ export default function Nav() {
   const [unread, setUnread] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
   const [hasUser, setHasUser] = useState(false);
+  const [me, setMe] = useState<{ name: string; photoUrl: string | null } | null>(null);
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
@@ -37,9 +39,18 @@ export default function Nav() {
       if (cancelled) return;
       setHasUser(!!user);
       if (!user) return;
-      const { data: p } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+      // Widened from just the role: the bar carries the portrait now, and
+      // asking for two more columns on a query already going out costs
+      // nothing, where a second round trip would cost a round trip.
+      const { data: p, error } = await supabase
+        .from("profiles")
+        .select("role, name, photo_url")
+        .eq("id", user.id)
+        .maybeSingle();
       if (cancelled) return;
+      if (error) console.error("[deep-waters] nav profile:", error.message);
       setIsAdmin(p?.role === "admin");
+      if (p) setMe({ name: p.name, photoUrl: p.photo_url ?? null });
       const refresh = async () => {
         const { count } = await supabase
           .from("notifications")
@@ -139,8 +150,30 @@ export default function Nav() {
               )}
             </Link>
 
-            {/* Desktop-only Me + Sign out */}
-            <Link href="/depth" className={`hidden md:inline-flex ${linkCls("/depth")}`}>Depth</Link>
+            {/* You. The one way into Depth from the top of any screen.
+                It sits beside the bell rather than under it on Today —
+                two tappable things stacked in the same corner made the
+                corner ask a question it didn't need to ask.
+
+                It replaces the desktop "Depth" text link rather than
+                joining it: two ways to the same page, side by side, is
+                not two ways, it is clutter. Square, per Fathom — a
+                person is not a button. */}
+            {me && (
+              <Link
+                href="/depth"
+                aria-label="Your depth"
+                className="tap-target ml-1 shrink-0 inline-flex"
+              >
+                <Avatar
+                  name={me.name}
+                  photoUrl={me.photoUrl}
+                  size="nav"
+                  decorative
+                />
+              </Link>
+            )}
+
             <button onClick={signOut} className="hidden md:inline text-xs text-rog-muted hover:text-rog-purple px-2">
               Sign out
             </button>

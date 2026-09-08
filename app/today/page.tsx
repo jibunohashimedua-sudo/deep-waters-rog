@@ -4,7 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { READING_PLAN, currentDayNumber, formatReading } from "@/lib/plan";
 import { todayISO } from "@/lib/rhapsody";
 import Nav from "@/components/Nav";
-import Avatar from "@/components/Avatar";
 import ReflectionForm from "@/components/ReflectionForm";
 import NudgeBanner from "@/components/NudgeBanner";
 import Greeting from "@/components/Greeting";
@@ -75,32 +74,18 @@ export default async function TodayPage() {
     <>
       <Nav />
       <main data-surface="reading" className="max-w-3xl mx-auto px-6 py-10">
-        {/* Your portrait, top right, and the only thing it does is take
-            you to Depth. No label, no chevron, no card round it — the
-            picture is the affordance, the way it is everywhere else. */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <Greeting
-              name={profile.name}
-              day={day}
-              completedToday={!!existing}
-              streak={streak}
-              returning={returning}
-            />
-          </div>
-          <Link
-            href="/depth"
-            aria-label="Your depth"
-            className="shrink-0 mt-1 tap-target"
-          >
-            <Avatar
-              name={profile.name}
-              photoUrl={profile.photo_url}
-              size="nav"
-              decorative
-            />
-          </Link>
-        </div>
+        {/* The portrait used to sit here, opposite the greeting. It lives
+            in the app bar now (see Nav): here it landed directly under
+            the notifications bell, so the top-right corner held two
+            separate tappable things about 80px apart, and the eye had to
+            work out which was which. */}
+        <Greeting
+          name={profile.name}
+          day={day}
+          completedToday={!!existing}
+          streak={streak}
+          returning={returning}
+        />
         <NudgeBanner completed={!!existing} day={day} />
         {/* The gauge. The mark is a sounding line, so the ninety days are
             drawn as a scale with ticks and an upright on today, read the
