@@ -13,6 +13,8 @@ import {
 import { bookByName } from "@/lib/bibleBooks";
 import VerseToolbar from "./VerseToolbar";
 import VerseNoteSheet from "./VerseNoteSheet";
+import CompareSheet from "./CompareSheet";
+import { DEFAULT_BIBLE_ID } from "@/lib/translations";
 
 type ChapterInput = {
   /** Book name, e.g. "Isaiah". */
@@ -32,6 +34,8 @@ type Props = {
   chapters: ChapterInput[];
   /** Set when the URL named a verse: bring it into view and mark it briefly. */
   focusVerse?: { start: number; end: number };
+  /** The edition on screen. Compare leads its list with it. */
+  translationId?: string;
 };
 
 /** How far below the top edge a focused verse settles — clears the sticky
@@ -72,7 +76,8 @@ export default function ScriptureReader({
   dayNumber,
   testament,
   chapters,
-  focusVerse
+  focusVerse,
+  translationId
 }: Props) {
   const supabase = useMemo(() => createClient(), []);
 
@@ -83,6 +88,7 @@ export default function ScriptureReader({
   const [notes, setNotes] = useState<VerseNote[]>([]);
   const [selected, setSelected] = useState<SelKey[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
   const [sheetSaving, setSheetSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [atCap, setAtCap] = useState(false);
@@ -307,6 +313,16 @@ export default function ScriptureReader({
     };
   }, [selected.length]);
 
+  // Compare belongs to a selection, so it goes when the selection does.
+  // Several paths empty the selection without going through
+  // clearSelection() — a tap outside, Escape, tapping into another
+  // chapter — and a Compare sheet left open over nothing shows the
+  // "which book is this?" state, which is a true answer to a question
+  // nobody asked.
+  useEffect(() => {
+    if (selected.length === 0) setCompareOpen(false);
+  }, [selected.length]);
+
   // Escape clears, for anyone reading on a keyboard.
   useEffect(() => {
     if (selected.length === 0) return;
@@ -482,6 +498,7 @@ export default function ScriptureReader({
   function clearSelection() {
     setSelected([]);
     setAtCap(false);
+    setCompareOpen(false);
   }
 
   /**
@@ -831,9 +848,25 @@ export default function ScriptureReader({
         onHighlight={saveHighlight}
         onRemoveHighlight={removeHighlight}
         onNote={() => setSheetOpen(true)}
+        onCompare={() => setCompareOpen(true)}
         onCopy={copy}
         onShare={share}
         onShareImage={shareImage}
+      />
+
+      {/* The same verses, in several translations at once. Uses the anchor's
+          book and the run from first to last selected verse, so a range
+          compares as a range. */}
+      <CompareSheet
+        open={compareOpen}
+        onClose={() => setCompareOpen(false)}
+        bookSlug={anchor ? bookByName(anchor.book)?.slug ?? null : null}
+        chapter={anchor?.chapter ?? 1}
+        start={spanStart}
+        end={spanEnd}
+        reference={noteReference}
+        currentId={translationId ?? DEFAULT_BIBLE_ID}
+        onToast={showToast}
       />
 
       <VerseNoteSheet

@@ -106,7 +106,7 @@ export default async function ReadPage({
 
         {note?.body && testament === "ot" && (
           /* Someone's note about today, above the reading.
-
+             
              It was a card with "Study note" set in mono above it — a label
              naming the one thing directly beneath it, which is the single
              job this system asks a label never to take. There is no label
@@ -148,6 +148,7 @@ export default async function ReadPage({
             dayNumber={day}
             testament={testament}
             chapters={loaded}
+            translationId={resolved[0]?.id}
           />
         )}
 

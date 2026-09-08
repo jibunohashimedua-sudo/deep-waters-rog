@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
@@ -42,10 +41,8 @@ export default async function BookChaptersPage({
     <>
       <Nav />
       <main className="max-w-3xl mx-auto px-6 py-10">
-        <Link href="/bible" className="text-sm text-rog-muted hover:text-rog-purple">
-          &larr; All books
-        </Link>
-        <p className="mt-10 kicker">{book.group}</p>
+        {/* The app bar's arrow is the way back to the book list. */}
+        <p className="kicker">{book.group}</p>
         <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">
           {book.name}
         </h1>

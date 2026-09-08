@@ -23,6 +23,7 @@ type Props = {
   onHighlight: (colour: HighlightColour) => void;
   onRemoveHighlight: () => void;
   onNote: () => void;
+  onCompare: () => void;
   onCopy: () => void;
   onShare: () => void;
   onShareImage: () => void;
@@ -51,6 +52,7 @@ export default function VerseToolbar({
   onHighlight,
   onRemoveHighlight,
   onNote,
+  onCompare,
   onCopy,
   onShare,
   onShareImage
@@ -97,6 +99,12 @@ export default function VerseToolbar({
             onClick={onNote}
           >
             {hasNote ? "Edit note" : "Note"}
+          </button>
+          {/* Sits next to Note rather than out by Share: comparing is
+              something you do while you're still reading the verse, not
+              something you do with it afterwards. */}
+          <button type="button" className="verse-action" onClick={onCompare}>
+            Compare
           </button>
           <button type="button" className="verse-action" onClick={onCopy}>
             Copy

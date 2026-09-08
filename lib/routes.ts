@@ -20,3 +20,57 @@ export function isReadingRoute(pathname: string): boolean {
   }
   return false;
 }
+
+/**
+ * Where the one back control on a page should go.
+ *
+ * The app bar used to call router.back(), which is not "back" so much as
+ * "wherever you happened to come from" — arriving at the devotional from a
+ * notification and pressing back sent you to the notification list, and
+ * arriving from a cold link sent you out of the app entirely. Every screen
+ * below a tab has exactly one parent, so it is named here instead.
+ *
+ * null means we genuinely don't know, and the caller falls back to history.
+ */
+export function backHrefFor(pathname: string): string | null {
+  const seg = pathname.split("/").filter(Boolean);
+  if (seg.length === 0) return null;
+
+  switch (seg[0]) {
+    // The devotional and the daily reading both hang off the day.
+    case "rhapsody":
+    case "read":
+      return "/today";
+
+    case "me":
+      return seg.length > 1 ? "/me" : "/today";
+
+    // /bible/[book] climbs to the book list; a chapter climbs to its book.
+    // (Chapters are reading routes, where the reading header carries this
+    // instead — but the answer is the same either way, and agreeing costs
+    // nothing.)
+    case "bible":
+      if (seg.length === 2) return "/bible";
+      if (seg.length >= 3) return `/bible/${seg[1]}`;
+      return null;
+
+    // /admin/notes/12 -> /admin/notes -> /admin. One segment at a time.
+    case "admin":
+      if (seg.length === 1) return null;
+      return `/${seg.slice(0, -1).join("/")}`;
+
+    case "cohorts":
+      if (seg.length === 1) return null;
+      // Managing a cohort climbs to that cohort's own page, not the list.
+      if (seg.length >= 3 && seg[2] === "manage") return `/c/${seg[1]}`;
+      return "/cohorts";
+
+    case "announcements":
+    case "testimonials":
+    case "prayer":
+      return "/today";
+
+    default:
+      return null;
+  }
+}

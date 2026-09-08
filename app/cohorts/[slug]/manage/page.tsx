@@ -1,6 +1,5 @@
 import { notFound, redirect } from "next/navigation";
 import Avatar from "@/components/Avatar";
-import Link from "next/link";
 import Nav from "@/components/Nav";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile, isCohortLeader } from "@/lib/auth";
@@ -61,10 +60,8 @@ export default async function CohortManagePage({
     <>
       <Nav />
       <main className="max-w-4xl mx-auto px-6 py-10">
-        <Link href={`/c/${cohort.slug}`} className="text-sm text-rog-muted hover:text-rog-purple">
-          &larr; Back to {cohort.name}
-        </Link>
-        <p className="mt-4 kicker">Manage</p>
+        {/* The app bar's arrow goes back to the cohort itself. */}
+        <p className="kicker">Manage</p>
         <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">{cohort.name}</h1>
 
         {/* Dashboard */}

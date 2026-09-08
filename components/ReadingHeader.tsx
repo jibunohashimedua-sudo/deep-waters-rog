@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import TranslationSwitcher from "./TranslationSwitcher";
+import ReferencePicker from "./ReferencePicker";
 
 type Props = {
   /** Where the back chevron goes — the day, or the book's chapter list. */
@@ -14,15 +15,21 @@ type Props = {
   reference: string;
   userId: string;
   translationId: string;
+  /** Where the picker should open, when this screen is one chapter of one
+      book. The daily reading spans several, so it opens at the book step. */
+  bookSlug?: string | null;
+  chapter?: number | null;
 };
 
 /**
  * The header on every reading screen, on /read and on /bible alike.
  *
- * You used to have to scroll back to the top of a chapter to change
- * translation, which is the wrong way round: the moment you want another
- * rendering is the moment a line stops making sense, and that is never at
- * the top. So the bar is sticky and the switcher is always in it.
+ * It carries the whole job of a reading screen's chrome: the way out, where
+ * you are, and which translation you're in. The last two are controls, not
+ * captions — the reference opens the book/chapter/verse picker, and the code
+ * on the right opens the translation list. Both are reachable at any point in
+ * a chapter, because the bar is sticky, and the moment you want either of
+ * them is never the moment you happen to be at the top of the page.
  *
  * It condenses rather than shrinking. The bar itself is one fixed row —
  * chevron, reference, translation — and the large reference lives in the
@@ -39,10 +46,13 @@ export default function ReadingHeader({
   kicker,
   reference,
   userId,
-  translationId
+  translationId,
+  bookSlug = null,
+  chapter = null
 }: Props) {
   const sentinel = useRef<HTMLDivElement>(null);
   const [condensed, setCondensed] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   // Watching a sentinel below the title rather than a scroll offset: the
   // title's height changes with the length of the reference and with the
@@ -84,23 +94,55 @@ export default function ReadingHeader({
           </svg>
         </Link>
 
-        {/* Hidden from assistive tech: it is the same reference as the
-            heading below, and announcing it twice is noise. */}
-        <span className="reading-ref" aria-hidden>
-          {reference}
-        </span>
+        {/* The condensed reference, which is also the picker once it has
+            faded up. It is invisible and unpressable until then — see
+            .reading-ref in globals.css — because the full-size one below
+            is still on screen and doing the same job. */}
+        <button
+          type="button"
+          className="reading-ref"
+          onClick={() => setPickerOpen(true)}
+          tabIndex={condensed ? 0 : -1}
+          aria-hidden={!condensed}
+          aria-label={`${reference}. Go to another passage.`}
+        >
+          {reference} &#9662;
+        </button>
 
         <TranslationSwitcher userId={userId} currentId={translationId} />
       </header>
 
       <div className="pt-8">
         <p className="kicker">{kicker}</p>
-        <h1 className="reading-title mt-3">{reference}</h1>
+        <h1 className="mt-3">
+          {/* The title is the book-and-chapter control. Somebody looking at
+              "Psalm 42" and wanting Psalm 43 should be able to say so by
+              pressing the words in front of them. */}
+          <button
+            type="button"
+            onClick={() => setPickerOpen(true)}
+            className="reading-title reading-title-btn"
+            aria-haspopup="dialog"
+          >
+            {reference}
+            <span className="reading-caret" aria-hidden>
+              &#9662;
+            </span>
+          </button>
+        </h1>
       </div>
 
       {/* Zero-height tell-tale. When this passes under the bar, the bar
           takes the reference over. */}
       <div ref={sentinel} aria-hidden className="h-px" />
+
+      <ReferencePicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        bookSlug={bookSlug}
+        chapter={chapter}
+        startStep="book"
+      />
     </>
   );
 }

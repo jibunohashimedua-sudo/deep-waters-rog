@@ -63,6 +63,8 @@ export default async function ChapterView({ bookSlug, chapter, focus }: Props) {
           reference={`${book.name} ${chapter}`}
           userId={userId}
           translationId={resolved.chosen.id}
+          bookSlug={book.slug}
+          chapter={chapter}
         />
 
         {resolved.fallbackNote && (
@@ -77,6 +79,7 @@ export default async function ChapterView({ bookSlug, chapter, focus }: Props) {
             dayNumber={planDay?.day ?? 1}
             testament={planDay?.testament ?? book.testament}
             focusVerse={focus}
+            translationId={resolved.id}
             chapters={[
               {
                 book: book.name,

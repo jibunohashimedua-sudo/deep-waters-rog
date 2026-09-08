@@ -7,7 +7,7 @@ import ThemeToggle from "./ThemeToggle";
 import Avatar from "./Avatar";
 import BottomNav from "./BottomNav";
 import Mark from "./Mark";
-import { isReadingRoute } from "@/lib/routes";
+import { backHrefFor, isReadingRoute } from "@/lib/routes";
 
 // Mirrors the mobile tab bar: Prayer is a view inside Community now, so it
 // isn't a separate destination here either.
@@ -89,9 +89,16 @@ export default function Nav() {
     }`;
 
   // Main tab routes never show a back button. Everything else (sub-pages
-  // like /me/edit, /admin/notes, /c/slug, /read) shows one.
+  // like /me/edit, /admin/notes, /c/slug, /read) shows one — and exactly
+  // one: any page that also drew its own "back to X" link in the body has
+  // had it removed, because two controls for one job is a question.
   const mainRoutes = ["/today", "/bible", "/community", "/leaderboard", "/cohorts", "/finishers", "/depth", "/admin", "/notifications"];
   const showBack = !mainRoutes.includes(pathname);
+
+  // A named destination wherever we have one, so back always means the
+  // page above this one rather than whatever the history stack happens to
+  // hold. History stays as the fallback for anything unmapped.
+  const backHref = backHrefFor(pathname);
 
   // On a reading screen the sticky reading header is the only chrome, so
   // the app bar stands down rather than stacking a second bar above it.
@@ -105,16 +112,26 @@ export default function Nav() {
       <header className="glass-nav sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 shrink-0">
-            {showBack && (
-              <button
-                onClick={() => router.back()}
-                className="glass-chip inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium text-rog-purple hover:opacity-70 transition"
-                aria-label="Go back"
-              >
-                <span aria-hidden>&larr;</span>
-                <span className="hidden sm:inline">Back</span>
-              </button>
-            )}
+            {showBack &&
+              (backHref ? (
+                <Link
+                  href={backHref}
+                  className="glass-chip inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium text-rog-purple hover:opacity-70 transition"
+                  aria-label="Go back"
+                >
+                  <span aria-hidden>&larr;</span>
+                  <span className="hidden sm:inline">Back</span>
+                </Link>
+              ) : (
+                <button
+                  onClick={() => router.back()}
+                  className="glass-chip inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium text-rog-purple hover:opacity-70 transition"
+                  aria-label="Go back"
+                >
+                  <span aria-hidden>&larr;</span>
+                  <span className="hidden sm:inline">Back</span>
+                </button>
+              ))}
             <Link href="/today" className="flex items-center gap-2">
               <Mark size={22} />
               <span className="font-bold text-rog-purple text-lg tracking-tight">Deep Waters</span>

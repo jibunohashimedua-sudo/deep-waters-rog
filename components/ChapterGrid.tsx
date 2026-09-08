@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import ReferencePicker, { type PickerStep } from "./ReferencePicker";
 
 type Props = {
   bookSlug: string;
@@ -16,28 +17,24 @@ const LONG_PRESS_MS = 450;
 /** Finger drift, in px, past which a press is a scroll and not a press. */
 const DRIFT_CANCEL_PX = 10;
 
-type SheetState =
-  | { open: false }
-  | { open: true; chapter: number; status: "loading" }
-  | { open: true; chapter: number; status: "ready"; count: number }
-  | { open: true; chapter: number; status: "unavailable" };
-
 /**
- * The chapter grid, with a second way in underneath it.
+ * The chapter grid, with a visible way to a verse beside it.
  *
  * A tap opens the chapter at the top, which is what most people want most of
- * the time. A press and hold — or a right-click, or the keyboard menu key —
- * opens the verses in that chapter instead, so somebody who has just heard
- * "Psalm twenty-three, verse four" gets there in two taps rather than
- * arriving at the top of the psalm and scrolling.
+ * the time. "Jump to a verse" opens the picker at this book's chapters and
+ * then its verses, so somebody who has just heard "Psalm twenty-three, verse
+ * four" gets there without arriving at the top of the psalm and scrolling.
  *
- * Verse counts come from the API on demand rather than from a table kept
- * here. They are fetched only when a grid is actually opened: Psalms alone
- * would be 150 chapter loads to know every count up front, for a panel
- * almost nobody opens.
+ * The press-and-hold shortcut survives for anyone who learnt it, but it is no
+ * longer the only door: a gesture is a shortcut, never an interface.
  */
 export default function ChapterGrid({ bookSlug, bookName, chapters, read }: Props) {
-  const [sheet, setSheet] = useState<SheetState>({ open: false });
+  const [picker, setPicker] = useState<{
+    open: boolean;
+    step: PickerStep;
+    chapter: number | null;
+  }>({ open: false, step: "chapter", chapter: null });
+
   const readSet = new Set(read);
 
   const pressTimer = useRef<number | null>(null);
@@ -45,49 +42,10 @@ export default function ChapterGrid({ bookSlug, bookName, chapters, read }: Prop
   // Set when a long press fires, so the click that the browser sends
   // afterwards doesn't also navigate to the chapter.
   const swallowClick = useRef(false);
-  // Counts we've already asked for, so reopening a grid is instant.
-  const countCache = useRef<Map<number, number | null>>(new Map());
-  const panelRef = useRef<HTMLDivElement>(null);
 
-  const openVerses = useCallback(
-    async (chapter: number) => {
-      const cached = countCache.current.get(chapter);
-      if (cached !== undefined) {
-        setSheet(
-          cached === null
-            ? { open: true, chapter, status: "unavailable" }
-            : { open: true, chapter, status: "ready", count: cached }
-        );
-        return;
-      }
-
-      setSheet({ open: true, chapter, status: "loading" });
-      try {
-        const res = await fetch(
-          `/api/bible/verse-count?book=${encodeURIComponent(bookSlug)}&chapter=${chapter}`
-        );
-        const json = await res.json();
-        const count: number | null =
-          res.ok && typeof json.count === "number" ? json.count : null;
-        countCache.current.set(chapter, count);
-        setSheet((s) =>
-          // Don't stomp on a panel the reader has since closed or changed.
-          s.open && s.chapter === chapter
-            ? count === null
-              ? { open: true, chapter, status: "unavailable" }
-              : { open: true, chapter, status: "ready", count }
-            : s
-        );
-      } catch {
-        setSheet((s) =>
-          s.open && s.chapter === chapter
-            ? { open: true, chapter, status: "unavailable" }
-            : s
-        );
-      }
-    },
-    [bookSlug]
-  );
+  function openVerses(chapter: number) {
+    setPicker({ open: true, step: "verse", chapter });
+  }
 
   function cancelPress() {
     if (pressTimer.current !== null) {
@@ -106,7 +64,7 @@ export default function ChapterGrid({ bookSlug, bookName, chapters, read }: Prop
     pressTimer.current = window.setTimeout(() => {
       swallowClick.current = true;
       pressTimer.current = null;
-      void openVerses(chapter);
+      openVerses(chapter);
     }, LONG_PRESS_MS);
   }
 
@@ -128,25 +86,18 @@ export default function ChapterGrid({ bookSlug, bookName, chapters, read }: Prop
     }
   }
 
-  function close() {
-    setSheet({ open: false });
-  }
-
-  // Escape closes, and focus moves into the panel when it opens so the verse
-  // grid is reachable without a mouse.
-  useEffect(() => {
-    if (!sheet.open) return;
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") close();
-    }
-    window.addEventListener("keydown", onKey);
-    panelRef.current?.focus();
-    return () => window.removeEventListener("keydown", onKey);
-  }, [sheet.open]);
-
   return (
     <>
-      <ul className="mt-10 grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
+      <button
+        type="button"
+        onClick={() => setPicker({ open: true, step: "chapter", chapter: null })}
+        className="chip mt-8 gap-2"
+      >
+        <span aria-hidden>&#8595;</span>
+        Jump to a verse
+      </button>
+
+      <ul className="mt-4 grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
         {Array.from({ length: chapters }, (_, i) => i + 1).map((c) => {
           const done = readSet.has(c);
           return (
@@ -169,7 +120,7 @@ export default function ChapterGrid({ bookSlug, bookName, chapters, read }: Prop
                 onContextMenu={(e) => {
                   e.preventDefault();
                   cancelPress();
-                  void openVerses(c);
+                  openVerses(c);
                 }}
               >
                 {c}
@@ -179,73 +130,13 @@ export default function ChapterGrid({ bookSlug, bookName, chapters, read }: Prop
         })}
       </ul>
 
-      <p className="mt-6 text-xs text-rog-muted">
-        Press and hold a chapter to jump straight to a verse.
-      </p>
-
-      {sheet.open && (
-        <div className="fixed inset-0 z-[70]">
-          <button
-            type="button"
-            aria-label="Close"
-            onClick={close}
-            className="sheet-backdrop absolute inset-0 w-full"
-          />
-          <div
-            ref={panelRef}
-            role="dialog"
-            aria-modal="true"
-            aria-label={`Verses in ${bookName} ${sheet.chapter}`}
-            tabIndex={-1}
-            className="verse-sheet"
-          >
-            <div className="pt-2 pb-2 flex justify-center">
-              <div className="w-10 h-1.5 rounded-full bg-black/15 dark:bg-white/20" />
-            </div>
-            <div className="px-5 pb-6">
-              <p className="kicker">Jump to a verse</p>
-              <h2 className="mt-2 font-serif text-2xl font-medium text-rog-ink leading-tight">
-                {bookName} {sheet.chapter}
-              </h2>
-
-              {sheet.status === "loading" && (
-                <p className="mt-6 text-sm text-rog-muted">Counting the verses…</p>
-              )}
-
-              {sheet.status === "unavailable" && (
-                <div className="mt-6">
-                  <p className="text-sm text-rog-muted">
-                    We couldn&rsquo;t load the verse list just now.
-                  </p>
-                  <Link
-                    href={`/bible/${bookSlug}/${sheet.chapter}`}
-                    className="btn-secondary mt-4 inline-block"
-                  >
-                    Open the chapter instead
-                  </Link>
-                </div>
-              )}
-
-              {sheet.status === "ready" && (
-                <ul className="mt-5 grid grid-cols-6 sm:grid-cols-8 gap-2 max-h-[50vh] overflow-y-auto">
-                  {Array.from({ length: sheet.count }, (_, i) => i + 1).map((v) => (
-                    <li key={v}>
-                      <Link
-                        href={`/bible/${bookSlug}/${sheet.chapter}/${v}`}
-                        className="chapter-tile"
-                        aria-label={`${bookName} ${sheet.chapter} verse ${v}`}
-                        onClick={close}
-                      >
-                        {v}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <ReferencePicker
+        open={picker.open}
+        onClose={() => setPicker((p) => ({ ...p, open: false }))}
+        bookSlug={bookSlug}
+        chapter={picker.chapter}
+        startStep={picker.step}
+      />
     </>
   );
 }
