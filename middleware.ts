@@ -1,6 +1,12 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+/** Cap for the Supabase auth roundtrip inside middleware. A stalled Supabase
+    used to drag every in-flight navigation; now we give up, send them to the
+    login page (for pages) or a JSON 401 (for /api/*), and let them retry. */
+const AUTH_TIMEOUT_MS = 4000;
+const AUTH_TIMEOUT = Symbol("auth-timeout");
+
 const PUBLIC_PATHS = [
   "/",
   // The landing page's main call to action points here, and it's the intro
@@ -57,14 +63,11 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refreshing here rotates the refresh token: the old one stops working the
-  // moment this call succeeds. The new pair is written onto `response`, so any
-  // reply that isn't `response` has to carry those cookies over or the browser
-  // keeps a refresh token that's already dead — and the next visit signs them
-  // out. That's what this helper is for; never plain `NextResponse.redirect`.
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
+  // An API call is expected to receive JSON, so an unauthenticated hit gets
+  // a JSON 401 rather than a 307 HTML redirect that the client's `.json()`
+  // then chokes on. Page routes still redirect so the browser lands
+  // somewhere useful.
+  const isApi = pathname.startsWith("/api/") && !pathname.startsWith("/api/og");
 
   const redirectTo = (targetPath: string) => {
     const url = request.nextUrl.clone();
@@ -74,11 +77,29 @@ export async function middleware(request: NextRequest) {
     return redirect;
   };
 
-  // An API call is expected to receive JSON, so an unauthenticated hit gets
-  // a JSON 401 rather than a 307 HTML redirect that the client's `.json()`
-  // then chokes on. Page routes still redirect so the browser lands
-  // somewhere useful.
-  const isApi = pathname.startsWith("/api/") && !pathname.startsWith("/api/og");
+  // Refreshing here rotates the refresh token: the old one stops working the
+  // moment this call succeeds. The new pair is written onto `response`, so any
+  // reply that isn't `response` has to carry those cookies over or the browser
+  // keeps a refresh token that's already dead — and the next visit signs them
+  // out. That's what this helper is for; never plain `NextResponse.redirect`.
+  //
+  // Wrapped in Promise.race against a 4s deadline: a slow Supabase used to
+  // drag every navigation to its knees. On timeout we don't stall; page
+  // routes redirect to /login, API routes get a JSON 401.
+  const raced = await Promise.race([
+    supabase.auth.getUser().then((r) => r.data.user ?? null),
+    new Promise<typeof AUTH_TIMEOUT>((resolve) =>
+      setTimeout(() => resolve(AUTH_TIMEOUT), AUTH_TIMEOUT_MS)
+    )
+  ]);
+  if (raced === AUTH_TIMEOUT) {
+    console.error(`[deep-waters] middleware auth timeout after ${AUTH_TIMEOUT_MS}ms on ${pathname}`);
+    if (isApi) {
+      return NextResponse.json({ error: "auth-timeout" }, { status: 401 });
+    }
+    return redirectTo("/login");
+  }
+  const user = raced;
 
   if (!user) {
     if (isApi) {

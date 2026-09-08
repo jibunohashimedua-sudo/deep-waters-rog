@@ -20,7 +20,16 @@ export function isoDate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-/** Today as "YYYY-MM-DD". */
+/**
+ * Today as "YYYY-MM-DD", in the current machine's timezone.
+ *
+ * Rendered from the server this is UTC (which is why the admin picker
+ * flips a day early in some timezones). The rhapsody reader uses
+ * `todayISOForUser(tz)` from `lib/dates.ts` instead — it takes the reader's
+ * timezone as an argument, from the `dw_tz` cookie the client sets on
+ * first load. Kept here because `/admin/rhapsody` still calls it and the
+ * one-day drift on that admin surface is acceptable.
+ */
 export function todayISO(): string {
   return isoDate(new Date());
 }

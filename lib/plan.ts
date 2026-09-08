@@ -138,14 +138,47 @@ export function buildPassageIds(chapters: Chapter[]): string[] {
   return chapters.map((c) => `${c.abbr}.${c.chapter}`);
 }
 
-// Compute which day a user is on based on their start_date.
-export function currentDayNumber(startDate: string | Date): number {
-  const start = new Date(startDate);
-  start.setHours(0, 0, 0, 0);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const diff = Math.floor((today.getTime() - start.getTime()) / 86400000);
+import { daysBetweenLocal, todayISOForUser, parseISODate } from "./dates";
+
+/**
+ * Which day of the plan the reader is on.
+ *
+ * `startDate` is the reader's own start (from `profiles.start_date`) as a
+ * YYYY-MM-DD string. `todayISO` is today in the reader's own timezone —
+ * server callers hand in `todayForCurrentRequest()` (which reads the
+ * `dw_tz` cookie), client callers pass `todayISOForUser()` off the
+ * browser's `Intl.DateTimeFormat`. Omitting `todayISO` falls back to UTC
+ * and is one day off for some timezones — the /today banner tells the
+ * reader about a possible ± 1 day shift while the cookie propagates.
+ *
+ * Was `new Date(iso).setHours(0,0,0,0)` compared as epoch ms, which drifted
+ * by ± 1 day in west-of-UTC timezones and by ± 1 hour across DST changes.
+ * This is calendar-only maths — no `Date` construction from ISO input, no
+ * `.setHours` — so neither drift is reachable any more.
+ */
+export function currentDayNumber(
+  startDate: string | Date,
+  todayISO?: string
+): number {
+  const startISO = normaliseStart(startDate);
+  const today = todayISO ?? todayISOForUser(null);
+  const diff = daysBetweenLocal(startISO, today);
   return Math.max(1, Math.min(90, diff + 1));
+}
+
+function normaliseStart(v: string | Date): string {
+  if (typeof v === "string") {
+    // Trust the ISO date prefix; parseISODate throws on anything malformed.
+    parseISODate(v);
+    return v.slice(0, 10);
+  }
+  // Kept for backwards compatibility with the few call sites that already
+  // hand in a Date. Read UTC parts so we're not at the mercy of the
+  // runtime's default timezone — which on Vercel is UTC anyway.
+  const y = v.getUTCFullYear();
+  const m = String(v.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(v.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 // ---------------------------------------------------------------------------

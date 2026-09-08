@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { currentDayNumber } from "@/lib/plan";
+import { todayForCurrentRequest } from "@/lib/serverToday";
 
 /**
  * /today is a shortcut to /day/{yourCurrentDay}.
@@ -24,6 +25,6 @@ export default async function TodayShortcut() {
     .single();
   if (!profile) redirect("/onboarding");
 
-  const day = currentDayNumber(profile.start_date);
+  const day = currentDayNumber(profile.start_date, todayForCurrentRequest());
   redirect(`/day/${day}`);
 }

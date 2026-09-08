@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { BADGES, BADGE_ORDER } from "@/lib/badges";
 import { READING_PLAN, currentDayNumber } from "@/lib/plan";
+import { todayForCurrentRequest } from "@/lib/serverToday";
 import { bookByName } from "@/lib/bibleBooks";
 import {
   normaliseHighlightColour,
@@ -116,7 +117,7 @@ export default async function DepthPage() {
   const rawNotes = (notesResult.data ?? []) as VerseNote[];
   const chapterReadRows = chapterReadsResult.data ?? [];
 
-  const day = currentDayNumber(profile.start_date);
+  const day = currentDayNumber(profile.start_date, todayForCurrentRequest());
   const earned = new Map(badges.map((b) => [b.badge, b.earned_at]));
   // "Done" is now the fully-kept days only — partial days show separately
   // on the grid rather than counting here.

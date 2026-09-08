@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { READING_PLAN, currentDayNumber } from "@/lib/plan";
+import { todayForCurrentRequest } from "@/lib/serverToday";
 
 /**
  * Toggle a chapter tick, then recompute whether the day is fully read.
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
     .single();
   if (!prof) return NextResponse.json({ error: "no profile" }, { status: 400 });
 
-  const currentDay = currentDayNumber(prof.start_date);
+  const currentDay = currentDayNumber(prof.start_date, todayForCurrentRequest());
   if (dayNumber > currentDay) {
     return NextResponse.json({ error: "That day hasn't arrived yet" }, { status: 400 });
   }

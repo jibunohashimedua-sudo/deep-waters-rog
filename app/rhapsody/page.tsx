@@ -1,14 +1,13 @@
-import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
-import { todayISO, longDate } from "@/lib/rhapsody";
+import { longDate } from "@/lib/rhapsody";
+import { todayISOForUser } from "@/lib/dates";
+import { tzForCurrentRequest } from "@/lib/serverToday";
 import Nav from "@/components/Nav";
 
-// A fresh signed link every visit, so this page can never be cached.
+// A fresh signed link every visit, so this page can never be cached. The
+// signed URL itself is minted at click time now — see `/api/rhapsody/pdf`.
 export const dynamic = "force-dynamic";
-
-/** How long the link to the original PDF stays good. */
-const LINK_TTL_SECONDS = 30 * 60;
 
 export default async function RhapsodyPage() {
   // requireProfile redirects to /login when signed out, so nothing below
@@ -16,7 +15,10 @@ export default async function RhapsodyPage() {
   await requireProfile();
   const supabase = createClient();
 
-  const date = todayISO();
+  // Reader's own timezone. Without the cookie (first paint of a fresh
+  // session) this falls back to UTC — a reader in Asia at 04:00 local can
+  // see yesterday's article until the cookie is set on the next request.
+  const date = todayISOForUser(tzForCurrentRequest());
 
   // Two plain queries, merged here. No nested select: this project has been
   // bitten by ambiguous-relationship errors from PostgREST joins.
@@ -26,37 +28,22 @@ export default async function RhapsodyPage() {
     .eq("date", date)
     .maybeSingle();
 
-  let edition: { title: string; file_path: string } | null = null;
+  // We only need to know a PDF exists — the actual signed URL is minted at
+  // click time by /api/rhapsody/pdf. A 30-minute signed URL minted at page
+  // render meant a reader who lingered got a fresh 403 in a new tab.
+  let hasPdf = false;
   let editionError: string | null = null;
   if (entry?.edition_id) {
     const { data, error } = await supabase
       .from("rhapsody_editions")
-      .select("title, file_path")
+      .select("id")
       .eq("id", entry.edition_id)
       .maybeSingle();
-    edition = data ?? null;
+    hasPdf = !!data;
     editionError = error?.message ?? null;
   }
 
-  // The link to the original PDF is signed with the service role, so the
-  // bucket needs no read policy at all and the storage path never reaches
-  // the browser. Only made when there's an article to go with it.
-  let signedUrl: string | null = null;
-  let signError: string | null = null;
-  if (entry && edition?.file_path) {
-    const service = createServiceClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { persistSession: false } }
-    );
-    const { data, error } = await service.storage
-      .from("rhapsody")
-      .createSignedUrl(edition.file_path, LINK_TTL_SECONDS);
-    signedUrl = data?.signedUrl ?? null;
-    signError = error?.message ?? null;
-  }
-
-  const problem = entryError?.message ?? editionError ?? signError;
+  const problem = entryError?.message ?? editionError;
   if (problem) console.error("[deep-waters] rhapsody reader:", problem);
 
   const rawBody: string = entry?.body ?? "";
@@ -64,7 +51,12 @@ export default async function RhapsodyPage() {
     .split(/\n{2,}/)
     .map((p) => p.trim())
     .filter(Boolean);
-  const pdfUrl = signedUrl ? `${signedUrl}#page=${entry?.page_number ?? 1}` : null;
+  // The `page` param lets /api/rhapsody/pdf append `#page=N` to the signed
+  // URL's Location header, so the reader lands on the mapped article page
+  // rather than the front cover.
+  const pdfHref = hasPdf
+    ? `/api/rhapsody/pdf?page=${entry?.page_number ?? 1}`
+    : null;
 
   return (
     <>
@@ -130,7 +122,7 @@ export default async function RhapsodyPage() {
 
         {/* Nothing to read means the text hasn't been pulled in yet — the PDF
             is still there, so send them to it rather than to an empty page. */}
-        {entry && paragraphs.length === 0 && pdfUrl && (
+        {entry && paragraphs.length === 0 && pdfHref && (
           <div className="mt-10 card empty-state">
             <p className="empty-body">Today&rsquo;s article hasn&rsquo;t been typed up yet.</p>
             <p className="empty-hint">You can still read it in the original booklet below.</p>
@@ -139,10 +131,10 @@ export default async function RhapsodyPage() {
 
         {/* Only the booklet link at the foot. Getting back to Today is the
             app bar's chevron — one back control per page. */}
-        {entry && pdfUrl && (
+        {entry && pdfHref && (
           <div className="mt-16">
             <a
-              href={pdfUrl}
+              href={pdfHref}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-secondary w-full text-center"

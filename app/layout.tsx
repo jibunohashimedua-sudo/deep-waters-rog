@@ -87,6 +87,26 @@ const themeScript = `
 })();
 `;
 
+// Writes the reader's IANA timezone into a cookie the server reads on the
+// next request. Without it the server has no way to know what "today" is
+// for someone outside UTC, and the reading plan's current day drifts by
+// one. Set with SameSite=Lax so it goes out on top-level navigations, and
+// a long max-age so we only pay this on the very first visit and after
+// the reader changes timezone.
+const tzScript = `
+(function() {
+  try {
+    var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (!tz) return;
+    var cookie = document.cookie || '';
+    var existing = cookie.split('; ').find(function(c) { return c.indexOf('dw_tz=') === 0; });
+    var existingVal = existing ? decodeURIComponent(existing.slice(6)) : null;
+    if (existingVal === tz) return;
+    document.cookie = 'dw_tz=' + encodeURIComponent(tz) + '; path=/; max-age=' + (60*60*24*365) + '; SameSite=Lax';
+  } catch (e) {}
+})();
+`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
@@ -96,6 +116,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: tzScript }} />
       </head>
       <body>
         <SplashScreen />

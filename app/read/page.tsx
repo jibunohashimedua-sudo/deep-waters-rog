@@ -6,6 +6,7 @@ import {
   currentDayNumber,
   formatReading
 } from "@/lib/plan";
+import { todayForCurrentRequest } from "@/lib/serverToday";
 import { fetchChapter, chapterErrorMessage, type ChapterFailure } from "@/lib/bible";
 import { resolveTranslation } from "@/lib/translations";
 import { wrapVersesInHtml } from "@/lib/verseParse";
@@ -22,7 +23,7 @@ export default async function ReadPage({
 
   // ?d= overrides the current day so links from /me's verse-notes land
   // on the correct chapter regardless of where the reader is today.
-  const currentDay = currentDayNumber(profile.start_date);
+  const currentDay = currentDayNumber(profile.start_date, todayForCurrentRequest());
   const requestedDay = Number.parseInt(searchParams.d ?? "", 10);
   const day =
     Number.isFinite(requestedDay) && requestedDay >= 1 && requestedDay <= 90

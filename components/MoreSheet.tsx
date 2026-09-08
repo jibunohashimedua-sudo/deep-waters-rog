@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import Avatar from "./Avatar";
 import Icon from "./Icons";
 import { currentDayNumber } from "@/lib/plan";
+import { todayISOForUser } from "@/lib/dates";
 
 type Choice = "light" | "dark" | "system";
 
@@ -58,7 +59,9 @@ export default function MoreSheet({ open, onClose, isAdmin }: Props) {
       if (cErr) console.error("[deep-waters] more sheet completions:", cErr.message);
       if (!profile) return;
 
-      const day = currentDayNumber(profile.start_date);
+      // Client-side: browser's own timezone answers "today" directly.
+      const localTZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const day = currentDayNumber(profile.start_date, todayISOForUser(localTZ));
       const days = new Set((done ?? []).map((c) => c.day_number));
       // Count back from today, or from yesterday when today isn't saved
       // yet, so a run isn't reported broken while the day is in progress.

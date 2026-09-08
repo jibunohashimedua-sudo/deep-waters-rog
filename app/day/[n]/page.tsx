@@ -2,12 +2,14 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { READING_PLAN, currentDayNumber, formatReading } from "@/lib/plan";
+import { todayForCurrentRequest } from "@/lib/serverToday";
 import Nav from "@/components/Nav";
 import ReflectionForm from "@/components/ReflectionForm";
 import NudgeBanner from "@/components/NudgeBanner";
 import Greeting from "@/components/Greeting";
 import DayHeader from "@/components/DayHeader";
 import ChapterTicker from "@/components/ChapterTicker";
+import TimezoneNotice from "@/components/TimezoneNotice";
 
 /**
  * Any day, 1–90.
@@ -48,7 +50,7 @@ export default async function DayPage({
   const profile = profileResult.data;
   if (!profile) redirect("/onboarding");
 
-  const currentDay = currentDayNumber(profile.start_date);
+  const currentDay = currentDayNumber(profile.start_date, todayForCurrentRequest());
 
   // Validate the URL day. Anything wrong sends the reader to their own
   // current day rather than to an error page — a stale bookmark from before
@@ -152,6 +154,10 @@ export default async function DayPage({
     <>
       <Nav />
       <main data-surface="reading" className="max-w-3xl mx-auto px-6 py-10">
+        {/* One-time notice about the timezone-drift fix. Self-retires two
+            weeks after deploy — see components/TimezoneNotice.tsx. */}
+        <TimezoneNotice />
+
         {/* Chrome: previous day, this day (opens the picker), next day,
             and a quiet "back to today" pill when off-day. */}
         <DayHeader day={day} currentDay={currentDay} doneDays={doneDays} />

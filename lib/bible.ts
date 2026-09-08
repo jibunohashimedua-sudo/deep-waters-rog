@@ -14,6 +14,17 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { DEFAULT_BIBLE_ID } from "./translations";
 import { countVersesInHtml } from "./verseParse";
+import { fetchWithTimeout, isTimeoutError } from "./fetchWithTimeout";
+
+/** How long to wait on API.Bible before giving up. The reader gets an
+    empty state, not a spinning page. */
+const API_BIBLE_TIMEOUT_MS = 6000;
+
+/** Guards against caching non-scripture (a maintenance HTML page, an
+    ad-driven error page) as if it were a chapter. Verse markers in
+    API.Bible's HTML look like `<span class="v">1</span>`; every real
+    chapter carries at least one. */
+const VERSE_MARKER_RE = /<span[^>]*class="[^"]*\bv\b[^"]*"[^>]*>\s*\d+\s*<\/span>/;
 
 const BASE = "https://api.scripture.api.bible/v1";
 
@@ -196,10 +207,11 @@ async function doFetchChapter(
   if (!apiKey) return { ok: false, kind: "no-key" };
 
   try {
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `${BASE}/bibles/${bibleId}/chapters/${book}.${chapter}` +
         `?content-type=html&include-verse-numbers=true&include-titles=false&include-notes=false`,
-      { headers: { "api-key": apiKey }, cache: "no-store" }
+      { headers: { "api-key": apiKey }, cache: "no-store" },
+      API_BIBLE_TIMEOUT_MS
     );
 
     if (res.status === 429) return { ok: false, kind: "rate-limit" };
@@ -219,11 +231,33 @@ async function doFetchChapter(
     };
     if (!text.content) return { ok: false, kind: "missing" };
 
+    // Shape check before caching. A maintenance page or an ad wrapper the
+    // upstream returns with a 200 would sail into bible_cache with the 90-day
+    // TTL and be served as scripture to every reader for three months. If the
+    // response doesn't carry a single verse-number marker, refuse it —
+    // don't cache, don't memoize.
+    if (!VERSE_MARKER_RE.test(text.content)) {
+      console.error(
+        `[deep-waters] API.Bible returned non-scripture for ${bibleId} ${book}.${chapter}: ` +
+          `length=${text.content.length}, head=${JSON.stringify(text.content.slice(0, 200))}`
+      );
+      return { ok: false, kind: "unavailable" };
+    }
+
     memoryCache.set(key, text);
     // Don't make the reader wait on the cache write.
     void writeSharedCache(bibleId, book, chapter, text);
     return { ok: true, chapter: text };
   } catch (err: any) {
+    if (isTimeoutError(err)) {
+      // Deliberate: don't cache a timeout, and don't stall the reader.
+      // Same shape the outer code already handles for a network failure —
+      // the /read page renders its empty-state line and offers a retry.
+      console.error(
+        `[deep-waters] API.Bible timeout after ${API_BIBLE_TIMEOUT_MS}ms for ${bibleId} ${book}.${chapter}`
+      );
+      return { ok: false, kind: "unavailable" };
+    }
     console.error("[deep-waters] API.Bible fetch failed:", err?.message ?? err);
     return { ok: false, kind: "unavailable" };
   }
