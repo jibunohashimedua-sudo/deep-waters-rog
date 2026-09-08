@@ -54,3 +54,4 @@ create policy "chapter_reads_delete_own" on public.chapter_reads
 -- were treated as complete under the old model, and this keeps every
 -- streak and badge intact through the migration.
 alter table public.completions
+  add column if not exists is_full boolean not null default true;
