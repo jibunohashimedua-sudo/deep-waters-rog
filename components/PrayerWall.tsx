@@ -175,34 +175,69 @@ export default function PrayerWall() {
 
   async function pray(id: string) {
     if (id.startsWith("temp-")) return;
-    await fetch("/api/prayer", {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ id, action: "pray" })
-    });
-    load();
+    setError(null);
+    try {
+      const res = await fetch("/api/prayer", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id, action: "pray" })
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setError(friendlyError(j.error));
+        return;
+      }
+      load();
+    } catch (err: any) {
+      setError(friendlyError(err?.message));
+    }
   }
 
   async function markAnswered(id: string) {
-    await fetch("/api/prayer", {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ id, action: "answered", note: answerNote })
-    });
-    setAnswering(null);
-    setAnswerNote("");
-    load();
+    setError(null);
+    try {
+      const res = await fetch("/api/prayer", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id, action: "answered", note: answerNote })
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setError(friendlyError(j.error));
+        return;
+      }
+      setAnswering(null);
+      setAnswerNote("");
+      load();
+    } catch (err: any) {
+      setError(friendlyError(err?.message));
+    }
   }
 
   async function del(id: string) {
     if (id.startsWith("temp-")) return;
+    const previous = items;
+    // Optimistic remove — put it back if the server refuses so the user
+    // isn't misled about what has and hasn't been deleted.
     setItems((prev) => prev.filter((p) => p.id !== id));
-    await fetch("/api/prayer", {
-      method: "DELETE",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ id })
-    });
-    load();
+    setError(null);
+    try {
+      const res = await fetch("/api/prayer", {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id })
+      });
+      if (!res.ok) {
+        setItems(previous);
+        const j = await res.json().catch(() => ({}));
+        setError(friendlyError(j.error));
+        return;
+      }
+      load();
+    } catch (err: any) {
+      setItems(previous);
+      setError(friendlyError(err?.message));
+    }
   }
 
   const shown = items.filter((p) => (tab === "open" ? !p.is_answered : p.is_answered));

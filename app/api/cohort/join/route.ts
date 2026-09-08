@@ -20,29 +20,44 @@ export async function POST(request: Request) {
     .maybeSingle();
   if (!cohort) return NextResponse.json({ error: "not found" }, { status: 404 });
 
-  // Add to cohort_members. Previously these three writes were fire-and-forget
-  // and the route redirected as though the join had worked, so a failure looked
-  // exactly like success until the member noticed they weren't in the cohort.
-  const { error: memberError } = await supabase
+  // Check membership first. If the user is already in this cohort, an
+  // upsert is a no-op — but the profile update that used to follow blindly
+  // was silently overwriting their `cohort_id` and, when `align_start=1`
+  // was ticked (the default on the share form), their `start_date`. That
+  // wiped a returning member's real start date and reset their whole plan
+  // to Day 1. Now: only alter the profile on a first-time join.
+  const { data: existing } = await supabase
     .from("cohort_members")
-    .upsert({ cohort_id: cohort.id, user_id: user.id, role: "member" }, { onConflict: "cohort_id,user_id" });
-  if (memberError) {
-    // eslint-disable-next-line no-console
-    console.error("[deep-waters] cohort join failed:", memberError.message);
-    return NextResponse.redirect(new URL(`/c/${cohort.slug}?error=join`, request.url));
-  }
+    .select("cohort_id")
+    .eq("cohort_id", cohort.id)
+    .eq("user_id", user.id)
+    .maybeSingle();
 
-  // Set as primary cohort + optionally align start date
-  const update: Record<string, unknown> = { cohort_id: cohort.id };
-  if (alignStart) update.start_date = cohort.start_date;
-  const { error: profileError } = await supabase
-    .from("profiles")
-    .update(update)
-    .eq("id", user.id);
-  if (profileError) {
-    // eslint-disable-next-line no-console
-    console.error("[deep-waters] cohort profile update failed:", profileError.message);
-    return NextResponse.redirect(new URL(`/c/${cohort.slug}?error=join`, request.url));
+  const alreadyMember = !!existing;
+
+  if (!alreadyMember) {
+    const { error: memberError } = await supabase
+      .from("cohort_members")
+      .insert({ cohort_id: cohort.id, user_id: user.id, role: "member" });
+    if (memberError) {
+      // eslint-disable-next-line no-console
+      console.error("[deep-waters] cohort join failed:", memberError.message);
+      return NextResponse.redirect(new URL(`/c/${cohort.slug}?error=join`, request.url));
+    }
+
+    // Set as primary cohort + optionally align start date. Only on a first
+    // join; a re-join never touches these.
+    const update: Record<string, unknown> = { cohort_id: cohort.id };
+    if (alignStart) update.start_date = cohort.start_date;
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update(update)
+      .eq("id", user.id);
+    if (profileError) {
+      // eslint-disable-next-line no-console
+      console.error("[deep-waters] cohort profile update failed:", profileError.message);
+      return NextResponse.redirect(new URL(`/c/${cohort.slug}?error=join`, request.url));
+    }
   }
 
   // Log event. Analytics only — never block the join on it.

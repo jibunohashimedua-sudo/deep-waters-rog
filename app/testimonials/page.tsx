@@ -2,11 +2,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Nav from "@/components/Nav";
-import { createClient } from "@/lib/supabase/client";
+import { friendlyError } from "@/lib/errors";
+import { TESTIMONY_MAX } from "@/lib/limits";
 
 export default function TestimonialPage() {
   const router = useRouter();
-  const supabase = createClient();
   const [body, setBody] = useState("");
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
@@ -16,14 +16,21 @@ export default function TestimonialPage() {
     e.preventDefault();
     setSaving(true);
     setError(null);
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-    if (!user) return router.push("/login");
-    const { error } = await supabase.from("testimonials").insert({ user_id: user.id, body: body.trim() });
+    // Server-side length cap lives in /api/testimonial. Client maxLength
+    // still bites first for the common case; the API is the boundary.
+    const res = await fetch("/api/testimonial", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ body })
+    });
     setSaving(false);
-    if (error) setError(error.message);
-    else setDone(true);
+    if (!res.ok) {
+      if (res.status === 401) return router.push("/login");
+      const j = await res.json().catch(() => ({}));
+      setError(friendlyError(j.error));
+      return;
+    }
+    setDone(true);
   }
 
   return (
@@ -48,12 +55,12 @@ export default function TestimonialPage() {
               value={body}
               onChange={(e) => setBody(e.target.value)}
               rows={8}
-              maxLength={1500}
+              maxLength={TESTIMONY_MAX}
               enterKeyHint="enter"
               placeholder="Write freely..."
               className="w-full border border-rog-line bg-white px-6 py-4 focus:border-rog-purple focus:outline-none leading-relaxed"
             />
-            <p className="text-xs text-rog-muted text-right">{body.length}/1500</p>
+            <p className="text-xs text-rog-muted text-right">{body.length}/{TESTIMONY_MAX}</p>
             <button type="submit" disabled={saving || !body.trim()} className="btn-primary w-full disabled:opacity-50">
               {saving ? "Sending..." : "Submit testimony"}
             </button>

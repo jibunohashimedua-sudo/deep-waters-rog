@@ -101,18 +101,34 @@ function OnboardingPageInner() {
       cohort_id: cohortId
     });
 
-    if (!insErr && cohortId) {
-      await supabase
-        .from("cohort_members")
-        .upsert({ cohort_id: cohortId, user_id: userId, role: "member" }, { onConflict: "cohort_id,user_id" });
-    }
-    if (!insErr) {
-      await supabase.from("events").insert({ user_id: userId, event: "signup", meta: { cohort_id: cohortId } });
+    if (insErr) {
+      setLoading(false);
+      setError(insErr.message);
+      return;
     }
 
+    // Cohort join is part of the same submit now. Used to be fire-and-forget
+    // after the profile write, so a network blip between the two left a
+    // profile row that middleware would admit forever while the user was
+    // never actually in the cohort they signed up through.
+    if (cohortId) {
+      const { error: memberErr } = await supabase
+        .from("cohort_members")
+        .upsert(
+          { cohort_id: cohortId, user_id: userId, role: "member" },
+          { onConflict: "cohort_id,user_id" }
+        );
+      if (memberErr) {
+        setLoading(false);
+        setError(memberErr.message);
+        return;
+      }
+    }
+
+    await supabase.from("events").insert({ user_id: userId, event: "signup", meta: { cohort_id: cohortId } });
+
     setLoading(false);
-    if (insErr) setError(insErr.message);
-    else router.push("/today");
+    router.push("/today");
   }
 
   return (

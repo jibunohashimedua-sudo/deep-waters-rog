@@ -74,7 +74,14 @@ export async function POST(request: Request) {
     const { error } = await supabase
       .from("chapter_reads")
       .insert({ user_id: user.id, day_number: dayNumber, book, chapter });
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    // A fast triple-tap can race two identical POSTs: both read
+    // `existingTick=null`, both attempt insert, one wins the unique
+    // constraint and the loser gets Postgres 23505. That's not a real
+    // failure — the tick is present after the winner ran — so we treat
+    // it as success and fall through to the recount.
+    if (error && (error as any).code !== "23505") {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
   }
 
   // Recompute after the tick so the count reflects the new state.

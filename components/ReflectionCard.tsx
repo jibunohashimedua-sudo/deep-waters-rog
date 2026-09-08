@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Avatar from "./Avatar";
 import { createClient } from "@/lib/supabase/client";
+import { friendlyError } from "@/lib/errors";
 import MentionText from "./MentionText";
 import ReportButton from "./ReportButton";
 
@@ -43,6 +44,7 @@ export default function ReflectionCard({
   const [commentCount, setCommentCount] = useState<number>(Number(item.comment_count));
   const [draft, setDraft] = useState("");
   const [posting, setPosting] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!currentUserId) return;
@@ -72,39 +74,79 @@ export default function ReflectionCard({
 
   async function amen() {
     if (!currentUserId) return;
-    const res = await fetch("/api/react", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ completion_id: item.id })
-    });
-    const j = await res.json();
-    setReacted(j.reacted);
-    setAmens((a) => (j.reacted ? a + 1 : Math.max(0, a - 1)));
+    // Optimistic flip — revert on any non-2xx so the count never drifts from
+    // truth. The prior version awaited json() unconditionally, which threw
+    // uncaught when middleware served an HTML redirect to a stale session.
+    const prevReacted = reacted;
+    const prevAmens = amens;
+    const nextReacted = !reacted;
+    setReacted(nextReacted);
+    setAmens((a) => (nextReacted ? a + 1 : Math.max(0, a - 1)));
+    setActionError(null);
+    try {
+      const res = await fetch("/api/react", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ completion_id: item.id })
+      });
+      if (!res.ok) throw new Error("react-failed");
+      const j = await res.json();
+      // Server is authority — if it disagrees with our optimistic flip,
+      // take its answer.
+      if (typeof j.reacted === "boolean" && j.reacted !== nextReacted) {
+        setReacted(j.reacted);
+        setAmens((a) => (j.reacted ? a + 1 : Math.max(0, a - 1)));
+      }
+    } catch (err) {
+      setReacted(prevReacted);
+      setAmens(prevAmens);
+      setActionError(friendlyError(err instanceof Error ? err.message : undefined));
+    }
   }
 
   async function postComment(e: React.FormEvent) {
     e.preventDefault();
     if (!draft.trim()) return;
     setPosting(true);
-    await fetch("/api/comment", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ completion_id: item.id, body: draft })
-    });
-    setDraft("");
-    setPosting(false);
-    setCommentCount((c) => c + 1);
-    await loadComments();
+    setActionError(null);
+    try {
+      const res = await fetch("/api/comment", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ completion_id: item.id, body: draft })
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setActionError(friendlyError(j.error));
+        return; // draft preserved, count untouched
+      }
+      setDraft("");
+      setCommentCount((c) => c + 1);
+      await loadComments();
+    } finally {
+      setPosting(false);
+    }
   }
 
   async function deleteComment(id: string) {
-    await fetch("/api/comment", {
-      method: "DELETE",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ id })
-    });
+    // Optimistic remove, restore on failure — a comment that disappears from
+    // the UI and then reappears on reload is worse than a small pause.
+    const previous = comments;
     setComments((prev) => prev.filter((c) => c.id !== id));
     setCommentCount((c) => Math.max(0, c - 1));
+    setActionError(null);
+    try {
+      const res = await fetch("/api/comment", {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id })
+      });
+      if (!res.ok) throw new Error("delete-failed");
+    } catch (err) {
+      setComments(previous);
+      setCommentCount((c) => c + 1);
+      setActionError(friendlyError(err instanceof Error ? err.message : undefined));
+    }
   }
 
   return (
@@ -148,7 +190,10 @@ export default function ReflectionCard({
         item.verse_reference && <p className="kicker mt-4">{item.verse_reference}</p>
       )}
       {item.reflection && (
-        <p className="selectable mt-3 text-[14.5px] leading-[1.55] text-rog-ink">
+        <p
+          className="selectable mt-3 text-[14.5px] leading-[1.55] text-rog-ink"
+          style={{ overflowWrap: "anywhere" }}
+        >
           <MentionText text={item.reflection} />
         </p>
       )}
@@ -183,6 +228,10 @@ export default function ReflectionCard({
         </div>
       </div>
 
+      {actionError && (
+        <p className="mt-2 text-[11.5px] text-danger" role="alert">{actionError}</p>
+      )}
+
       {/* Comments */}
       {showComments && (
         <div className="mt-4 border-t border-rog-line pt-4 space-y-3">
@@ -196,7 +245,12 @@ export default function ReflectionCard({
               <Avatar name={c.profiles?.name ?? "?"} photoUrl={c.profiles?.photo_url} size="xs" decorative />
               <div className="flex-1 surface-soft !p-3">
                 <p className="text-[13px] font-semibold text-rog-ink">{c.profiles?.name}</p>
-                <p className="selectable text-[14px] leading-[1.5] text-rog-ink"><MentionText text={c.body} /></p>
+                <p
+                  className="selectable text-[14px] leading-[1.5] text-rog-ink"
+                  style={{ overflowWrap: "anywhere" }}
+                >
+                  <MentionText text={c.body} />
+                </p>
                 <div className="flex gap-3 mt-1.5">
                   <p className="kicker">{new Date(c.created_at).toLocaleString("en-GB")}</p>
                   {(c.user_id === currentUserId || isAdmin) && (

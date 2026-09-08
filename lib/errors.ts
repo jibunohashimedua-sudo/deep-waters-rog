@@ -62,5 +62,18 @@ export function friendlyError(msg?: string | null): string {
     return "That link has expired. Request a fresh one.";
   }
 
+  // Server rejected a write because the text was too long. Every API that
+  // enforces a cap returns the string "too_long" so the user gets the same
+  // friendly line whichever surface they hit it from.
+  if (lower === "too_long" || lower.includes("too_long")) {
+    return "That's too long to save. Please shorten it and try again.";
+  }
+  // "profile-missing" is the signal middleware.ts sends to API calls when
+  // the reader has no profiles row yet. Practically only reachable if
+  // onboarding was interrupted or an admin removed the profile mid-session.
+  if (lower.includes("profile-missing") || lower.includes("profile_missing")) {
+    return "Your profile hasn't been set up yet. Finish onboarding and try again.";
+  }
+
   return "Something didn't work. Try again in a moment.";
 }

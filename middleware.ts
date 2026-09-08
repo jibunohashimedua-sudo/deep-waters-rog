@@ -74,7 +74,16 @@ export async function middleware(request: NextRequest) {
     return redirect;
   };
 
+  // An API call is expected to receive JSON, so an unauthenticated hit gets
+  // a JSON 401 rather than a 307 HTML redirect that the client's `.json()`
+  // then chokes on. Page routes still redirect so the browser lands
+  // somewhere useful.
+  const isApi = pathname.startsWith("/api/") && !pathname.startsWith("/api/og");
+
   if (!user) {
+    if (isApi) {
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    }
     return redirectTo("/login");
   }
 
@@ -86,6 +95,13 @@ export async function middleware(request: NextRequest) {
       .eq("id", user.id)
       .maybeSingle();
     if (!profile) {
+      if (isApi) {
+        // Signed in with no profile row is only reachable if onboarding was
+        // interrupted or an admin removed the profile mid-session. Say so
+        // in JSON so the client can surface the friendly message rather than
+        // crashing on `.json()` of a 307 HTML body.
+        return NextResponse.json({ error: "profile-missing" }, { status: 401 });
+      }
       return redirectTo("/onboarding");
     }
   }

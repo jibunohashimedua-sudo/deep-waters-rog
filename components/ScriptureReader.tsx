@@ -626,14 +626,17 @@ export default function ScriptureReader({
           n.id === existingNote.id ? { ...n, body, updated_at: new Date().toISOString() } : n
         )
       );
-      const { error } = await supabase
-        .from("verse_notes")
-        .update({ body })
-        .eq("id", existingNote.id);
+      // Server-side length cap and validation live in /api/verse-note.
+      const res = await fetch("/api/verse-note", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: existingNote.id, body })
+      });
       setSheetSaving(false);
-      if (error) {
+      if (!res.ok) {
         setNotes(prev);
-        showToast(friendlyError(error.message));
+        const j = await res.json().catch(() => ({}));
+        showToast(friendlyError(j.error));
         return;
       }
     } else {
@@ -654,10 +657,10 @@ export default function ScriptureReader({
         updated_at: new Date().toISOString()
       };
       setNotes([...notes, optimistic]);
-      const { data, error } = await supabase
-        .from("verse_notes")
-        .insert({
-          user_id: userId,
+      const res = await fetch("/api/verse-note", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
           day_number: dayNumber,
           testament,
           book: anchor.book,
@@ -667,15 +670,16 @@ export default function ScriptureReader({
           verse_text: text,
           body
         })
-        .select()
-        .single();
+      });
       setSheetSaving(false);
-      if (error) {
+      if (!res.ok) {
         setNotes(prev);
-        showToast(friendlyError(error.message));
+        const j = await res.json().catch(() => ({}));
+        showToast(friendlyError(j.error));
         return;
       }
-      setNotes([...prev, data as VerseNote]);
+      const j = await res.json();
+      setNotes([...prev, j.note as VerseNote]);
     }
     setSheetOpen(false);
     clearSelection();

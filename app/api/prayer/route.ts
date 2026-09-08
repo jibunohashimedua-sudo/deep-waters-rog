@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { recordMentions } from "@/lib/mentions";
+import { PRAYER_BODY_MAX, PRAYER_NOTE_MAX, capText } from "@/lib/limits";
 
 export async function POST(request: Request) {
   const supabase = createClient();
@@ -11,17 +12,22 @@ export async function POST(request: Request) {
 
   const { body, cohort_id } = await request.json();
   if (!body?.trim()) return NextResponse.json({ error: "Please write something first" }, { status: 400 });
+  if (body.trim().length > PRAYER_BODY_MAX) {
+    return NextResponse.json({ error: "too_long", field: "body", max: PRAYER_BODY_MAX }, { status: 400 });
+  }
+  const capped = capText(body, PRAYER_BODY_MAX);
+  if (!capped) return NextResponse.json({ error: "Please write something first" }, { status: 400 });
 
   const { data: row, error } = await supabase
     .from("prayer_requests")
-    .insert({ user_id: user.id, cohort_id: cohort_id ?? null, body: body.trim() })
+    .insert({ user_id: user.id, cohort_id: cohort_id ?? null, body: capped })
     .select("id")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   // Mentions are a nice-to-have. If they fail, the prayer still posts.
   try {
-    await recordMentions(supabase, "prayer", row.id, body, user.id);
+    await recordMentions(supabase, "prayer", row.id, capped, user.id);
   } catch (e) {
     console.error("mention recording failed (non-fatal):", e);
   }
@@ -63,9 +69,13 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ ok: true, prayed: true });
   }
   if (action === "answered") {
+    if (typeof note === "string" && note.trim().length > PRAYER_NOTE_MAX) {
+      return NextResponse.json({ error: "too_long", field: "note", max: PRAYER_NOTE_MAX }, { status: 400 });
+    }
+    const cappedNote = capText(note, PRAYER_NOTE_MAX);
     const { error } = await supabase
       .from("prayer_requests")
-      .update({ is_answered: true, answered_note: note ?? null })
+      .update({ is_answered: true, answered_note: cappedNote })
       .eq("id", id)
       .eq("user_id", user.id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });

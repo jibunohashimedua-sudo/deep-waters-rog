@@ -2,6 +2,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import {
+  COHORT_NAME_MAX,
+  COHORT_DESCRIPTION_MAX,
+  COHORT_WELCOME_MAX,
+  capText
+} from "@/lib/limits";
 
 export default function CohortSettingsForm({
   cohortId,
@@ -32,18 +38,37 @@ export default function CohortSettingsForm({
     e.preventDefault();
     setSaving(true);
     setMsg(null);
-    const { error } = await supabase
+    const cappedName = capText(name, COHORT_NAME_MAX);
+    if (!cappedName) {
+      setSaving(false);
+      setMsg("Cohort name can't be empty.");
+      return;
+    }
+    // Read the row back after the update. Supabase returns no error for a
+    // zero-row update — same shape as success — so a cohort that was
+    // deleted from another tab used to save silently to nowhere and the
+    // leader was told "Saved". Now it says what really happened.
+    const { data, error } = await supabase
       .from("cohorts")
       .update({
-        name: name.trim(),
-        description: description.trim() || null,
-        welcome_message: welcome.trim() || null,
+        name: cappedName,
+        description: capText(description, COHORT_DESCRIPTION_MAX),
+        welcome_message: capText(welcome, COHORT_WELCOME_MAX),
         start_date: startDate
       })
-      .eq("id", cohortId);
+      .eq("id", cohortId)
+      .select("id");
     setSaving(false);
-    setMsg(error ? error.message : "Saved");
-    if (!error) router.refresh();
+    if (error) {
+      setMsg(error.message);
+      return;
+    }
+    if (!data || data.length === 0) {
+      setMsg("This cohort no longer exists.");
+      return;
+    }
+    setMsg("Saved");
+    router.refresh();
   }
 
   async function del() {
@@ -60,6 +85,7 @@ export default function CohortSettingsForm({
           required
           type="text"
           enterKeyHint="next"
+          maxLength={COHORT_NAME_MAX}
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="w-full rounded-full border border-rog-line bg-white px-5 py-2.5 focus:border-rog-purple focus:outline-none"
@@ -71,6 +97,7 @@ export default function CohortSettingsForm({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={2}
+          maxLength={COHORT_DESCRIPTION_MAX}
           enterKeyHint="next"
           placeholder="Shown on the join page"
           className="w-full border border-rog-line bg-white px-5 py-2.5 focus:border-rog-purple focus:outline-none"
@@ -82,6 +109,7 @@ export default function CohortSettingsForm({
           value={welcome}
           onChange={(e) => setWelcome(e.target.value)}
           rows={3}
+          maxLength={COHORT_WELCOME_MAX}
           enterKeyHint="done"
           placeholder="Shown to members after they join"
           className="w-full border border-rog-line bg-white px-5 py-2.5 focus:border-rog-purple focus:outline-none"

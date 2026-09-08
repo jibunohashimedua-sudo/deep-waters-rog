@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Nav from "@/components/Nav";
 import { createClient } from "@/lib/supabase/client";
+import { COHORT_NAME_MAX, capText } from "@/lib/limits";
+import { friendlyError } from "@/lib/errors";
 
 function slugify(text: string): string {
   return text
@@ -38,7 +40,14 @@ export default function NewCohortPage() {
       return;
     }
 
-    const baseSlug = slugify(name);
+    const cappedName = capText(name, COHORT_NAME_MAX);
+    if (!cappedName) {
+      setError("Cohort name can't be empty.");
+      setLoading(false);
+      return;
+    }
+
+    const baseSlug = slugify(cappedName);
     let slug = baseSlug;
     // Ensure uniqueness by appending a suffix if taken
     let attempt = 0;
@@ -55,13 +64,13 @@ export default function NewCohortPage() {
 
     const { error: insErr } = await supabase.from("cohorts").insert({
       slug,
-      name: name.trim(),
+      name: cappedName,
       start_date: startDate,
       created_by: user.id
     });
 
     setLoading(false);
-    if (insErr) setError(insErr.message);
+    if (insErr) setError(friendlyError(insErr.message));
     else router.push(`/c/${slug}`);
   }
 
@@ -84,6 +93,7 @@ export default function NewCohortPage() {
               required
               type="text"
               enterKeyHint="next"
+              maxLength={COHORT_NAME_MAX}
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. August 2026, Youth Church, Christ Embassy Luton"

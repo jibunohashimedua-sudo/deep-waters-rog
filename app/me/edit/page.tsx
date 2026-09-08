@@ -23,6 +23,7 @@ const PhotoCropper = dynamic(() => import("@/components/PhotoCropper"), {
 });
 import { createClient } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/errors";
+import { PROFILE_NAME_MAX, PROFILE_BIO_MAX } from "@/lib/limits";
 import {
   DEFAULT_BIBLE_ID,
   TRANSLATIONS,
@@ -117,26 +118,31 @@ export default function EditProfilePage() {
       finalPhoto = `${data.publicUrl}?v=${Date.now()}`;
     }
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        name: name.trim(),
-        bio: bio.trim() || null,
+    // Server-side length caps live in /api/me. Fields that aren't strings
+    // (booleans, numbers, the translation id) get validated the same way.
+    const res = await fetch("/api/me", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name,
+        bio,
         photo_url: finalPhoto,
         email_reminders: emailReminders,
         push_reminders: pushReminders,
         reminder_hour: reminderHour,
         preferred_bible_id: bibleId
       })
-      .eq("id", userId);
+    });
 
     setSaving(false);
-    if (error) setMsg({ kind: "error", text: friendlyError(error.message) });
-    else {
-      setMsg({ kind: "ok", text: "Saved." });
-      router.refresh();
-      setTimeout(() => router.push("/depth"), 600);
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      setMsg({ kind: "error", text: friendlyError(j.error) });
+      return;
     }
+    setMsg({ kind: "ok", text: "Saved." });
+    router.refresh();
+    setTimeout(() => router.push("/depth"), 600);
   }
 
   if (loading) {
@@ -222,6 +228,7 @@ export default function EditProfilePage() {
               type="text"
               autoComplete="name"
               enterKeyHint="next"
+              maxLength={PROFILE_NAME_MAX}
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="mt-2 w-full min-h-[44px] border px-4 py-3 text-[13.5px]"
@@ -238,7 +245,7 @@ export default function EditProfilePage() {
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               rows={2}
-              maxLength={160}
+              maxLength={PROFILE_BIO_MAX}
               enterKeyHint="done"
               placeholder="A line about you"
               className="mt-2 w-full border px-4 py-3 text-[13.5px] leading-5"

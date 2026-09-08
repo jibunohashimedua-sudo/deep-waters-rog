@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { recordMentions } from "@/lib/mentions";
 import { READING_PLAN, currentDayNumber } from "@/lib/plan";
+import {
+  REFLECTION_MAX,
+  VERSE_REF_MAX,
+  VERSE_TEXT_MAX,
+  capText
+} from "@/lib/limits";
 
 export async function POST(request: Request) {
   const supabase = createClient();
@@ -11,11 +17,27 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const body = await request.json();
-  const { day_number, verse_reference, verse_text, reflection } = body;
+  const { day_number } = body;
 
   if (!day_number || day_number < 1 || day_number > 90) {
     return NextResponse.json({ error: "invalid day" }, { status: 400 });
   }
+
+  // Trim first, refuse over-cap second. Silently truncating a reflection
+  // would land only most of what somebody wrote, which is worse than telling
+  // them plainly that the box is full.
+  if (typeof body.reflection === "string" && body.reflection.trim().length > REFLECTION_MAX) {
+    return NextResponse.json({ error: "too_long", field: "reflection", max: REFLECTION_MAX }, { status: 400 });
+  }
+  if (typeof body.verse_reference === "string" && body.verse_reference.trim().length > VERSE_REF_MAX) {
+    return NextResponse.json({ error: "too_long", field: "verse_reference", max: VERSE_REF_MAX }, { status: 400 });
+  }
+  if (typeof body.verse_text === "string" && body.verse_text.trim().length > VERSE_TEXT_MAX) {
+    return NextResponse.json({ error: "too_long", field: "verse_text", max: VERSE_TEXT_MAX }, { status: 400 });
+  }
+  const reflection = capText(body.reflection, REFLECTION_MAX);
+  const verse_reference = capText(body.verse_reference, VERSE_REF_MAX);
+  const verse_text = capText(body.verse_text, VERSE_TEXT_MAX);
 
   // Reading ahead is fine. Marking ahead is not — a completion is a
   // record that a day was done, and a day the reader hasn't reached
@@ -40,8 +62,7 @@ export async function POST(request: Request) {
   // done" — a reflection saved without ticking chapters is still the
   // reader saying "I'm done here", and unticking a chapter doesn't
   // demote a day they wrote about.
-  const reflectionText = typeof reflection === "string" ? reflection.trim() : "";
-  const hasReflection = reflectionText.length > 0;
+  const hasReflection = reflection !== null && reflection.length > 0;
 
   const reading = READING_PLAN[day_number - 1];
   const totalChapters = reading.ot.length + reading.nt.length;
