@@ -93,7 +93,24 @@ export const ICONS = {
       <circle cx="12" cy="12" r="8.5" />
       <path d="M12 7.2V12l3.2 2" />
     </>
-  )
+  ),
+
+  // ---- theme ----
+  light: (
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2.5V5M12 19v2.5M4.6 4.6 6.4 6.4M17.6 17.6l1.8 1.8M2.5 12H5M19 12h2.5M4.6 19.4 6.4 17.6M17.6 6.4l1.8-1.8" />
+    </>
+  ),
+  dark: <path d="M20 14.7A8.5 8.5 0 0 1 9.3 4a8.5 8.5 0 1 0 10.7 10.7Z" />,
+  /** Following the system: one circle, half of it filled. */
+  system: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 3.5a8.5 8.5 0 0 1 0 17Z" fill="currentColor" stroke="none" />
+    </>
+  ),
+  check: <path d="M4.5 12.5 9.5 17.5 19.5 6.5" />
 } as const;
 
 export type IconName = keyof typeof ICONS;

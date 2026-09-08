@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Icon from "./Icons";
 
 type Choice = "light" | "dark" | "system";
 
@@ -37,8 +38,6 @@ export default function ThemeToggle() {
     setOpen(false);
   }
 
-  const icon = choice === "dark" ? "🌙" : choice === "light" ? "☀️" : "🌓";
-
   return (
     <div className="relative">
       <button
@@ -47,7 +46,7 @@ export default function ThemeToggle() {
         aria-label="Theme"
         title={`Theme: ${choice}`}
       >
-        <span className="text-lg">{icon}</span>
+        <Icon name={choice} className="w-5 h-5" />
       </button>
       {open && (
         <>
@@ -56,7 +55,12 @@ export default function ThemeToggle() {
             onClick={() => setOpen(false)}
             aria-hidden
           />
-          <div className="absolute right-0 mt-2 w-40 overflow-hidden glass-chip z-40">
+          {/* Opaque. `glass-chip` is a transparent border-only treatment, so
+              the page behind this menu was reading straight through it. */}
+          <div
+            className="absolute right-0 mt-2 w-40 overflow-hidden border border-rog-line z-40"
+            style={{ background: "var(--bg)" }}
+          >
             {(["light", "dark", "system"] as const).map((c) => (
               <button
                 key={c}
@@ -65,11 +69,11 @@ export default function ThemeToggle() {
                   choice === c ? "font-semibold" : ""
                 }`}
               >
-                <span className="w-5 text-center">
-                  {c === "dark" ? "🌙" : c === "light" ? "☀️" : "🌓"}
-                </span>
+                <Icon name={c} className="w-[17px] h-[17px] shrink-0 text-rog-muted" />
                 <span className="capitalize">{c}</span>
-                {choice === c && <span className="ml-auto text-xs">✓</span>}
+                {choice === c && (
+                  <Icon name="check" className="ml-auto w-3.5 h-3.5 text-rog-muted" strokeWidth={2.2} />
+                )}
               </button>
             ))}
           </div>
