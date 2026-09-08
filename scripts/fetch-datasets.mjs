@@ -70,6 +70,21 @@ for (const s of SOURCES) {
   }
 }
 
+/** Robertson's Word Pictures. Volumes 1-4 are public domain per the
+    module's own conf; volumes 5 and 6 are not, and the importer leaves
+    them out. */
+const RWP_URL = "https://crosswire.org/ftpmirror/pub/sword/packages/rawzip/RWP.zip";
+
+const rwp = join(DATA, "RWP");
+if (existsSync(rwp)) {
+  console.log("have  RWP (Robertson's Word Pictures, vols 1-4 public domain)");
+} else {
+  console.log("fetch RWP.zip — Robertson's Word Pictures in the New Testament (CrossWire)");
+  const zip = join(DATA, "RWP.zip");
+  execFileSync("curl", ["-sL", "-o", zip, RWP_URL]);
+  execFileSync("unzip", ["-o", "-q", zip, "-d", rwp]);
+}
+
 const kd = join(DATA, "KD");
 if (existsSync(kd)) {
   console.log("have  KD (Keil and Delitzsch on the OT, public domain)");

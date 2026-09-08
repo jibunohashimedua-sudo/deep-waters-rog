@@ -45,7 +45,7 @@ export const LENSES: Lens[] = [
     id: "wordstudy",
     label: "Word study",
     source:
-      "Keil and Delitzsch, Biblical Commentary on the Old Testament (1864), public domain — CrossWire Sword module KD. New Testament word studies are not loaded: see the note in scripts/import-word-study.mjs",
+      "Old Testament: Keil and Delitzsch, Biblical Commentary on the Old Testament (1864), public domain — CrossWire module KD. New Testament: A. T. Robertson, Word Pictures in the New Testament, volumes 1–4, public domain — CrossWire module RWP. Volumes 5 and 6 (John, Hebrews, the General Epistles, Revelation) remain in copyright and are not loaded",
     takesWord: true
   },
   {

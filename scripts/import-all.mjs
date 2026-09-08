@@ -12,7 +12,8 @@ const steps = [
   ["kjv_verses + verse_words", "./import-verse-words.mjs"],
   ["cross_refs", "./import-cross-refs.mjs"],
   ["commentary_entries", "./import-commentary.mjs"],
-  ["word_study_entries", "./import-word-study.mjs"]
+  ["word_study_entries (Keil and Delitzsch)", "./import-word-study.mjs"],
+  ["word_study_entries (Robertson)", "./import-robertson.mjs"]
 ];
 
 for (const [label, mod] of steps) {

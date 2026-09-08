@@ -5,7 +5,8 @@ type Props = { entries: WordStudyEntry[] | null; loading: boolean; verse: number
 
 /** What each source is called, in full, wherever one of its entries shows. */
 const SOURCE_NAMES: Record<string, string> = {
-  keil_delitzsch: "Keil and Delitzsch"
+  keil_delitzsch: "Keil and Delitzsch",
+  robertson: "Robertson, Word Pictures"
 };
 
 /**
@@ -17,18 +18,25 @@ const SOURCE_NAMES: Record<string, string> = {
  * have been worse than an empty tab. So the lens says what it is, and every
  * entry is labelled with the book it actually came out of.
  *
- * Keil and Delitzsch cover the Old Testament. The New Testament has no
- * source loaded yet, and says so rather than showing nothing.
+ * Keil and Delitzsch cover the Old Testament. Robertson covers the New,
+ * except for the two volumes of his that are still in copyright — John and
+ * Hebrews, and the General Epistles with Revelation. Where neither has an
+ * entry the lens says which books are missing and why, rather than leaving
+ * a reader to wonder whether the verse simply has nothing in it.
  */
 export default function BenchWordStudy({ entries, loading, verse }: Props) {
   if (loading) return <p className="bench-empty">Looking for a word study…</p>;
 
   if (!entries || entries.length === 0) {
     return (
-      <p className="bench-empty">
-        No word study on this verse. Keil and Delitzsch cover the Old
-        Testament; nothing is loaded for the New Testament yet.
-      </p>
+      <>
+        <p className="bench-empty">No word study on this verse.</p>
+        <p className="bench-empty">
+          Keil and Delitzsch cover the Old Testament, and Robertson the New
+          — except John, Hebrews, the General Epistles and Revelation,
+          whose volumes are still in copyright and are not loaded.
+        </p>
+      </>
     );
   }
 
