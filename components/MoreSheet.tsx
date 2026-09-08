@@ -186,7 +186,9 @@ export default function MoreSheet({ open, onClose, isAdmin }: Props) {
 
   const link =
     "flex items-center gap-3 px-4 py-3  text-sm font-medium text-rog-ink hover:bg-black/5 dark:hover:bg-white/10 transition";
-  const label = "px-4 pt-4 pb-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-rog-muted";
+  /* A group of rows, set off from the one above it by a single hairline.
+     This is what replaced the six uppercase section labels. */
+  const group = "mt-2 pt-2 border-t border-rog-line";
 
   return (
     <div
@@ -262,66 +264,74 @@ export default function MoreSheet({ open, onClose, isAdmin }: Props) {
             <Icon name="edit" /> Edit profile
           </Link>
 
-          {/* Prayer lost its own tab when Bible took a slot. It lives inside
-              the Community tab now, but it stays one tap from here so nobody
-              has to learn a new route to reach it. */}
-          <p className={label}>Together</p>
-          <Link href="/prayer" onClick={onClose} className={link}>
-            <Icon name="prayer" /> Prayer wall
-          </Link>
+          {/* Four groups, separated by a hairline each.
+              
+              There were six labels here — Together, Groups, Celebrate,
+              Updates, Settings, Admin — and four of them announced a
+              single row underneath. A label that names the one thing
+              below it is the heading saying what the heading says, which
+              is the one thing this system asks a label never to be. The
+              rows carry an icon and a name now; a rule between them does
+              all the grouping that was ever needed.
 
-          <p className={label}>Groups</p>
-          <Link href="/cohorts" onClick={onClose} className={link}>
-            <Icon name="cohorts" /> Cohorts
-          </Link>
-
-          <p className={label}>Celebrate</p>
-          <Link href="/finishers" onClick={onClose} className={link}>
-            <Icon name="finishers" /> Finishers
-          </Link>
-          <Link href="/testimonials" onClick={onClose} className={link}>
-            <Icon name="testimony" /> Share testimony
-          </Link>
-
-          <p className={label}>Updates</p>
-          <Link href="/announcements" onClick={onClose} className={link}>
-            <Icon name="announcements" /> Announcements
-          </Link>
-
-          <p className={label}>Settings</p>
-
-          <div className="px-4 py-3">
-            <p className="text-sm font-medium text-rog-ink mb-2">Theme</p>
-            <div className="flex gap-1 p-1 rounded-full glass-chip">
-              {(["light", "dark", "system"] as const).map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => pickTheme(c)}
-                  className={`flex-1 py-1.5 text-xs font-medium rounded-full transition capitalize ${
-                    theme === c
-                      ? "bg-rog-purple text-white"
-                      : "text-rog-muted hover:text-rog-ink"
-                  }`}
-                >
-                  {c === "dark" ? "🌙 " : c === "light" ? "☀️ " : "🌓 "}
-                  {c}
-                </button>
-              ))}
-            </div>
+              Prayer lost its own tab when Bible took a slot. It lives
+              inside the Community tab now, but it stays one tap from here
+              so nobody has to learn a new route to reach it. */}
+          <div className={group}>
+            <Link href="/prayer" onClick={onClose} className={link}>
+              <Icon name="prayer" /> Prayer wall
+            </Link>
+            <Link href="/cohorts" onClick={onClose} className={link}>
+              <Icon name="cohorts" /> Cohorts
+            </Link>
+            <Link href="/finishers" onClick={onClose} className={link}>
+              <Icon name="finishers" /> Finishers
+            </Link>
+            <Link href="/testimonials" onClick={onClose} className={link}>
+              <Icon name="testimony" /> Share testimony
+            </Link>
+            <Link href="/announcements" onClick={onClose} className={link}>
+              <Icon name="announcements" /> Announcements
+            </Link>
           </div>
 
-          <button type="button" onClick={signOut} className={`${link} w-full text-left`}>
-            <Icon name="signout" /> Sign out
-          </button>
+          <div className={group}>
+            <div className="px-4 py-3">
+              <p className="text-sm font-medium text-rog-ink mb-2">Theme</p>
+              <div className="flex gap-1 p-1 rounded-full glass-chip">
+                {(["light", "dark", "system"] as const).map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => pickTheme(c)}
+                    /* The sun, moon and half-moon that used to sit in
+                       these three went the same way as the rest of the
+                       sheet's emoji. The words are the label; a picture
+                       of the sun in front of the word "light" was saying
+                       it twice, in a typeface we don't control. */
+                    className={`flex-1 py-1.5 text-xs font-medium rounded-full transition capitalize ${
+                      theme === c
+                        ? "bg-rog-purple text-white"
+                        : "text-rog-muted hover:text-rog-ink"
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button type="button" onClick={signOut} className={`${link} w-full text-left`}>
+              <Icon name="signout" /> Sign out
+            </button>
+          </div>
 
           {isAdmin && (
-            <>
-              <p className={label}>Admin</p>
+            <div className={group}>
               <Link href="/admin" onClick={onClose} className={link}>
                 <Icon name="admin" /> Admin dashboard
               </Link>
-            </>
+            </div>
           )}
         </div>
       </div>
