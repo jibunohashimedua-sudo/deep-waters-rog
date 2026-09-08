@@ -105,19 +105,31 @@ export default async function ReadPage({
         )}
 
         {note?.body && testament === "ot" && (
-          <div className="mt-10 card">
-            <p className="kicker">Study note</p>
-            {note.title && (
-              <p className="mt-2 font-semibold text-rog-ink text-[17px]">{note.title}</p>
-            )}
-            <p className="selectable mt-2 text-[14px] leading-relaxed whitespace-pre-wrap text-rog-muted">
+          /* Someone's note about today, above the reading.
+
+             It was a card with "Study note" set in mono above it — a label
+             naming the one thing directly beneath it, which is the single
+             job this system asks a label never to take. There is no label
+             now: when the note has a title, the title is the heading; when
+             it hasn't, "Study note" is the heading rather than a caption
+             sitting over one.
+
+             It doesn't need a plate round it either. It is the interface
+             sans at 13.5/20 and the scripture below is Literata at 18/1.74,
+             so family and size do the separating, which is how this system
+             is supposed to tell two kinds of writing apart. */
+          <section className="mt-10 border-t border-rog-line pt-6">
+            <h2 className="text-[17px] font-semibold tracking-[-0.01em] text-rog-ink leading-snug">
+              {note.title?.trim() || "Study note"}
+            </h2>
+            <p className="selectable mt-3 max-w-[34rem] text-[13.5px] leading-5 text-rog-ink whitespace-pre-wrap">
               {note.body}
             </p>
-          </div>
+          </section>
         )}
 
         {failure && (
-          <div className="mt-10 card empty-state">
+          <div className="mt-10 empty-state">
             <p className="empty-body">{chapterErrorMessage(failure)}</p>
             <p className="empty-hint">
               {loaded.length > 0
