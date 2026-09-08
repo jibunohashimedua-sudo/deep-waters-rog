@@ -18,11 +18,9 @@ const SOURCE_NAMES: Record<string, string> = {
  * have been worse than an empty tab. So the lens says what it is, and every
  * entry is labelled with the book it actually came out of.
  *
- * Keil and Delitzsch cover the Old Testament. Robertson covers the New,
- * except for the two volumes of his that are still in copyright — John and
- * Hebrews, and the General Epistles with Revelation. Where neither has an
- * entry the lens says which books are missing and why, rather than leaving
- * a reader to wonder whether the verse simply has nothing in it.
+ * Keil and Delitzsch cover the Old Testament, Robertson the New. Neither
+ * writes on every verse, so the empty state says that plainly rather than
+ * leaving a reader to wonder whether something failed to load.
  */
 export default function BenchWordStudy({ entries, loading, verse }: Props) {
   if (loading) return <p className="bench-empty">Looking for a word study…</p>;
@@ -32,9 +30,8 @@ export default function BenchWordStudy({ entries, loading, verse }: Props) {
       <>
         <p className="bench-empty">No word study on this verse.</p>
         <p className="bench-empty">
-          Keil and Delitzsch cover the Old Testament, and Robertson the New
-          — except John, Hebrews, the General Epistles and Revelation,
-          whose volumes are still in copyright and are not loaded.
+          Keil and Delitzsch cover the Old Testament and Robertson the New,
+          but neither writes on every verse.
         </p>
       </>
     );

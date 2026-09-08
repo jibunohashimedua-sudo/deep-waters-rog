@@ -1,25 +1,34 @@
 // word_study_entries — A. T. Robertson, Word Pictures in the New Testament.
 //
-// LICENCE, AND WHY ONLY PART OF IT IS HERE.
+// LICENCE.
 //
-// The CrossWire module RWP carries all six volumes, but its own conf is
-// explicit that they are not all free:
+// The CrossWire module RWP carries all six volumes under:
 //
 //   DistributionLicense=Copyrighted; Free non-commercial distribution
 //   Vol 1,2,3,4  Public Domain
 //   Volume 5 (c) 1932. Renewal 1960 Broadman Press. All rights reserved.
 //   Volume 6 (c) 1933. Renewal 1960 Broadman Press. All rights reserved.
+//                      Used by permission.
 //
-// So only volumes 1 to 4 are imported — Matthew and Mark, Luke, Acts, and
-// the Epistles of Paul. Volumes 5 and 6 are left out: John and Hebrews,
-// and the General Epistles with Revelation.
+// Volumes 1 to 4 are public domain outright — Matthew and Mark, Luke,
+// Acts, and the Epistles of Paul.
 //
-// The module notes that volume 5's copyright expires at the end of 2006
-// and volume 6's at the end of 2007. Those dates are the pre-1998 term.
-// The Copyright Term Extension Act took renewed works of 1932 and 1933 to
-// 95 years from publication, which is 2028 and 2029. Treating them as
-// expired would be taking the module's arithmetic over the statute, so
-// they stay out until somebody who can make that call says otherwise.
+// Volumes 5 and 6 are not. They are John and Hebrews, and the General
+// Epistles with Revelation, and they are still in copyright: the module
+// dates their expiry to the end of 2006 and 2007, but that is the
+// pre-1998 term, and the Copyright Term Extension Act takes renewed works
+// of 1932 and 1933 to 2028 and 2029. They are included here under the
+// module's grant of free NON-COMMERCIAL distribution, on the owner's
+// explicit statement that Deep Waters is non-commercial.
+//
+// That grant is the whole basis for those two volumes, so if the app ever
+// takes money, they have to come out. There is no schema change needed to
+// do it — they are exactly the books in COPYRIGHTED_BOOKS below:
+//
+//   delete from word_study_entries
+//   where source = 'robertson'
+//     and book in ('John','Hebrews','James','1 Peter','2 Peter',
+//                  '1 John','2 John','3 John','Jude','Revelation');
 //
 //   node scripts/import-robertson.mjs [--dry-run]
 import { readFileSync } from "node:fs";
@@ -31,14 +40,13 @@ import { normaliseBookName } from "./books.mjs";
 const SOURCE = "robertson";
 const MODULE = join(DATA, "RWP", "modules", "comments", "zcom", "rwp");
 
-/** Volumes 1–4, the ones the module states are public domain. */
-const PUBLIC_DOMAIN_BOOKS = new Set([
-  "Matthew", "Mark",                                   // vol 1
-  "Luke",                                              // vol 2
-  "Acts",                                              // vol 3
-  "Romans", "1 Corinthians", "2 Corinthians", "Galatians", "Ephesians",
-  "Philippians", "Colossians", "1 Thessalonians", "2 Thessalonians",
-  "1 Timothy", "2 Timothy", "Titus", "Philemon"        // vol 4
+/** Volumes 5 and 6 — in copyright, carried under the module's
+    free non-commercial distribution grant. Named so they can be
+    identified, and removed, without guesswork. */
+const COPYRIGHTED_BOOKS = new Set([
+  "John", "Hebrews",                                   // vol 5
+  "James", "1 Peter", "2 Peter", "1 John", "2 John", "3 John",
+  "Jude", "Revelation"                                 // vol 6
 ]);
 
 const czs = readFileSync(join(MODULE, "nt.czs"));
@@ -131,13 +139,13 @@ if (best.rate < 0.4 || best.rate < runnerUp.rate * 5) {
 console.log(`  using shift ${best.shift}`);
 
 const rows = [];
-let skippedCopyright = 0;
+let underPermission = 0;
 for (let i = 0; i < slots.length; i++) {
   const s = slots[i];
   if (s.kind !== "verse") continue;
   const body = entryAt(i + best.shift);
   if (!body || body.length < 40) continue;
-  if (!PUBLIC_DOMAIN_BOOKS.has(s.book)) { skippedCopyright++; continue; }
+  if (COPYRIGHTED_BOOKS.has(s.book)) underPermission++;
   rows.push({
     source: SOURCE,
     book: s.book,
@@ -151,7 +159,8 @@ for (let i = 0; i < slots.length; i++) {
 
 const chars = rows.reduce((n, r) => n + r.body.length, 0);
 console.log(`word_study_entries (${SOURCE}): ${rows.length} notes, ${(chars / 1e6).toFixed(1)} MB of text`);
-console.log(`  ${skippedCopyright} notes left out — volumes 5 and 6 are still in copyright`);
+console.log(`  ${rows.length - underPermission} notes from volumes 1-4 (public domain)`);
+console.log(`  ${underPermission} notes from volumes 5-6 (in copyright; free non-commercial distribution)`);
 const sample = rows.find((r) => r.book === "Romans" && r.chapter === 8 && r.verse_start === 28);
 if (sample) console.log(`  Romans 8:28: ${sample.body.slice(0, 100)}…`);
 

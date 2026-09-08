@@ -28,7 +28,7 @@ Run `supabase/migrations/2026_09_12_study_datasets.sql`, then
 | Cross references | [OpenBible.info](https://www.openbible.info/labs/cross-references/), from the Treasury of Scripture Knowledge | CC BY 4.0 |
 | Commentary | [Matthew Henry's Commentary](https://codeberg.org/revisedcommonversion/matthew-henry-commentary) | CC0 1.0; text public domain |
 | Word study (Old Testament) | Keil and Delitzsch, [CrossWire Sword module KD](https://crosswire.org/sword/modules/ModDisp.jsp?modType=Commentaries) | `DistributionLicense=Public Domain` in the module's own conf |
-| Word study (New Testament) | A. T. Robertson, Word Pictures, vols 1–4, [CrossWire module RWP](https://crosswire.org/sword/modules/ModDisp.jsp?modType=Commentaries) | Public domain per the module's own conf. **Vols 5–6 excluded** — still in copyright, see `import-robertson.mjs` |
+| Word study (New Testament) | A. T. Robertson, Word Pictures, [CrossWire module RWP](https://crosswire.org/sword/modules/ModDisp.jsp?modType=Commentaries) | Vols 1–4 public domain; **vols 5–6 © Broadman Press, carried under the module's free non-commercial distribution grant** — they must be removed if the app ever takes money, see `import-robertson.mjs` |
 | Vine's Expository Dictionary | — | **Not loaded, lens removed.** No edition found under a licence clean enough to import |
 
 `scripts/.data/` is not committed.
