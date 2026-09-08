@@ -39,6 +39,9 @@ export default function PrayerWall() {
   const [myPhoto, setMyPhoto] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [draft, setDraft] = useState("");
+  // Opt-in, off by default. A prayer only reaches the pastoral screen
+  // because its author asked for it to, or because nobody responded.
+  const [needsPastor, setNeedsPastor] = useState(false);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<"open" | "answered">("open");
@@ -133,6 +136,7 @@ export default function PrayerWall() {
     setError(null);
 
     const text = draft.trim();
+    const askedForPastor = needsPastor;
     const tempId = "temp-" + Date.now();
     const optimistic: Prayer = {
       id: tempId,
@@ -148,17 +152,19 @@ export default function PrayerWall() {
     };
     setItems((prev) => [optimistic, ...prev]);
     setDraft("");
+    setNeedsPastor(false);
 
     try {
       const res = await fetch("/api/prayer", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ body: text })
+        body: JSON.stringify({ body: text, needs_pastor: askedForPastor })
       });
       const j = await res.json();
       if (!res.ok) {
         setItems((prev) => prev.filter((p) => p.id !== tempId));
         setDraft(text);
+        setNeedsPastor(askedForPastor);
         setError(friendlyError(j.error));
       } else {
         setItems((prev) => prev.map((p) => (p.id === tempId ? { ...p, id: j.id } : p)));
@@ -167,6 +173,7 @@ export default function PrayerWall() {
     } catch (err: any) {
       setItems((prev) => prev.filter((p) => p.id !== tempId));
       setDraft(text);
+      setNeedsPastor(askedForPastor);
       setError(friendlyError(err?.message));
     } finally {
       setPosting(false);
@@ -253,6 +260,15 @@ export default function PrayerWall() {
           placeholder="What can we pray about with you? Use @name to mention someone."
           className="w-full border border-rog-line bg-white px-5 py-3 focus:border-rog-purple focus:outline-none"
         />
+        <label className="mt-3 flex items-center gap-2.5 text-sm text-rog-ink">
+          <input
+            type="checkbox"
+            checked={needsPastor}
+            onChange={(e) => setNeedsPastor(e.target.checked)}
+            className="w-4 h-4 accent-rog-purple"
+          />
+          Ask a pastor to see this
+        </label>
         <button type="submit" disabled={posting || !draft.trim()} className="btn-primary w-full mt-3 disabled:opacity-50">
           {posting ? "Posting..." : "Post prayer request"}
         </button>

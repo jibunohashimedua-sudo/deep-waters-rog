@@ -26,6 +26,9 @@ export const VERSE_NOTE_MAX = 2000;
 export const PROFILE_NAME_MAX = 60;
 export const PROFILE_BIO_MAX = 160;
 export const TESTIMONY_MAX = 1500;
+/** A pastoral care note. Long enough for what was said on a phone call,
+    short enough that the log stays scannable. */
+export const CARE_NOTE_MAX = 2000;
 
 /**
  * Trim whitespace and truncate to `max` characters. Returns `null` when the

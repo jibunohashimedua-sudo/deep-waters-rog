@@ -216,9 +216,18 @@ export default function MoreSheet({ open, onClose, isAdmin, isPastoral }: Props)
               inside the Community tab now, but it stays one tap from here
               so nobody has to learn a new route to reach it. */}
           <div className={group}>
-            {/* Elite. Above the prayer wall because it is the pastor's own
-                work rather than the church's, and it only exists at all
-                when the flag is on. */}
+            {/* The pastoral rows. Above the prayer wall because they are
+                the pastor's own work rather than the church's, and they
+                only exist at all when the flag is on.
+
+                Church pulse sits above Sermons: it is about people, and a
+                sermon is about a passage. Neither is a bottom tab and
+                neither is inside Admin — admin is running the app. */}
+            {isPastoral && (
+              <Link href="/pulse" onClick={onClose} className={link}>
+                <Icon name="pulse" /> Church pulse
+              </Link>
+            )}
             {isPastoral && (
               <Link href="/sermons" onClick={onClose} className={link}>
                 <Icon name="sermon" /> Sermons

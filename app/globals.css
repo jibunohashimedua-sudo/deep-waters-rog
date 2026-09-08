@@ -2387,3 +2387,195 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   height: 55vh;
   grid-column: 1 / -1;
 }
+
+/* =========================================================
+   CHURCH PULSE
+
+   The pastoral care screen. Built from tokens already here: square
+   containers, pills only on things you press, no shadow, no blur, no
+   gradient, Plex Mono on every number and label.
+
+   Two colours and no more. Sonar keeps its job — position and state,
+   here the proportion of a cohort reading. Care is Shoal amber from the
+   highlight set, a tinted ground behind a 2px left rule, and it is the
+   only mark on the page for anything that wants attention. There is no
+   red anywhere: a person going quiet is not an error.
+   ========================================================= */
+
+/* ---- the four numbers ---- */
+.pulse-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+@media (min-width: 640px) {
+  .pulse-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.pulse-stat {
+  background: var(--bg);
+  padding: 16px 14px 18px;
+  border-radius: 0;
+}
+.pulse-stat-num {
+  display: block;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 30px;
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.pulse-stat-label {
+  display: block;
+  margin-top: 12px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  line-height: 1.4;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+/* The one tile that is a call to action. Nothing else on the page takes
+   this treatment except the rows and marks that carry the same meaning. */
+.pulse-stat[data-care="true"] {
+  background: var(--hl-shoal-ground);
+  box-shadow: inset 2px 0 0 var(--hl-shoal-rule);
+}
+.pulse-stat[data-care="true"] .pulse-stat-label { color: var(--text); opacity: 0.72; }
+
+/* ---- check on these ---- */
+.pulse-rows { border-bottom: 1px solid var(--line); }
+.pulse-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 14px;
+  text-align: left;
+  border-top: 1px solid var(--line);
+  background: var(--hl-shoal-ground);
+  box-shadow: inset 2px 0 0 var(--hl-shoal-rule);
+}
+/* Hover deepens the rule rather than tinting the ground. No filter, no
+   second colour — the row already says what it is. */
+.pulse-row:hover { box-shadow: inset 3px 0 0 var(--hl-shoal-rule); }
+.pulse-row-name {
+  display: block;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pulse-row-reason {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  opacity: 0.78;
+}
+
+/* ---- cohorts ---- */
+.pulse-cohort {
+  padding: 14px 0 16px;
+  border-top: 1px solid var(--line);
+}
+.pulse-cohort:last-child { border-bottom: 1px solid var(--line); }
+.pulse-bar {
+  margin-top: 10px;
+  height: 4px;
+  width: 100%;
+  background: var(--soft-bg);
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+}
+.pulse-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--sonar);
+}
+.pulse-bar[data-state="quiet"] .pulse-bar-fill { background: var(--hl-shoal-rule); }
+
+/* ---- where people fall away ---- */
+.pulse-curve { width: 100%; height: auto; display: block; }
+.pulse-curve-line {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.pulse-curve-axis { stroke: var(--line); stroke-width: 1; }
+.pulse-curve-mark { stroke: var(--hl-shoal-rule); stroke-width: 1.4; }
+
+/* ---- prayers waiting ---- */
+.pulse-prayer {
+  padding: 14px 0 16px;
+  border-top: 1px solid var(--line);
+}
+.pulse-prayer:last-child { border-bottom: 1px solid var(--line); }
+.pulse-prayer[data-care="true"] {
+  padding: 14px;
+  background: var(--hl-shoal-ground);
+  box-shadow: inset 2px 0 0 var(--hl-shoal-rule);
+}
+.pulse-prayer-body {
+  margin-top: 8px;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+/* ---- the person sheet ---- */
+.pulse-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+.pulse-fact { background: var(--bg); padding: 12px 14px; }
+.pulse-fact-value {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.pulse-care-entry {
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.pulse-care-entry:first-child { border-top: 0; }
+.pulse-care-body {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+/* Errors on this page wear the care treatment too. Everywhere else in
+   the app an error is --danger red; here there is no red at all, because
+   the one thing amber means on this screen is "look at this", and a
+   failed save is exactly that. */
+.pulse-notice {
+  margin-top: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--hl-shoal-ground);
+  box-shadow: inset 2px 0 0 var(--hl-shoal-rule);
+}

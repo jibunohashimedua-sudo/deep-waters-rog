@@ -41,6 +41,16 @@ export const ICONS = {
 
   // ---- the More sheet ----
   edit: <path d="M4 20h4L18 10l-4-4L4 16v4ZM14 6l4 4" />,
+  /** A ping and two returns — the sounding this app is named for, turned
+      on the church itself. Church pulse listens for who is out there; it
+      is not a heartbeat and deliberately not a medical mark. */
+  pulse: (
+    <>
+      <circle cx="12" cy="17" r="1.3" />
+      <path d="M8.4 13.6a5 5 0 0 1 7.2 0" />
+      <path d="M5.2 10.4a9.5 9.5 0 0 1 13.6 0" />
+    </>
+  ),
   /** A manuscript: a page with a folded corner and two lines written on
       it. Elite's Sermons row, and nothing else in the app uses it. */
   sermon: (

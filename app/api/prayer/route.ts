@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "You are not signed in" }, { status: 401 });
 
-  const { body, cohort_id } = await request.json();
+  const { body, cohort_id, needs_pastor } = await request.json();
   if (!body?.trim()) return NextResponse.json({ error: "Please write something first" }, { status: 400 });
   if (body.trim().length > PRAYER_BODY_MAX) {
     return NextResponse.json({ error: "too_long", field: "body", max: PRAYER_BODY_MAX }, { status: 400 });
@@ -20,7 +20,19 @@ export async function POST(request: Request) {
 
   const { data: row, error } = await supabase
     .from("prayer_requests")
-    .insert({ user_id: user.id, cohort_id: cohort_id ?? null, body: capped })
+    // needs_pastor is the author asking for a pastor to see this. It is
+    // the only thing that puts a prayer in front of Church Pulse other
+    // than nobody having responded to it.
+    //
+    // Only sent when it is actually true, so an ordinary prayer post is
+    // one column narrower than the table it lands in and cannot fail on
+    // a deploy that has run ahead of its migration.
+    .insert({
+      user_id: user.id,
+      cohort_id: cohort_id ?? null,
+      body: capped,
+      ...(needs_pastor === true ? { needs_pastor: true } : {})
+    })
     .select("id")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
