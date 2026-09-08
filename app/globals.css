@@ -640,13 +640,53 @@ body {
    ========================================================= */
 
 /* Fields are recessed squares with a hairline. No blur, no glow ring —
-   the border goes to full accent on focus and that is the whole state. */
+   the border goes to full accent on focus and that is the whole state.
+
+   The width rules here are load-bearing on mobile: without them iOS
+   Safari gives date, time, datetime-local and select inputs their own
+   built-in width and ignores width:100% entirely — the Start date field
+   on cohort settings used to spill past its card and push the whole
+   page sideways. box-sizing + width + max-width + min-width put every
+   input under the same rule, and the -webkit-appearance/appearance
+   reset on date/time/select convinces iOS to stop reserving its own
+   space. min-width:0 matters especially inside flex or grid rows,
+   where a field's intrinsic min-content would otherwise refuse to
+   shrink below its own placeholder. */
 input, textarea, select {
   background: var(--input-bg) !important;
   color: var(--text);
   border-color: var(--input-border);
   border-radius: 0;
   font-family: var(--font-sans), system-ui, sans-serif;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"],
+input[type="month"],
+input[type="week"],
+select {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  /* iOS also pads date inputs oddly, giving them a taller box than a
+     text input of the same font. Levelling that here so a mixed form
+     doesn't step up and down between rows. */
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+/* A caret for the selects we just stripped native chrome off — a
+   drawn arrow so a select still reads as tappable. */
+select {
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+                    linear-gradient(-45deg, transparent 50%, currentColor 50%);
+  background-position: right 1.1rem top 55%, right 0.7rem top 55%;
+  background-size: 0.4rem 0.4rem, 0.4rem 0.4rem;
+  background-repeat: no-repeat;
+  padding-right: 2.2rem;
 }
 input:focus, textarea:focus, select:focus {
   background: var(--input-bg-focus) !important;
@@ -1298,6 +1338,16 @@ select:focus-visible {
   opacity: 1;
   transform: translateY(0);
 }
+
+/* It is a button — the picker's second door — so it must not be
+   pressable while it is invisible and the full-size title below is
+   still on screen doing the same job. */
+.reading-ref {
+  pointer-events: none;
+  text-align: left;
+  cursor: pointer;
+}
+.reading-bar[data-condensed="true"] .reading-ref { pointer-events: auto; }
 @media (prefers-reduced-motion: reduce) {
   .reading-ref { transition: opacity 200ms ease; transform: none; }
   .reading-bar[data-condensed="true"] .reading-ref { transform: none; }
@@ -1316,6 +1366,28 @@ select:focus-visible {
 @media (min-width: 640px) {
   .reading-title { font-size: 32px; }
 }
+
+/* The title is the book-and-chapter control. It carries no pill and no
+   border: a heading that turns into a button on press is still a heading,
+   and boxing it would make the page look like a form. The caret is the
+   only tell, and it sits down at metadata size beside the words. */
+.reading-title-btn {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  max-width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.reading-caret {
+  font-size: 13px;
+  color: var(--muted);
+  transition: color 0.15s ease;
+}
+.reading-title-btn:hover .reading-caret { color: var(--text); }
 
 /* =========================================================
    THE VERSE TOOLBAR

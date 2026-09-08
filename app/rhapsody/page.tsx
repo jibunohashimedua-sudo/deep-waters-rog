@@ -1,8 +1,6 @@
-import Link from "next/link";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
-import { currentDayNumber } from "@/lib/plan";
 import { todayISO, longDate } from "@/lib/rhapsody";
 import Nav from "@/components/Nav";
 
@@ -15,10 +13,9 @@ const LINK_TTL_SECONDS = 30 * 60;
 export default async function RhapsodyPage() {
   // requireProfile redirects to /login when signed out, so nothing below
   // this line ever runs for a stranger.
-  const { profile } = await requireProfile();
+  await requireProfile();
   const supabase = createClient();
 
-  const day = currentDayNumber(profile.start_date);
   const date = todayISO();
 
   // Two plain queries, merged here. No nested select: this project has been
@@ -73,11 +70,10 @@ export default async function RhapsodyPage() {
     <>
       <Nav />
       <main data-surface="reading" className="max-w-3xl mx-auto px-6 py-10">
-        <Link href="/today" className="text-sm text-rog-muted hover:text-rog-purple">
-          &larr; Back to Day {day}
-        </Link>
-
-        <p className="mt-10 chapter-mark accent-pink">Rhapsody of Realities</p>
+        {/* No "back to day N" link here: the app bar's arrow already goes
+            there, and two back controls on one screen is a question the
+            screen shouldn't be asking. */}
+        <p className="chapter-mark accent-pink">Rhapsody of Realities</p>
         <h1 className="mt-3 font-serif text-3xl md:text-4xl font-normal text-rog-ink leading-tight">
           {entry?.title?.trim() || "Today’s article"}
         </h1>
@@ -141,21 +137,18 @@ export default async function RhapsodyPage() {
           </div>
         )}
 
-        {entry && (
-          <div className="mt-16 flex flex-col sm:flex-row gap-3">
-            {pdfUrl && (
-              <a
-                href={pdfUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-secondary flex-1 text-center"
-              >
-                Open the original booklet
-              </a>
-            )}
-            <Link href="/today" className="btn-primary flex-1 text-center">
-              Back to today
-            </Link>
+        {/* Only the booklet link at the foot. Getting back to Today is the
+            app bar's chevron — one back control per page. */}
+        {entry && pdfUrl && (
+          <div className="mt-16">
+            <a
+              href={pdfUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary w-full text-center"
+            >
+              Open the original booklet
+            </a>
           </div>
         )}
 
