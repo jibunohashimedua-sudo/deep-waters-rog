@@ -169,10 +169,12 @@ export default async function DepthPage() {
             const done = doneDays.has(d);
             const isToday = d === day;
             return (
-              <div
+              <Link
                 key={d}
+                href={`/day/${d}`}
                 title={`Day ${d}`}
-                className="aspect-square flex items-center justify-center font-mono text-[9.5px] tabular-nums"
+                aria-label={`Open day ${d}${done ? ", kept" : ""}${isToday ? ", today" : ""}`}
+                className="aspect-square flex items-center justify-center font-mono text-[9.5px] tabular-nums transition-opacity hover:opacity-80"
                 style={{
                   background: done
                     ? "var(--accent)"
@@ -187,7 +189,7 @@ export default async function DepthPage() {
                 }}
               >
                 {d}
-              </div>
+              </Link>
             );
           })}
         </div>

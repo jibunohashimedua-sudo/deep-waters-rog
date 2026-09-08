@@ -92,8 +92,14 @@ export default function Nav() {
   // like /me/edit, /admin/notes, /c/slug, /read) shows one — and exactly
   // one: any page that also drew its own "back to X" link in the body has
   // had it removed, because two controls for one job is a question.
+  //
+  // /day/N is a main destination too, not a sub-page: /today is a
+  // shortcut that redirects into it, and its own header carries the
+  // prev/next arrows and the day picker, so the app-bar back would be
+  // a second answer to the same question.
   const mainRoutes = ["/today", "/bible", "/community", "/leaderboard", "/cohorts", "/finishers", "/depth", "/admin", "/notifications"];
-  const showBack = !mainRoutes.includes(pathname);
+  const isDayRoute = pathname === "/day" || pathname.startsWith("/day/");
+  const showBack = !mainRoutes.includes(pathname) && !isDayRoute;
 
   // A named destination wherever we have one, so back always means the
   // page above this one rather than whatever the history stack happens to

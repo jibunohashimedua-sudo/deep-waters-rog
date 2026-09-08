@@ -6,12 +6,18 @@ export default function ReflectionForm({
   dayNumber,
   existing,
   userName,
-  userPhoto
+  userPhoto,
+  future = false,
+  futureDate = null
 }: {
   dayNumber: number;
   existing: { verse_reference: string | null; verse_text: string | null; reflection: string | null } | null;
   userName: string;
   userPhoto: string | null;
+  /** True when this day hasn't arrived yet — read ahead, save later. */
+  future?: boolean;
+  /** The date this day maps to, for the "save on …" line. Not shown when null. */
+  futureDate?: string | null;
 }) {
   const router = useRouter();
   const [verseRef, setVerseRef] = useState(existing?.verse_reference ?? "");
@@ -56,8 +62,23 @@ export default function ReflectionForm({
           one thing a kicker must never be — the heading says it already. */}
       <section className="surface-soft">
         <h2 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.02em] text-rog-ink leading-tight">
-          {done ? "Today's reflection is kept" : "Today's reflection"}
+          {future
+            ? `Reflection for Day ${dayNumber}`
+            : done
+              ? "Today's reflection is kept"
+              : "Today's reflection"}
         </h2>
+
+        {/* A future day can be read, but can't be saved yet — a completion
+            is a record that the day was done, and it isn't. The form is
+            visible so people can see what the shape is; the button is off
+            until that date lands. */}
+        {future && (
+          <p className="mt-3 text-[13px] leading-5 text-rog-muted">
+            You&rsquo;re reading ahead. You&rsquo;ll be able to save this reflection{" "}
+            {futureDate ? `on ${futureDate}` : "when this day arrives"}.
+          </p>
+        )}
 
         <form onSubmit={handleSubmit} className="mt-10">
           {/* Verse info zone — a quieter grouping */}
@@ -107,8 +128,18 @@ export default function ReflectionForm({
             />
           </div>
 
-          <button type="submit" disabled={loading} className="btn-primary w-full mt-10 disabled:opacity-50">
-            {loading ? "Saving..." : done ? "Save changes" : "Save today"}
+          <button
+            type="submit"
+            disabled={loading || future}
+            className="btn-primary w-full mt-10 disabled:opacity-50"
+          >
+            {future
+              ? "Not yet"
+              : loading
+                ? "Saving..."
+                : done
+                  ? "Save changes"
+                  : "Save today"}
           </button>
         </form>
       </section>

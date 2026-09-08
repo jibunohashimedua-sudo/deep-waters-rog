@@ -18,7 +18,14 @@ const tabs: Tab[] = [
   {
     href: "/today",
     label: "Today",
-    match: (p) => p === "/today" || p.startsWith("/today/") || p === "/read" || p.startsWith("/read/"),
+    match: (p) =>
+      p === "/today" ||
+      p.startsWith("/today/") ||
+      p === "/read" ||
+      p.startsWith("/read/") ||
+      // Every plan day lives at /day/N now — /today is a shortcut into it.
+      p === "/day" ||
+      p.startsWith("/day/"),
     icon: (
       <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
         <path d="M4 5a2 2 0 0 1 2-2h11v16H6a2 2 0 0 0-2 2V5Z" />
