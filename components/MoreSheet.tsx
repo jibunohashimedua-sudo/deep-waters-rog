@@ -18,6 +18,82 @@ function applyTheme(choice: Choice) {
   else localStorage.setItem("theme", choice);
 }
 
+/**
+ * The sheet's icons.
+ *
+ * Drawn, not set in emoji. An emoji is whatever the reader's phone decides
+ * it is — a different drawing on an iPhone, an Android and a Mac, at a
+ * different weight and in colours this system doesn't own — so a column of
+ * them matches nothing else in the app. The same argument was already
+ * written next to the notification bell in Nav; this is it applied to the
+ * one screen that had eight of them.
+ *
+ * Same hand as the tab bar: a 24 box, no fill, 1.8 stroke, round joins, and
+ * no detail that dies at 19px. Where the app has a choice it draws the
+ * literal thing — the prayer wall is a wall, because that is what it is
+ * called and because brickwork is the same geometry as the gauge.
+ */
+const ICONS = {
+  edit: <path d="M4 20h4L18 10l-4-4L4 16v4ZM14 6l4 4" />,
+  prayer: (
+    <>
+      <path d="M3 4h18v16H3z" />
+      <path d="M3 9.3h18M3 14.7h18M9 4v5.3M15 9.3v5.4M9 14.7V20" />
+    </>
+  ),
+  cohorts: (
+    <>
+      <circle cx="6.5" cy="9" r="2" />
+      <circle cx="17.5" cy="9" r="2" />
+      <circle cx="12" cy="7.5" r="2.2" />
+      <path d="M3 17.5c0-2 1.6-3.4 3.5-3.4M21 17.5c0-2-1.6-3.4-3.5-3.4M8 19.5c0-2.2 1.8-3.9 4-3.9s4 1.7 4 3.9" />
+    </>
+  ),
+  finishers: <path d="M5 21V4M5 5h11l-2 3.6L16 12.2H5" />,
+  testimony: (
+    <>
+      <path d="M4 5h16v11H9l-5 4V5Z" />
+      <path d="M8 9h8M8 12.3h5" />
+    </>
+  ),
+  announcements: (
+    <>
+      <path d="M4 10v4a1 1 0 0 0 1 1h2l7 4V5L7 9H5a1 1 0 0 0-1 1Z" />
+      <path d="M18 9.6a4 4 0 0 1 0 4.8" />
+    </>
+  ),
+  // Two sliders, not three. Three fitted the idea of a control panel
+  // better and turned into a grey smudge at 19px, which is the size it
+  // actually ships at — six strokes and three knobs is more marks than a
+  // 19px box can hold apart.
+  admin: (
+    <>
+      <path d="M4 9h7M15.2 9H20M4 15h3M11.2 15H20" />
+      <circle cx="13" cy="9" r="2.2" />
+      <circle cx="9" cy="15" r="2.2" />
+    </>
+  ),
+  signout: <path d="M14 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8M19 12H9M15.5 8.5 19 12l-3.5 3.5" />
+};
+
+/** One icon, at tab-bar weight, in the quiet ink so the label leads. */
+function Icon({ name }: { name: keyof typeof ICONS }) {
+  return (
+    <svg
+      className="w-[19px] h-[19px] shrink-0 text-rog-muted"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      {ICONS[name]}
+    </svg>
+  );
+}
+
 type Props = {
   open: boolean;
   onClose: () => void;
@@ -183,7 +259,7 @@ export default function MoreSheet({ open, onClose, isAdmin }: Props) {
           )}
 
           <Link href="/me/edit" onClick={onClose} className={`${link} border-t border-rog-line`}>
-            Edit profile
+            <Icon name="edit" /> Edit profile
           </Link>
 
           {/* Prayer lost its own tab when Bible took a slot. It lives inside
@@ -191,25 +267,25 @@ export default function MoreSheet({ open, onClose, isAdmin }: Props) {
               has to learn a new route to reach it. */}
           <p className={label}>Together</p>
           <Link href="/prayer" onClick={onClose} className={link}>
-            <span aria-hidden>🙏</span> Prayer wall
+            <Icon name="prayer" /> Prayer wall
           </Link>
 
           <p className={label}>Groups</p>
           <Link href="/cohorts" onClick={onClose} className={link}>
-            <span aria-hidden>👥</span> Cohorts
+            <Icon name="cohorts" /> Cohorts
           </Link>
 
           <p className={label}>Celebrate</p>
           <Link href="/finishers" onClick={onClose} className={link}>
-            <span aria-hidden>🏁</span> Finishers
+            <Icon name="finishers" /> Finishers
           </Link>
           <Link href="/testimonials" onClick={onClose} className={link}>
-            <span aria-hidden>💬</span> Share testimony
+            <Icon name="testimony" /> Share testimony
           </Link>
 
           <p className={label}>Updates</p>
           <Link href="/announcements" onClick={onClose} className={link}>
-            <span aria-hidden>📣</span> Announcements
+            <Icon name="announcements" /> Announcements
           </Link>
 
           <p className={label}>Settings</p>
@@ -236,14 +312,14 @@ export default function MoreSheet({ open, onClose, isAdmin }: Props) {
           </div>
 
           <button type="button" onClick={signOut} className={`${link} w-full text-left`}>
-            <span aria-hidden>↩︎</span> Sign out
+            <Icon name="signout" /> Sign out
           </button>
 
           {isAdmin && (
             <>
               <p className={label}>Admin</p>
               <Link href="/admin" onClick={onClose} className={link}>
-                <span aria-hidden>🛠</span> Admin dashboard
+                <Icon name="admin" /> Admin dashboard
               </Link>
             </>
           )}
