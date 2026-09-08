@@ -145,26 +145,42 @@ export default function MoreSheet({ open, onClose, isAdmin }: Props) {
           {/* You, first. Depth is the profile, and this is the row that
               says so — portrait, name, and one mono line of where you
               are. Hairline separated, no card. */}
-          <Link
-            href="/depth"
-            onClick={onClose}
-            className="person-row px-4 !border-t-0"
-          >
-            <Avatar
-              name={me?.name ?? ""}
-              photoUrl={me?.photoUrl}
-              size="lg"
-              decorative
-            />
-            <span className="min-w-0">
-              <span className="block text-[15px] font-medium text-rog-ink truncate">
-                {me?.name ?? "\u00a0"}
+          {me ? (
+            <Link
+              href="/depth"
+              onClick={onClose}
+              className="person-row px-4 !border-t-0"
+            >
+              <Avatar
+                name={me.name}
+                photoUrl={me.photoUrl}
+                size="lg"
+                decorative
+              />
+              <span className="min-w-0">
+                <span className="block text-[15px] font-medium text-rog-ink truncate">
+                  {me.name}
+                </span>
+                <span className="kicker block mt-1">
+                  {`Day ${me.day} \u00b7 Streak ${me.streak}`}
+                </span>
               </span>
-              <span className="kicker block mt-1">
-                {me ? `Day ${me.day} \u00b7 Streak ${me.streak}` : "\u00a0"}
-              </span>
-            </span>
-          </Link>
+            </Link>
+          ) : (
+            /* The shape of the row, held while the query is in flight.
+               This used to render the real row with empty strings in it,
+               which put a "?" in the portrait — the Avatar's fallback for
+               a person with no name — above two blank lines. A question
+               mark where your own face goes is a strange thing to show
+               someone, and it was answering a question nobody asked. */
+            <div className="person-row px-4 !border-t-0" aria-hidden>
+              <div className="skeleton w-12 h-12 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="skeleton h-4 w-32" />
+                <div className="skeleton h-2.5 w-24 mt-2" />
+              </div>
+            </div>
+          )}
 
           <Link href="/me/edit" onClick={onClose} className={`${link} border-t border-rog-line`}>
             Edit profile
