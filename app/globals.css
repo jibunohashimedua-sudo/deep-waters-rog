@@ -1110,6 +1110,14 @@ select:focus-visible {
   left: 0;
   height: 2px;
   background: var(--accent);
+  /* Ticking a chapter should move the bar, not teleport it — the reader
+     needs to see which way it went and by how much. Only fires when the
+     width actually changes, so the whole-plan gauge, whose width is set
+     once on load, is unaffected. */
+  transition: width 320ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .gauge-fill { transition: none; }
 }
 .gauge-today {
   position: absolute;
