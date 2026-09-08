@@ -3,14 +3,18 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Mark from "@/components/Mark";
+import Icon, { type IconName } from "@/components/Icons";
 
 type Step = {
   kicker: string;
   title: string;
   body: string;
-  emoji: string;
-  /** Path in /public — shown in place of `emoji` when set. Use for the brand slide. */
-  mark?: string;
+  /** The mark for this slide. Each one is the app's own icon for the thing
+      the slide describes, so onboarding teaches the interface rather than
+      illustrating beside it. Absent on the brand slide, which uses Mark. */
+  icon?: IconName;
+  /** Set on the brand slide, which shows the four-bar mark instead. */
+  brand?: boolean;
 };
 
 const STEPS: Step[] = [
@@ -18,32 +22,31 @@ const STEPS: Step[] = [
     kicker: "Welcome",
     title: "Deep Waters",
     body: "A 90 day journey through the Bible together. Old Testament and New Testament, every single day. You will finish at day 90.",
-    emoji: "🌊",
-    mark: "/deep-waters-mark-cream.png"
+    brand: true
   },
   {
     kicker: "Every day",
     title: "Read together",
     body: "Roughly 13 chapters a day, split between OT and NT. Tap the reading cards to open the KJV text right in the app. No jumping between tabs.",
-    emoji: "📖"
+    icon: "bible"
   },
   {
     kicker: "One verse. One thought.",
     title: "Share what stood out",
     body: "After you read, drop the verse that hit you and a short reflection. It shows up on the community feed. Amen someone. Comment. Tag with @name.",
-    emoji: "💬"
+    icon: "testimony"
   },
   {
     kicker: "You are not alone",
     title: "Prayer, cohorts, and support",
     body: "Post prayer requests. See who is praying with you. Join a cohort to walk with a smaller group. Everyone is reading the same day.",
-    emoji: "🙏"
+    icon: "cohorts"
   },
   {
     kicker: "Track your journey",
     title: "Progress, badges, finisher wall",
     body: "See your 90 day grid fill up. Earn badges for streaks and milestones. Hit day 90 and land on the finisher wall.",
-    emoji: "🏆"
+    icon: "depth"
   }
 ];
 
@@ -114,13 +117,23 @@ export default function WelcomePage() {
             style={{ background: "#0C0A18", color: "#E9E6F2" }}
           >
             <div className="relative">
-              {step.mark ? (
-                <div className="mb-6 flex justify-center">
+              {/* The brand slide keeps the four-bar mark. The rest carry the
+                  app's own icon for what they describe — the Bible tab's
+                  book, the bubble from under a reflection, the cohort's
+                  three figures, the sounding line that measures your ninety
+                  days. A lighter stroke at this size: 1.8 reads as confident
+                  at 19px in a tab bar and as fat at 80. */}
+              <div className="mb-8 flex justify-center" style={{ color: "#E9E6F2" }}>
+                {step.brand ? (
                   <Mark size={88} className="text-[#F3EDE4] w-20 md:w-24 h-auto" />
-                </div>
-              ) : (
-                <div className="text-6xl md:text-7xl mb-6">{step.emoji}</div>
-              )}
+                ) : step.icon ? (
+                  <Icon
+                    name={step.icon}
+                    className="w-[72px] h-[72px] md:w-20 md:h-20"
+                    strokeWidth={1.15}
+                  />
+                ) : null}
+              </div>
               <p className="kicker" style={{ color: "#8B87A3" }}>
                 {step.kicker}
               </p>

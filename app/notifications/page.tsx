@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import { createClient } from "@/lib/supabase/client";
+import Icon, { type IconName } from "@/components/Icons";
 
 type N = {
   id: string;
@@ -14,13 +15,24 @@ type N = {
   created_at: string;
 };
 
-const ICON: Record<string, string> = {
-  mention: "@",
-  comment: "💬",
-  amen: "🙏",
-  announcement: "📣",
-  badge: "🏅",
-  reminder: "⏰"
+/**
+ * What each kind of notice looks like.
+ *
+ * Drawn, not emoji — and drawn as the same marks the app already uses, so a
+ * notice about an amen carries the mark on the amen button and a notice about
+ * a comment carries the one under the reflection. A notification that looks
+ * like the thing it is about needs less reading.
+ *
+ * `mention` is the exception and stays a character: "@" is a typographic mark
+ * rather than a picture, it is set in the font we ship, and no drawing of it
+ * would be clearer than the thing itself.
+ */
+const ICON: Record<string, IconName> = {
+  comment: "testimony",
+  amen: "amen",
+  announcement: "announcements",
+  badge: "badge",
+  reminder: "reminder"
 };
 
 export default function NotificationsPage() {
@@ -91,7 +103,19 @@ export default function NotificationsPage() {
             items.map((n) => {
               const inner = (
                 <div className={`card flex gap-3 ${n.read ? "opacity-60" : "!border-rog-purple"}`}>
-                  <div className="text-xl w-8 text-center">{ICON[n.kind] ?? "•"}</div>
+                  <div className="w-8 shrink-0 flex justify-center text-rog-muted">
+                    {n.kind === "mention" ? (
+                      <span className="font-mono text-[15px] leading-none" aria-hidden>
+                        @
+                      </span>
+                    ) : ICON[n.kind] ? (
+                      <Icon name={ICON[n.kind]} />
+                    ) : (
+                      <span className="font-mono text-[15px] leading-none" aria-hidden>
+                        &middot;
+                      </span>
+                    )}
+                  </div>
                   <div className="flex-1">
                     <p className="font-semibold text-rog-ink text-sm">{n.title}</p>
                     {n.body && <p className="text-xs text-rog-muted mt-0.5">{n.body}</p>}
