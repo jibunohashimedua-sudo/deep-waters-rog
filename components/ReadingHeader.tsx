@@ -51,6 +51,7 @@ export default function ReadingHeader({
   chapter = null
 }: Props) {
   const sentinel = useRef<HTMLDivElement>(null);
+  const bar = useRef<HTMLElement>(null);
   const [condensed, setCondensed] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -61,11 +62,15 @@ export default function ReadingHeader({
   useEffect(() => {
     const el = sentinel.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
+    // The sentinel counts as gone the moment it slides under the bar
+    // rather than when it leaves the viewport entirely. The bar is
+    // measured rather than assumed to be 52px, because on a phone with a
+    // notch it is 52px plus the status bar inset, and a number typed here
+    // would be wrong on exactly the devices this app is read on.
+    const barHeight = Math.round(bar.current?.getBoundingClientRect().height ?? 52);
     const io = new IntersectionObserver(
       ([entry]) => setCondensed(!entry.isIntersecting),
-      // The bar is 52px tall, so the sentinel counts as gone the moment it
-      // slides under it rather than when it leaves the viewport entirely.
-      { rootMargin: "-52px 0px 0px 0px", threshold: 0 }
+      { rootMargin: `-${barHeight}px 0px 0px 0px`, threshold: 0 }
     );
     io.observe(el);
     return () => io.disconnect();
@@ -74,6 +79,7 @@ export default function ReadingHeader({
   return (
     <>
       <header
+        ref={bar}
         className="reading-bar"
         data-condensed={condensed ? "true" : undefined}
         aria-label="Reading"

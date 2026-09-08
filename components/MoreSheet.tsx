@@ -120,7 +120,10 @@ export default function MoreSheet({ open, onClose, isAdmin }: Props) {
 
   return (
     <div
-      className={`md:hidden fixed inset-0 z-50 ${open ? "" : "pointer-events-none"}`}
+      /* Not md:hidden any more. The wide-screen bar opens this same sheet
+         — same rows, same theme control, same sign out — so there is one
+         More in the app rather than one per bar. */
+      className={`fixed inset-0 z-50 ${open ? "" : "pointer-events-none"}`}
       aria-hidden={!open}
     >
       {/* Backdrop — dim + soft blur so the page behind softens */}
@@ -137,7 +140,9 @@ export default function MoreSheet({ open, onClose, isAdmin }: Props) {
         role="dialog"
         aria-modal="true"
         aria-label="More"
-        className={`bottom-glass absolute left-0 right-0 bottom-0 rounded-t-[28px] max-h-[85vh] overflow-y-auto transition-transform duration-300 ${
+        /* On a wide screen it stops at a readable measure and centres,
+           rather than running a list of six rows across a whole iPad. */
+        className={`bottom-glass absolute left-0 right-0 bottom-0 md:mx-auto md:max-w-md rounded-t-[28px] max-h-[85vh] overflow-y-auto transition-transform duration-300 ${
           open ? "translate-y-0" : "translate-y-full"
         }`}
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}

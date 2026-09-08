@@ -16,6 +16,34 @@
  * The verse marker (`<span class="v">…</span>`) stays untouched so the
  * existing pink superscript styling in globals.css keeps working.
  *
+ * A verse is a verse id, not a paragraph.
+ * ---------------------------------------------------------------------
+ * Poetry and quoted speech are why that is worth saying out loud. A
+ * translation that sets a quotation as verse lines returns one verse in
+ * several paragraphs, and only the first of them carries a number:
+ *
+ *   <p class="p"><span class="v" data-sid="MAT 4:4">4</span>But Jesus told
+ *      him, “No! The Scriptures say,</p>
+ *   <p data-vid="MAT 4:4" class="q1">‘People do not live by bread alone,</p>
+ *   <p data-vid="MAT 4:4" class="q2">but by every word…’”</p>
+ *
+ * All three are Matthew 4:4. This used to hand back any paragraph with no
+ * marker in it untouched, so those two poetry lines carried no verse id at
+ * all: they couldn't be highlighted, selected, copied or noted, and a
+ * highlight on verse 4 painted the first line and stopped at the quote.
+ *
+ * So the current verse is carried across paragraph boundaries. API.Bible
+ * names the owner itself on a continuation paragraph, in
+ * `data-vid="MAT 4:4"`, and that is used wherever it appears; the last
+ * marker seen is the fallback for a translation that doesn't send it. A
+ * section heading breaks the carry, because a heading belongs to the
+ * chapter rather than to the verse above it.
+ *
+ * Continuation fragments are marked `data-dw-part="cont"`, on the span and
+ * on its paragraph, so the styling can treat a run of them as one verse:
+ * one tap target, one note dot, and no paragraph gap opening up inside a
+ * highlight band.
+ *
  * Runs per-paragraph so a verse never straddles a </p>, which keeps
  * the DOM well-formed even when API.Bible splits chapters strangely.
  */
@@ -27,18 +55,66 @@ const MARKER_RE = /<span[^>]*class="[^"]*\bv\b[^"]*"[^>]*>\s*(\d+)\s*<\/span>/g;
 // contain newlines, and `?` because we want the *nearest* </p>.
 const PARAGRAPH_RE = /<p(\s[^>]*)?>([\s\S]*?)<\/p>/g;
 
-function wrapVersesInParagraph(inner: string): string {
+// Section headings, reference lines and descriptive titles: the paragraph
+// classes that sit between verses without belonging to one.
+const HEADING_CLASS_RE = /class="[^"]*\b(?:s|s1|s2|s3|ms|ms1|mr|r|d|sp|qa)\b[^"]*"/;
+
+// The owner API.Bible names on a continuation paragraph: data-vid="MAT 4:4".
+// The verse is whatever follows the colon, which is the last run of digits.
+const VID_RE = /\bdata-vid="[^"]*?(\d+)"/;
+
+/** Nothing but tags and whitespace — an empty stanza break, typically
+    `<p class="b"></p>`. There is no verse in it to wrap. */
+function isBlank(inner: string): boolean {
+  return inner.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim() === "";
+}
+
+const contSpan = (verse: number, inner: string) =>
+  `<span class="dw-verse" data-verse="${verse}" data-dw-part="cont">${inner}</span>`;
+
+/**
+ * One paragraph's inner HTML, with each verse wrapped.
+ *
+ * `carry` is the verse the paragraph opens in — either the one API.Bible
+ * named on it, or the last one seen. Returns the verse the *next*
+ * paragraph opens in (the last marker in this one, or `carry` unchanged
+ * when there wasn't one), and whether this paragraph opened inside the
+ * verse before it.
+ */
+function wrapVersesInParagraph(
+  inner: string,
+  carry: number | null
+): { html: string; carry: number | null; continues: boolean } {
   const markers: { num: string; start: number }[] = [];
   MARKER_RE.lastIndex = 0;
   let m: RegExpExecArray | null;
   while ((m = MARKER_RE.exec(inner)) !== null) {
     markers.push({ num: m[1], start: m.index });
   }
-  if (markers.length === 0) return inner;
+
+  // No number in this paragraph: it continues the verse before it. That is
+  // a poetry line, a quoted line, or a sentence broken across a paragraph
+  // — one verse either way.
+  if (markers.length === 0) {
+    if (carry === null) return { html: inner, carry, continues: false };
+    return { html: contSpan(carry, inner), carry, continues: true };
+  }
 
   let out = "";
-  // Text before the first marker (rare, but keep it).
-  if (markers[0].start > 0) out += inner.slice(0, markers[0].start);
+  let continues = false;
+
+  // Text before the first marker. It belongs to the verse that was running
+  // when the paragraph opened, so it is wrapped as a continuation rather
+  // than left outside every verse the way it used to be.
+  if (markers[0].start > 0) {
+    const lead = inner.slice(0, markers[0].start);
+    if (carry !== null && !isBlank(lead)) {
+      out += contSpan(carry, lead);
+      continues = true;
+    } else {
+      out += lead;
+    }
+  }
 
   for (let i = 0; i < markers.length; i++) {
     const start = markers[i].start;
@@ -46,13 +122,45 @@ function wrapVersesInParagraph(inner: string): string {
     const segment = inner.slice(start, end);
     out += `<span class="dw-verse" data-verse="${markers[i].num}">${segment}</span>`;
   }
-  return out;
+
+  const last = Number.parseInt(markers[markers.length - 1].num, 10);
+  return { html: out, carry: Number.isFinite(last) ? last : carry, continues };
 }
 
 export function wrapVersesInHtml(html: string): string {
+  // Carried across paragraphs — the whole point. See the note about
+  // Matthew 4:4 at the top of this file.
+  let carry: number | null = null;
+
   return html.replace(PARAGRAPH_RE, (_full, attrs, inner) => {
-    const wrapped = wrapVersesInParagraph(inner);
-    return `<p${attrs || ""}>${wrapped}</p>`;
+    const attrStr: string = attrs || "";
+
+    // A heading is not part of the verse above it, and the verse after one
+    // always opens with its own number, so the carry stops here.
+    if (HEADING_CLASS_RE.test(attrStr)) {
+      carry = null;
+      return `<p${attrStr}>${inner}</p>`;
+    }
+
+    // API.Bible names the owner outright on a continuation paragraph.
+    // Trust that over the running count wherever both are present.
+    const vid = VID_RE.exec(attrStr);
+    const named = vid ? Number.parseInt(vid[1], 10) : NaN;
+    if (Number.isFinite(named)) carry = named;
+
+    // An empty stanza break carries no words, so there is nothing to wrap
+    // — wrapping it would put a 44px tap target in the middle of a poem.
+    // It is still flagged as inside a verse so the styling can close the
+    // gap it would otherwise open in a highlight band.
+    if (isBlank(inner)) {
+      const marker = carry !== null ? ' data-dw-part="cont"' : "";
+      return `<p${attrStr}${marker}>${inner}</p>`;
+    }
+
+    const result = wrapVersesInParagraph(inner, carry);
+    carry = result.carry;
+
+    return `<p${attrStr}${result.continues ? ' data-dw-part="cont"' : ""}>${result.html}</p>`;
   });
 }
 
@@ -83,6 +191,21 @@ export function countVersesInHtml(html: string): number {
 }
 
 /**
+ * How many words of scripture are in a chapter.
+ *
+ * The automatic chapter tracker asks how long a chapter ought to take, and
+ * the only honest answer comes from the chapter itself — Psalm 119 is not
+ * Psalm 117. Verse numbers are stripped first so a chapter isn't credited
+ * with a word for every marker in it.
+ */
+export function countWordsInHtml(html: string): number {
+  const withoutMarkers = html.replace(new RegExp(MARKER_RE.source, "g"), " ");
+  const text = stripToText(withoutMarkers);
+  if (!text) return 0;
+  return text.split(/\s+/).length;
+}
+
+/**
  * Every verse in a chapter's HTML, as plain text, keyed by verse number.
  *
  * Depth lists highlights, and a list of references with no words in them is
@@ -94,6 +217,12 @@ export function countVersesInHtml(html: string): number {
  * DOM, and the input is the same narrow shape of markup API.Bible has always
  * returned. It is only ever asked for display text: nothing downstream parses
  * or trusts it.
+ *
+ * This one has always read whole verses, poetry included: it slices between
+ * one marker and the next across the entire chapter rather than paragraph by
+ * paragraph, so a continuation line falls inside the slice on its own. That
+ * is why Compare and the highlight list never showed the gap the reader
+ * could see on the page.
  */
 export function verseTextsFromHtml(html: string): Map<number, string> {
   const out = new Map<number, string>();

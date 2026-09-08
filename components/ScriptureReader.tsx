@@ -11,6 +11,7 @@ import {
   type VerseNote
 } from "@/lib/highlights";
 import { bookByName } from "@/lib/bibleBooks";
+import { verseFragments, verseTextOnPage } from "@/lib/verseFragments";
 import VerseToolbar from "./VerseToolbar";
 import VerseNoteSheet from "./VerseNoteSheet";
 import CompareSheet from "./CompareSheet";
@@ -168,8 +169,12 @@ export default function ScriptureReader({
         );
       for (const h of chapterHighlights) {
         for (let v = h.verse_start; v <= h.verse_end; v++) {
-          const el = root.querySelector<HTMLElement>(`[data-verse="${v}"]`);
-          if (el) el.setAttribute("data-hl", h.colour);
+          // Every fragment of the verse, not the first one. A verse set as
+          // poetry or quoted speech is several paragraphs — see
+          // lib/verseFragments.ts.
+          for (const el of verseFragments(root, v)) {
+            el.setAttribute("data-hl", h.colour);
+          }
         }
       }
 
@@ -178,8 +183,12 @@ export default function ScriptureReader({
       );
       for (const n of chapterNotes) {
         for (let v = n.verse_start; v <= n.verse_end; v++) {
-          const el = root.querySelector<HTMLElement>(`[data-verse="${v}"]`);
-          if (el) el.setAttribute("data-note", "true");
+          // The dot goes on the last fragment only — it marks the end of
+          // the verse, and one verse gets one dot however many lines it
+          // was set across.
+          const parts = verseFragments(root, v);
+          const last = parts[parts.length - 1];
+          if (last) last.setAttribute("data-note", "true");
         }
       }
     }
@@ -354,10 +363,12 @@ export default function ScriptureReader({
     const root = rootRef.current;
     if (!root || !focusVerse) return;
     for (let v = focusVerse.start; v <= focusVerse.end; v++) {
-      const el = root.querySelector<HTMLElement>(`[data-verse="${v}"]`);
-      if (!el) continue;
-      if (focusPhase === "off") el.removeAttribute("data-focus");
-      else el.setAttribute("data-focus", focusPhase === "fading" ? "fading" : "true");
+      // All of the verse, so a linked verse set as poetry doesn't light up
+      // its first line and leave the rest dark.
+      for (const el of verseFragments(root, v)) {
+        if (focusPhase === "off") el.removeAttribute("data-focus");
+        else el.setAttribute("data-focus", focusPhase === "fading" ? "fading" : "true");
+      }
     }
   });
 
@@ -431,13 +442,9 @@ export default function ScriptureReader({
     if (!root) return "";
     const parts: string[] = [];
     for (const v of verseNumbers) {
-      const el = root.querySelector<HTMLElement>(`[data-verse="${v}"]`);
-      if (!el) continue;
-      // Drop the verse marker itself — a quoted verse doesn't carry its
-      // own number inside the sentence.
-      const clone = el.cloneNode(true) as HTMLElement;
-      clone.querySelectorAll(".v").forEach((n) => n.remove());
-      const t = (clone.textContent ?? "").replace(/\s+/g, " ").trim();
+      // The whole verse, every fragment of it joined — so copy, share, the
+      // note sheet and the shared card all quote the poetry too.
+      const t = verseTextOnPage(root, v);
       if (t) parts.push(t);
     }
     return parts.join(" ");

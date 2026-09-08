@@ -185,7 +185,16 @@ html {
   overflow-x: clip;
 }
 body {
-  overflow-x: hidden;
+  /* `clip`, not `hidden` — and this one is load-bearing.
+     `overflow-x: hidden` on body makes body a scroll container in its own
+     right (the other axis computes to `auto`), and once it is one, every
+     `position: sticky` inside it measures itself against body instead of
+     the window. Body is exactly as tall as its content and never scrolls,
+     so sticky never engages: the reading header sat at the top of the
+     document and slid away with the scripture. `clip` clips the same
+     overflow without creating a scroll container, so sticky finds the
+     window again. */
+  overflow-x: clip;
   overscroll-behavior-y: none;
 }
 
@@ -634,6 +643,81 @@ body {
 .bible-content p:last-child {
   margin-bottom: 0;
 }
+
+/* ---------------------------------------------------------------
+   A verse set across several paragraphs.
+
+   Poetry and quoted speech come back from API.Bible as their own
+   paragraphs continuing the verse above them, and lib/verseParse.ts
+   marks both the paragraph and the fragment `data-dw-part="cont"`.
+   The verse is one verse; these rules stop it looking like several.
+   --------------------------------------------------------------- */
+
+/* A continuation fragment doesn't need its own thumb-sized target —
+   the verse's first fragment already carries one, and a 44px floor on
+   every line of a psalm would set poetry at double-spacing. */
+.dw-verse[data-dw-part="cont"] {
+  min-height: 0;
+}
+
+/* No paragraph gap inside one verse, so a highlight reads as one band
+   down the poem rather than as separate stripes with daylight between
+   them. The gap between two *different* verses is untouched. */
+.bible-content p:has(+ p[data-dw-part="cont"]) {
+  margin-bottom: 0;
+}
+
+/* The empty stanza break API.Bible sends between a line of speech and
+   the verse it quotes. Left at a full paragraph's margin it opened a
+   hole in the middle of the highlight. */
+.bible-content p.b {
+  margin-bottom: 0.45em;
+}
+.bible-content p.b[data-dw-part="cont"] {
+  margin-bottom: 0;
+  height: 0.35em;
+}
+
+/* Poetry keeps the shape it was written in. API.Bible's q1/q2/q3 are
+   the levels of a verse line, and the indent is what tells the eye it is
+   reading a psalm and not a paragraph. Set in em so it tracks the type
+   rather than a fixed pixel that stops being right at 19px.
+
+   The indent is on the verse's padding rather than the paragraph's, and
+   that is the whole trick: it means the verse box itself still starts at
+   the measure's left edge, so a highlight on a verse of poetry is one
+   band with one rule down its side, instead of a staircase of little
+   bands each with a rule at its own indent. The words move; the verse
+   doesn't.
+
+   The extra 0.9em, cancelled by the negative text-indent, is a hanging
+   indent: the verse number sits out in the margin, and a line of poetry
+   too long for the column runs over indented rather than starting flush
+   and pretending to be the next line. */
+.bible-content p.q1,
+.bible-content p.q2,
+.bible-content p.q3,
+.bible-content p.q4 {
+  margin-bottom: 0.15em;
+}
+.bible-content p.q1 > .dw-verse { padding-left: calc(14px + 2.0em); }
+.bible-content p.q2 > .dw-verse { padding-left: calc(14px + 3.1em); }
+.bible-content p.q3 > .dw-verse { padding-left: calc(14px + 4.2em); }
+.bible-content p.q4 > .dw-verse { padding-left: calc(14px + 5.3em); }
+.bible-content p.q1 > .dw-verse,
+.bible-content p.q2 > .dw-verse,
+.bible-content p.q3 > .dw-verse,
+.bible-content p.q4 > .dw-verse {
+  text-indent: -0.9em;
+}
+
+/* The same indents for a poetry line no verse could be found for — rare,
+   and only at the very top of a chapter, but it should still look like
+   poetry rather than silently going flush. */
+.bible-content p.q1:not(:has(> .dw-verse)) { padding-left: 1.1em; }
+.bible-content p.q2:not(:has(> .dw-verse)) { padding-left: 2.2em; }
+.bible-content p.q3:not(:has(> .dw-verse)) { padding-left: 3.3em; }
+.bible-content p.q4:not(:has(> .dw-verse)) { padding-left: 4.4em; }
 
 /* =========================================================
    FORM CONTROLS
@@ -1383,9 +1467,20 @@ select:focus-visible {
   grid-template-columns: 44px minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
-  min-height: 52px;
-  margin: 0 -24px;           /* out to the page edges, past main's px-6 */
-  padding: 0 12px;
+  /* 52px of bar, plus whatever the status bar takes. Box-sizing is
+     border-box everywhere, so the inset has to be added here or the row
+     itself would be squeezed to make room for it. */
+  min-height: calc(52px + env(safe-area-inset-top));
+  /* Out to the page edges past main's px-6, and up through the status
+     bar. Body already carries `padding-top: env(safe-area-inset-top)`,
+     so without pulling back through it the bar would pin at y=0 with
+     the iPhone's clock sitting on top of the book name. The negative
+     margin takes it up into that strip and the matching padding puts
+     its contents back below the notch, so the ground is opaque all the
+     way to the top edge and nothing scrolls through the gap. Both are
+     zero on a phone without one, and on every desktop. */
+  margin: calc(-1 * env(safe-area-inset-top)) -24px 0;
+  padding: env(safe-area-inset-top) 12px 0;
   background: var(--bg);      /* opaque. Nothing is frosted anywhere. */
   border-bottom: 1px solid var(--line);
 }

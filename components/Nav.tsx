@@ -3,22 +3,17 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import ThemeToggle from "./ThemeToggle";
 import Avatar from "./Avatar";
 import BottomNav from "./BottomNav";
+import MoreSheet from "./MoreSheet";
 import Mark from "./Mark";
 import { backHrefFor, isReadingRoute } from "@/lib/routes";
+import { NAV_TABS, MORE_ICON, moreMatches } from "@/lib/nav";
 
-// Mirrors the mobile tab bar: Prayer is a view inside Community now, so it
-// isn't a separate destination here either.
-const links = [
-  { href: "/today", label: "Today" },
-  { href: "/bible", label: "Bible" },
-  { href: "/community", label: "Community" },
-  { href: "/leaderboard", label: "Leaderboard" },
-  { href: "/cohorts", label: "Cohorts" },
-  { href: "/finishers", label: "Finishers" }
-];
+// The wide-screen bar and the phone's tab bar read the same list — see
+// lib/nav.tsx for why. There used to be a second list here naming
+// Leaderboard, Cohorts and Finishers as top-level sections; all three are
+// views inside People, and had been for three refactors.
 
 export default function Nav() {
   const pathname = usePathname();
@@ -27,6 +22,7 @@ export default function Nav() {
   const [unread, setUnread] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
   const [hasUser, setHasUser] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [me, setMe] = useState<{ name: string; photoUrl: string | null } | null>(null);
 
   useEffect(() => {
@@ -76,16 +72,13 @@ export default function Nav() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function signOut() {
-    await supabase.auth.signOut();
-    router.push("/");
-  }
-
-  const linkCls = (href: string) =>
+  // Highlighted or not — nothing else. Which section you are in is the
+  // section's own `match`, shared with the tab bar, rather than a prefix
+  // test on the href: /community?view=leaderboard is People, and a path
+  // test could only ever have told you it was /community.
+  const linkCls = (active: boolean) =>
     `px-3 py-2 rounded-full text-sm font-medium transition ${
-      pathname === href || pathname.startsWith(href + "/")
-        ? "bg-rog-purple text-white"
-        : "text-rog-ink hover:bg-rog-cream"
+      active ? "bg-rog-purple text-white" : "text-rog-ink hover:bg-rog-cream"
     }`;
 
   // Main tab routes never show a back button. Everything else (sub-pages
@@ -144,20 +137,37 @@ export default function Nav() {
             </Link>
           </div>
 
-          {/* Desktop */}
-          <nav className="hidden md:flex items-center gap-1">
-            {links.map((l) => (
-              <Link key={l.href} href={l.href} className={linkCls(l.href)}>{l.label}</Link>
-            ))}
-            {isAdmin && <Link href="/admin" className={linkCls("/admin")}>Admin</Link>}
+          {/* Wide screens. The same sections as the tab bar, in the same
+              order, under the same names — including More, which opens the
+              same sheet and carries the same rows. Admin lives in there,
+              where the phone has always kept it. */}
+          <nav className="hidden md:flex items-center gap-1" aria-label="Sections">
+            {NAV_TABS.map((t) => {
+              const active = t.match(pathname);
+              return (
+                <Link
+                  key={t.href}
+                  href={t.href}
+                  aria-current={active ? "page" : undefined}
+                  className={linkCls(active)}
+                >
+                  {t.label}
+                </Link>
+              );
+            })}
+            <button
+              type="button"
+              onClick={() => setMoreOpen(true)}
+              aria-haspopup="dialog"
+              aria-expanded={moreOpen}
+              className={`${linkCls(moreOpen || moreMatches(pathname))} inline-flex items-center gap-1.5`}
+            >
+              <span className="[&>svg]:w-4 [&>svg]:h-4">{MORE_ICON}</span>
+              More
+            </button>
           </nav>
 
           <div className="flex items-center gap-1">
-            {/* Desktop-only controls */}
-            <div className="hidden md:flex items-center gap-1">
-              <ThemeToggle />
-            </div>
-
             {/* Notifications bell — always visible */}
             <Link href="/notifications" className="tap-target relative p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10" aria-label="Notifications">
               {/* Drawn, not set in emoji — an emoji is whatever the phone
@@ -197,15 +207,30 @@ export default function Nav() {
               </Link>
             )}
 
-            <button onClick={signOut} className="hidden md:inline text-xs text-rog-muted hover:text-rog-purple px-2">
-              Sign out
-            </button>
+            {/* Theme and Sign out used to sit here as well as in the More
+                sheet — the same two controls twice on a wide screen, and a
+                second place for them to drift. They are in More now, which
+                is where they are on the phone. */}
           </div>
         </div>
       </header>
       )}
 
-      <BottomNav isAdmin={isAdmin} hasUser={hasUser} />
+      <BottomNav
+        isAdmin={isAdmin}
+        hasUser={hasUser}
+        moreOpen={moreOpen}
+        onOpenMore={() => setMoreOpen(true)}
+      />
+
+      {/* One sheet for both bars. Same component, same rows, so the two
+          can't offer different things behind the same word — and only one
+          of it in the tree, so opening it doesn't run its query twice. */}
+      <MoreSheet
+        open={moreOpen}
+        onClose={() => setMoreOpen(false)}
+        isAdmin={isAdmin}
+      />
     </>
   );
 }

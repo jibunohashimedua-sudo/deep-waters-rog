@@ -4,13 +4,24 @@ import { READING_PLAN, currentDayNumber } from "@/lib/plan";
 import { todayForCurrentRequest } from "@/lib/serverToday";
 
 /**
- * Toggle a chapter tick, then recompute whether the day is fully read.
+ * Record a chapter as read, then recompute whether the day is fully read.
  *
  * The tick itself is one row in chapter_reads. After the tick lands, we
  * count chapter_reads for the day, compare to the plan (OT + NT length),
  * and set completions.is_full accordingly. A reflection saved for the day
  * counts as its own "day full" signal, so unticking never demotes a day
  * the reader wrote about.
+ *
+ * Two modes, because there are two callers and they want different things:
+ *
+ *   "toggle" (the default) is the manual check-box on the day view. A
+ *   second press takes the tick off again, which is the whole point of a
+ *   check-box.
+ *
+ *   "mark" is the automatic tracker on the reading screen. It can only
+ *   ever add. A chapter re-read a week later must not quietly untick
+ *   itself, and the tracker has no business removing anything — a row
+ *   that is already there is simply success.
  *
  * Reading ahead is fine — reading is a private act. Marking ahead is not,
  * so a chapter tick for a day the reader hasn't reached yet is refused,
@@ -27,6 +38,7 @@ export async function POST(request: Request) {
   const dayNumber = Number(body?.day_number);
   const book = typeof body?.book === "string" ? body.book : "";
   const chapter = Number(body?.chapter);
+  const mode = body?.mode === "mark" ? "mark" : "toggle";
 
   if (
     !Number.isFinite(dayNumber) || dayNumber < 1 || dayNumber > 90 ||
@@ -53,9 +65,10 @@ export async function POST(request: Request) {
   const reading = READING_PLAN[dayNumber - 1];
   const totalChapters = reading.ot.length + reading.nt.length;
 
-  // Toggle: if a tick exists, remove it; otherwise add one. The unique
-  // constraint on (user, day, book, chapter) means either state is a
-  // single-row operation.
+  // If a tick exists, "toggle" removes it and "mark" leaves it alone;
+  // otherwise both add one. The unique constraint on
+  // (user, day, book, chapter) means either state is a single-row
+  // operation.
   const { data: existingTick } = await supabase
     .from("chapter_reads")
     .select("id")
@@ -65,13 +78,13 @@ export async function POST(request: Request) {
     .eq("chapter", chapter)
     .maybeSingle();
 
-  if (existingTick) {
+  if (existingTick && mode === "toggle") {
     const { error } = await supabase
       .from("chapter_reads")
       .delete()
       .eq("id", existingTick.id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  } else {
+  } else if (!existingTick) {
     const { error } = await supabase
       .from("chapter_reads")
       .insert({ user_id: user.id, day_number: dayNumber, book, chapter });
@@ -136,7 +149,8 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({
-    ticked: !existingTick, // the state AFTER the toggle
+    // The state AFTER the call. "mark" only ever leaves it ticked.
+    ticked: mode === "mark" ? true : !existingTick,
     ticks: ticksCount,
     total: totalChapters,
     isFull: shouldBeFull

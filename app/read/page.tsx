@@ -9,10 +9,11 @@ import {
 import { todayForCurrentRequest } from "@/lib/serverToday";
 import { fetchChapter, chapterErrorMessage, type ChapterFailure } from "@/lib/bible";
 import { resolveTranslation } from "@/lib/translations";
-import { wrapVersesInHtml } from "@/lib/verseParse";
+import { wrapVersesInHtml, countWordsInHtml } from "@/lib/verseParse";
 import Nav from "@/components/Nav";
 import ScriptureReader from "@/components/ScriptureReader";
 import ReadingHeader from "@/components/ReadingHeader";
+import ChapterReadTracker from "@/components/ChapterReadTracker";
 
 export default async function ReadPage({
   searchParams
@@ -45,11 +46,18 @@ export default async function ReadPage({
   // out together. Fetching them in sequence was a round trip of dead time
   // on every render of this page.
   const supabase = createClient();
-  const [chapterOutcomes, noteResult] = await Promise.all([
+  const [chapterOutcomes, noteResult, ticksResult] = await Promise.all([
     Promise.all(
       chapters.map((c, i) => fetchChapter(c.abbr, c.chapter, resolved[i].id))
     ),
-    supabase.from("study_notes").select("title, body").eq("day_number", day).maybeSingle()
+    supabase.from("study_notes").select("title, body").eq("day_number", day).maybeSingle(),
+    // What is already recorded for this day, so the tracker doesn't watch
+    // a chapter that has nothing left to record.
+    supabase
+      .from("chapter_reads")
+      .select("book, chapter")
+      .eq("user_id", userId)
+      .eq("day_number", day)
   ]);
 
   if (noteResult.error) {
@@ -57,9 +65,26 @@ export default async function ReadPage({
   }
   const note = noteResult.data;
 
+  if (ticksResult.error) {
+    console.error("[deep-waters] chapter ticks lookup:", ticksResult.error.message);
+  }
+  const alreadyRead = new Set(
+    (ticksResult.data ?? []).map((r) => `${r.book}|${r.chapter}`)
+  );
+
   // Keep the chapters that loaded, and remember the first real problem so we
   // can explain a gap instead of silently showing less scripture.
   const loaded: { book: string; chapter: number; reference: string; html: string }[] = [];
+  // What the automatic tracker needs: how long each chapter should take,
+  // which comes from its own word count. Counted here because the HTML is
+  // already in hand on the server and counting it in the browser would be
+  // work done on the one screen that has to stay smooth.
+  const tracked: {
+    book: string;
+    chapter: number;
+    words: number;
+    alreadyRead: boolean;
+  }[] = [];
   let failure: ChapterFailure | null = null;
   chapterOutcomes.forEach((o, i) => {
     if (o.ok) {
@@ -68,6 +93,12 @@ export default async function ReadPage({
         chapter: chapters[i].chapter,
         reference: o.chapter.reference,
         html: wrapVersesInHtml(o.chapter.content)
+      });
+      tracked.push({
+        book: chapters[i].book,
+        chapter: chapters[i].chapter,
+        words: countWordsInHtml(o.chapter.content),
+        alreadyRead: alreadyRead.has(`${chapters[i].book}|${chapters[i].chapter}`)
       });
     } else if (!failure || o.kind === "rate-limit") {
       failure = o.kind;
@@ -150,6 +181,20 @@ export default async function ReadPage({
             testament={testament}
             chapters={loaded}
             translationId={resolved[0]?.id}
+          />
+        )}
+
+        {/* Chapters record themselves. Reaching the last verse and staying
+            a while is what a read is; ticking a box afterwards was only
+            ever a way of telling the app what it could already see.
+            Renders nothing but a two-second confirmation. */}
+        {loaded.length > 0 && (
+          <ChapterReadTracker
+            dayNumber={day}
+            chapters={tracked}
+            /* A day the reader hasn't reached can be read but not marked
+               — the API refuses it, and it isn't ours to record. */
+            enabled={day <= currentDay}
           />
         )}
 
