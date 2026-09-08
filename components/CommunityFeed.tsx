@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import ReflectionCard from "@/components/ReflectionCard";
 import { createClient } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/errors";
+import { readCache, writeCache } from "@/lib/viewCache";
 
 type Item = {
   id: string;
@@ -22,36 +23,67 @@ type Item = {
 type Cohort = { id: string; name: string };
 type VOTD = { verse_reference: string; verse_text: string | null; picks: number } | null;
 
+/** What we keep so a back navigation lands on a full page, not an empty one. */
+type Cached = { items: Item[]; votd: VOTD; cohorts: Cohort[] };
+const CACHE_KEY = "community-feed";
+
 /**
  * The reflections feed. Lifted out of /community when Prayer joined it as a
  * second view — the page above owns the heading and the segmented control.
  */
 export default function CommunityFeed() {
   const supabase = createClient();
-  const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [cohorts, setCohorts] = useState<Cohort[]>([]);
+  // Seeded from the last visit so the list has its real height on the first
+  // frame. Without this the feed mounted empty, the page collapsed, and the
+  // browser had nothing to restore your scroll position into — which is why
+  // coming back from a post always dumped you at the top.
+  const cached = readCache<Cached>(CACHE_KEY);
+  const [items, setItems] = useState<Item[]>(cached?.items ?? []);
+  const [loading, setLoading] = useState(!cached);
+  const [cohorts, setCohorts] = useState<Cohort[]>(cached?.cohorts ?? []);
   const [myCohortIds, setMyCohortIds] = useState<string[]>([]);
   const [filter, setFilter] = useState<string>("all");
   const [me, setMe] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [votd, setVotd] = useState<VOTD>(null);
+  const [votd, setVotd] = useState<VOTD>(cached?.votd ?? null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const { data, error: fErr } = await supabase.from("community_feed").select("*").limit(100);
-    if (fErr) setError(friendlyError(fErr.message));
-    else setError(null);
-    setItems((data ?? []) as Item[]);
+    if (fErr) {
+      setError(friendlyError(fErr.message));
+      setLoading(false);
+      return;
+    }
+    setError(null);
+    const next = (data ?? []) as Item[];
+    setItems(next);
     setLoading(false);
+    // Refreshed data replaces what the next back navigation will seed from.
+    const prev = readCache<Cached>(CACHE_KEY);
+    writeCache<Cached>(CACHE_KEY, {
+      items: next,
+      votd: prev?.votd ?? null,
+      cohorts: prev?.cohorts ?? []
+    });
   }, [supabase]);
 
   useEffect(() => {
     load();
     // These three don't depend on one another, so they go out together
     // rather than in sequence.
-    supabase.from("cohorts").select("id, name").then(({ data }) => setCohorts((data ?? []) as Cohort[]));
-    supabase.from("verse_of_the_day").select("*").maybeSingle().then(({ data }) => setVotd(data as VOTD));
+    supabase.from("cohorts").select("id, name").then(({ data }) => {
+      const next = (data ?? []) as Cohort[];
+      setCohorts(next);
+      const prev = readCache<Cached>(CACHE_KEY);
+      if (prev) writeCache<Cached>(CACHE_KEY, { ...prev, cohorts: next });
+    });
+    supabase.from("verse_of_the_day").select("*").maybeSingle().then(({ data }) => {
+      const next = data as VOTD;
+      setVotd(next);
+      const prev = readCache<Cached>(CACHE_KEY);
+      if (prev) writeCache<Cached>(CACHE_KEY, { ...prev, votd: next });
+    });
     supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) return;
       setMe(data.user.id);

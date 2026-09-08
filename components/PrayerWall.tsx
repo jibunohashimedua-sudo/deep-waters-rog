@@ -5,6 +5,7 @@ import MentionText from "@/components/MentionText";
 import ReportButton from "@/components/ReportButton";
 import { createClient } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/errors";
+import { readCache, writeCache } from "@/lib/viewCache";
 
 type Prayer = {
   id: string;
@@ -24,10 +25,15 @@ type Prayer = {
  * second view inside the Community tab — same queries, same optimistic
  * posting, same empty states. The page around it owns the heading now.
  */
+const CACHE_KEY = "prayer-wall";
+
 export default function PrayerWall() {
   const supabase = createClient();
-  const [items, setItems] = useState<Prayer[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Same reason as the feed: mounting empty collapses the page, so a back
+  // navigation has no height to restore into and lands at the top.
+  const cached = readCache<Prayer[]>(CACHE_KEY);
+  const [items, setItems] = useState<Prayer[]>(cached ?? []);
+  const [loading, setLoading] = useState(!cached);
   const [me, setMe] = useState<string | null>(null);
   const [myName, setMyName] = useState<string>("");
   const [myPhoto, setMyPhoto] = useState<string | null>(null);
@@ -60,6 +66,7 @@ export default function PrayerWall() {
     if (list.length === 0) {
       setItems([]);
       setLoading(false);
+      writeCache<Prayer[]>(CACHE_KEY, []);
       return;
     }
 
@@ -89,6 +96,7 @@ export default function PrayerWall() {
     setItems(merged);
     setError(null);
     setLoading(false);
+    writeCache<Prayer[]>(CACHE_KEY, merged);
   }, [supabase]);
 
   useEffect(() => {

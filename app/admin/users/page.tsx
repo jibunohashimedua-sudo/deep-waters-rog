@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import Nav from "@/components/Nav";
 import { createClient } from "@/lib/supabase/server";
@@ -40,9 +41,9 @@ export default async function AdminUsersPage({
           />
           <button className="btn-primary text-sm">Search</button>
           {searchParams.filter !== "pending" ? (
-            <a href="/admin/users?filter=pending" className="btn-secondary text-sm">Pending only</a>
+            <Link href="/admin/users?filter=pending" className="btn-secondary text-sm">Pending only</Link>
           ) : (
-            <a href="/admin/users" className="btn-secondary text-sm">Show all</a>
+            <Link href="/admin/users" className="btn-secondary text-sm">Show all</Link>
           )}
         </form>
 
