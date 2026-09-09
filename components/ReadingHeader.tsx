@@ -85,19 +85,7 @@ export default function ReadingHeader({
         aria-label="Reading"
       >
         <Link href={backHref} className="reading-back" aria-label={backLabel}>
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-          >
-            <path d="M15 5l-7 7 7 7" />
-          </svg>
+          Back
         </Link>
 
         {/* The condensed reference, which is also the picker once it has

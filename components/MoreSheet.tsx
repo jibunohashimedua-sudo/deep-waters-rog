@@ -6,7 +6,6 @@ import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Avatar from "./Avatar";
-import Icon from "./Icons";
 import { currentDayNumber } from "@/lib/plan";
 import { todayISOForUser } from "@/lib/dates";
 
@@ -223,7 +222,7 @@ export default function MoreSheet({
           )}
 
           <Link href="/me/edit" onClick={onClose} className={`${link} border-t border-rog-line`}>
-            <Icon name="edit" /> Edit profile
+            Edit profile
           </Link>
 
           {/* Four groups, separated by a hairline each.
@@ -233,8 +232,10 @@ export default function MoreSheet({
               single row underneath. A label that names the one thing
               below it is the heading saying what the heading says, which
               is the one thing this system asks a label never to be. The
-              rows carry an icon and a name now; a rule between them does
-              all the grouping that was ever needed.
+              rows are names, and a rule between them does all the
+              grouping that was ever needed. They carried an icon each
+              until the set came down to five; a row in a sheet you opened
+              on purpose does not need a picture to be found.
 
               Prayer lost its own tab when Bible took a slot. It lives
               inside the Community tab now, but it stays one tap from here
@@ -252,19 +253,19 @@ export default function MoreSheet({
               />
             )}
             <Link href="/prayer" onClick={onClose} className={link}>
-              <Icon name="prayer" /> Prayer wall
+              Prayer wall
             </Link>
             <Link href="/cohorts" onClick={onClose} className={link}>
-              <Icon name="cohorts" /> Cohorts
+              Cohorts
             </Link>
             <Link href="/finishers" onClick={onClose} className={link}>
-              <Icon name="finishers" /> Finishers
+              Finishers
             </Link>
             <Link href="/testimonials" onClick={onClose} className={link}>
-              <Icon name="testimony" /> Share testimony
+              Share testimony
             </Link>
             <Link href="/announcements" onClick={onClose} className={link}>
-              <Icon name="announcements" /> Announcements
+              Announcements
             </Link>
           </div>
 
@@ -295,14 +296,14 @@ export default function MoreSheet({
             </div>
 
             <button type="button" onClick={signOut} className={`${link} w-full text-left`}>
-              <Icon name="signout" /> Sign out
+              Sign out
             </button>
           </div>
 
           {isAdmin && (
             <div className={group}>
               <Link href="/admin" onClick={onClose} className={link}>
-                <Icon name="admin" /> Admin dashboard
+                Admin dashboard
               </Link>
             </div>
           )}

@@ -379,11 +379,6 @@ body {
   gap: 14px;
   text-align: center;
 }
-.empty-state .empty-mark {
-  color: var(--muted);
-  opacity: 0.55;
-  line-height: 0;
-}
 .empty-state .empty-body {
   font-family: var(--font-serif), Georgia, serif;
   font-size: 17px;
@@ -1543,8 +1538,13 @@ select:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
+  min-width: 44px;
   height: 44px;
+  padding: 0 10px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
   color: var(--muted);
   transition: color 0.15s ease;
 }
@@ -2088,9 +2088,14 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
+  min-width: 44px;
   height: 44px;
+  padding: 0 12px;
   border-radius: 999px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
   color: var(--muted);
 }
 .bench-close:hover { color: var(--text); }

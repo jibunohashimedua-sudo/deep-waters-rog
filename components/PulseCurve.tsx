@@ -28,12 +28,6 @@ export default function PulseCurve({ points }: { points: PulseCurvePoint[] }) {
     const reached = usable.length;
     return (
       <div className="empty-state">
-        <span className="empty-mark" aria-hidden>
-          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-            <path d="M5 30h30" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-            <path d="M8 24l5-3 4 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </span>
         <p className="empty-body">Not enough of the plan has happened yet.</p>
         <p className="empty-hint">
           {`The plan is ${reached} day${reached === 1 ? "" : "s"} old. The curve needs at least ${CURVE_MIN_DAYS} before a line through it means anything, so it will appear here on its own.`}

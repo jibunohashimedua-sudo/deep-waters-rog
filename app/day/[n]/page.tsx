@@ -225,9 +225,6 @@ export default async function DayPage({
           {existingIsFull && existing && isCurrent && (
             <div className="mt-3">
               <span className="kept-chip" aria-label="Reflection saved for today">
-                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden>
-                  <path d="M3 7.5L6 10.5L11 4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
                 Kept
               </span>
             </div>
@@ -235,9 +232,6 @@ export default async function DayPage({
           {existingIsFull && existing && !isCurrent && (
             <div className="mt-3">
               <span className="kept-chip">
-                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden>
-                  <path d="M3 7.5L6 10.5L11 4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
                 Kept
               </span>
             </div>

@@ -210,15 +210,9 @@ export default function ReflectionCard({
           data-on={reacted ? "true" : undefined}
           aria-pressed={reacted}
         >
-          <svg viewBox="0 0 24 24" aria-hidden strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 20.5S3.5 15.4 3.5 9.6A4.6 4.6 0 0 1 12 7a4.6 4.6 0 0 1 8.5 2.6c0 5.8-8.5 10.9-8.5 10.9Z" />
-          </svg>
           <span>Amen{amens > 0 ? ` ${amens}` : ""}</span>
         </button>
         <button onClick={toggleComments} className="act">
-          <svg viewBox="0 0 24 24" aria-hidden strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.5 12.2c0 3.8-3.8 6.9-8.5 6.9a10 10 0 0 1-2.7-.4L4 20.5l1.6-3.7a6.4 6.4 0 0 1-2.1-4.6c0-3.8 3.8-6.9 8.5-6.9s8.5 3.1 8.5 6.9Z" />
-          </svg>
           <span>{commentCount > 0 ? `Reply ${commentCount}` : "Reply"}</span>
         </button>
         <div className="ml-auto">

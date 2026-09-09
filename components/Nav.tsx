@@ -194,18 +194,15 @@ export default function Nav() {
 
           <div className="flex items-center gap-1">
             {/* Notifications bell — always visible */}
-            <Link href="/notifications" className="tap-target relative p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10" aria-label="Notifications">
-              {/* Drawn, not set in emoji — an emoji is whatever the phone
-                  decides it is, and it never matches the rest of the icons. */}
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                <path d="M18 8.5a6 6 0 1 0-12 0c0 5-2 6.5-2 6.5h16s-2-1.5-2-6.5Z" />
-                <path d="M10.4 19a1.9 1.9 0 0 0 3.2 0" />
-              </svg>
-              {unread > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-red-600 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                  {unread > 9 ? "9+" : unread}
-                </span>
-              )}
+            {/* A word, not a bell. The app has five icons and a bell is
+                not one of them — and "Alerts 3" tells you more than a
+                drawing with a dot on it ever did. */}
+            <Link
+              href="/notifications"
+              className="tap-target kicker px-2 py-2 hover:text-rog-ink"
+              aria-label={unread > 0 ? `Alerts, ${unread} unread` : "Alerts"}
+            >
+              Alerts{unread > 0 ? ` ${unread > 9 ? "9+" : unread}` : ""}
             </Link>
 
             {/* You. The one way into Depth from the top of any screen.

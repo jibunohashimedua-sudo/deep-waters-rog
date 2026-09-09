@@ -3,16 +3,11 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Mark from "@/components/Mark";
-import Icon, { type IconName } from "@/components/Icons";
 
 type Step = {
   kicker: string;
   title: string;
   body: string;
-  /** The mark for this slide. Each one is the app's own icon for the thing
-      the slide describes, so onboarding teaches the interface rather than
-      illustrating beside it. Absent on the brand slide, which uses Mark. */
-  icon?: IconName;
   /** Set on the brand slide, which shows the four-bar mark instead. */
   brand?: boolean;
 };
@@ -27,26 +22,22 @@ const STEPS: Step[] = [
   {
     kicker: "Every day",
     title: "Read together",
-    body: "Roughly 13 chapters a day, split between OT and NT. Tap the reading cards to open the KJV text right in the app. No jumping between tabs.",
-    icon: "bible"
+    body: "Roughly 13 chapters a day, split between OT and NT. Tap the reading cards to open the KJV text right in the app. No jumping between tabs."
   },
   {
     kicker: "One verse. One thought.",
     title: "Share what stood out",
-    body: "After you read, drop the verse that hit you and a short reflection. It shows up on the community feed. Amen someone. Comment. Tag with @name.",
-    icon: "testimony"
+    body: "After you read, drop the verse that hit you and a short reflection. It shows up on the community feed. Amen someone. Comment. Tag with @name."
   },
   {
     kicker: "You are not alone",
     title: "Prayer, cohorts, and support",
-    body: "Post prayer requests. See who is praying with you. Join a cohort to walk with a smaller group. Everyone is reading the same day.",
-    icon: "cohorts"
+    body: "Post prayer requests. See who is praying with you. Join a cohort to walk with a smaller group. Everyone is reading the same day."
   },
   {
     kicker: "Track your journey",
     title: "Progress, badges, finisher wall",
-    body: "See your 90 day grid fill up. Earn badges for streaks and milestones. Hit day 90 and land on the finisher wall.",
-    icon: "depth"
+    body: "See your 90 day grid fill up. Earn badges for streaks and milestones. Hit day 90 and land on the finisher wall."
   }
 ];
 
@@ -117,23 +108,17 @@ export default function WelcomePage() {
             style={{ background: "#0C0A18", color: "#E9E6F2" }}
           >
             <div className="relative">
-              {/* The brand slide keeps the four-bar mark. The rest carry the
-                  app's own icon for what they describe — the Bible tab's
-                  book, the bubble from under a reflection, the cohort's
-                  three figures, the sounding line that measures your ninety
-                  days. A lighter stroke at this size: 1.8 reads as confident
-                  at 19px in a tab bar and as fat at 80. */}
-              <div className="mb-8 flex justify-center" style={{ color: "#E9E6F2" }}>
-                {step.brand ? (
+              {/* Only the brand slide carries a mark now. The other four
+                  used to open with an 80px icon of the thing they describe,
+                  and those icons are gone with the rest of the set — so the
+                  words are the slide. Which is the honest arrangement: each
+                  one is a sentence about what this app asks of you, and a
+                  picture of a book was never adding to it. */}
+              {step.brand && (
+                <div className="mb-8 flex justify-center" style={{ color: "#E9E6F2" }}>
                   <Mark size={88} className="text-[#F3EDE4] w-20 md:w-24 h-auto" />
-                ) : step.icon ? (
-                  <Icon
-                    name={step.icon}
-                    className="w-[72px] h-[72px] md:w-20 md:h-20"
-                    strokeWidth={1.15}
-                  />
-                ) : null}
-              </div>
+                </div>
+              )}
               <p className="kicker" style={{ color: "#8B87A3" }}>
                 {step.kicker}
               </p>

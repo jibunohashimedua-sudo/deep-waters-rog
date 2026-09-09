@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import Icon from "./Icons";
 
 type Choice = "light" | "dark" | "system";
 
@@ -42,11 +41,11 @@ export default function ThemeToggle() {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="tap-target p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10"
-        aria-label="Theme"
+        className="tap-target px-2 py-1 kicker hover:text-rog-ink"
+        aria-label={`Theme: ${choice}. Change it.`}
         title={`Theme: ${choice}`}
       >
-        <Icon name={choice} className="w-5 h-5" />
+        {choice}
       </button>
       {open && (
         <>
@@ -69,11 +68,11 @@ export default function ThemeToggle() {
                   choice === c ? "font-semibold" : ""
                 }`}
               >
-                <Icon name={c} className="w-[17px] h-[17px] shrink-0 text-rog-muted" />
                 <span className="capitalize">{c}</span>
-                {choice === c && (
-                  <Icon name="check" className="ml-auto w-3.5 h-3.5 text-rog-muted" strokeWidth={2.2} />
-                )}
+                {/* The tick was the twenty-second icon in a set that is
+                    now five. A word says it, and says it in the metadata
+                    face the rest of the app's state is written in. */}
+                {choice === c && <span className="ml-auto kicker">On</span>}
               </button>
             ))}
           </div>

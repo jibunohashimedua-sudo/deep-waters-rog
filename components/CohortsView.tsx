@@ -58,13 +58,6 @@ export default function CohortsView() {
           </>
         ) : cohorts.length === 0 ? (
           <div className="empty-state">
-            <span className="empty-mark" aria-hidden>
-              <svg width="44" height="20" viewBox="0 0 44 20" fill="none">
-                <circle cx="10" cy="10" r="5" stroke="currentColor" strokeWidth="1.3" fill="none" />
-                <circle cx="22" cy="10" r="5" stroke="currentColor" strokeWidth="1.3" fill="none" />
-                <circle cx="34" cy="10" r="5" stroke="currentColor" strokeWidth="1.3" fill="none" />
-              </svg>
-            </span>
             <p className="empty-body">No cohorts yet.</p>
             <p className="empty-hint">Anyone can start one.</p>
           </div>

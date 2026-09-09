@@ -224,19 +224,7 @@ export default function ReferencePicker({
                 aria-label={step === "verse" ? "Back to chapters" : "Back to books"}
                 className="reading-back -ml-3 shrink-0"
               >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden
-                >
-                  <path d="M15 5l-7 7 7 7" />
-                </svg>
+                Back
               </button>
             )}
             <p className="kicker">{kicker}</p>

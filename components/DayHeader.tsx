@@ -37,9 +37,9 @@ export default function DayHeader({ day, currentDay, doneDays }: Props) {
               className="tap-target inline-flex items-center justify-center w-10 h-10 text-rog-ink hover:opacity-70 transition"
               aria-label={`Go to day ${prev}`}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                <path d="M15 5l-7 7 7 7" />
-              </svg>
+              <span className="text-[15px] leading-none" aria-hidden>
+                &larr;
+              </span>
             </Link>
           ) : (
             <span className="w-10 h-10" aria-hidden />
@@ -52,9 +52,9 @@ export default function DayHeader({ day, currentDay, doneDays }: Props) {
             aria-label={`Day ${day}. Pick another day.`}
           >
             Day {day}
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-              <path d="M6 9l6 6 6-6H6z" />
-            </svg>
+            <span className="text-[9px] leading-none" aria-hidden>
+              &#9662;
+            </span>
           </button>
           {next !== null ? (
             <Link
@@ -62,9 +62,9 @@ export default function DayHeader({ day, currentDay, doneDays }: Props) {
               className="tap-target inline-flex items-center justify-center w-10 h-10 text-rog-ink hover:opacity-70 transition"
               aria-label={`Go to day ${next}`}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                <path d="M9 5l7 7-7 7" />
-              </svg>
+              <span className="text-[15px] leading-none" aria-hidden>
+                &rarr;
+              </span>
             </Link>
           ) : (
             <span className="w-10 h-10" aria-hidden />

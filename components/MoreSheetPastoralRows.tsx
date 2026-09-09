@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
-import Icon from "./Icons";
 import { matchesPastoralMoreRoute } from "./PastoralNavHelpers";
 
 type Props = {
@@ -57,10 +56,10 @@ export default function MoreSheetPastoralRows({
   return (
     <>
       <Link href="/pulse" onClick={onClose} className={className}>
-        <Icon name="pulse" /> Church pulse
+        Church pulse
       </Link>
       <Link href="/sermons" onClick={onClose} className={className}>
-        <Icon name="sermon" /> Sermons
+        Sermons
       </Link>
     </>
   );

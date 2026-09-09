@@ -3,7 +3,6 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import { createClient } from "@/lib/supabase/client";
-import Icon, { type IconName } from "@/components/Icons";
 
 type N = {
   id: string;
@@ -23,16 +22,21 @@ type N = {
  * a comment carries the one under the reflection. A notification that looks
  * like the thing it is about needs less reading.
  *
- * `mention` is the exception and stays a character: "@" is a typographic mark
- * rather than a picture, it is set in the font we ship, and no drawing of it
- * would be clearer than the thing itself.
+ * Every kind is named in words now rather than drawn. The app has five icons
+ * and they are the five tabs; a notification kind is not one of them, and a
+ * one-word label in the metadata face says which it is more plainly than a
+ * 19px picture of a bell ever did.
+ *
+ * "@" survives as the mark for a mention because it isn't a drawing: it is a
+ * typographic character, set in the font we already ship, and nothing would
+ * be clearer than the thing itself.
  */
-const ICON: Record<string, IconName> = {
-  comment: "testimony",
-  amen: "amen",
-  announcement: "announcements",
-  badge: "badge",
-  reminder: "reminder"
+const KIND_LABEL: Record<string, string> = {
+  comment: "Reply",
+  amen: "Amen",
+  announcement: "Notice",
+  badge: "Milestone",
+  reminder: "Reminder"
 };
 
 export default function NotificationsPage() {
@@ -85,12 +89,10 @@ export default function NotificationsPage() {
             <div className="space-y-3" aria-busy="true" aria-live="polite">
               <span className="sr-only">Loading notifications</span>
               {[0, 1, 2].map((i) => (
-                <div key={i} className="card flex gap-3">
-                  <div className="skeleton w-10 h-10 !rounded-full shrink-0" />
-                  <div className="flex-1">
-                    <div className="skeleton h-3 w-3/5" />
-                    <div className="skeleton mt-2 h-3 w-2/5" />
-                  </div>
+                <div key={i} className="card">
+                  <div className="skeleton h-2 w-16" />
+                  <div className="skeleton mt-2 h-3 w-3/5" />
+                  <div className="skeleton mt-2 h-3 w-2/5" />
                 </div>
               ))}
             </div>
@@ -102,22 +104,12 @@ export default function NotificationsPage() {
           ) : (
             items.map((n) => {
               const inner = (
-                <div className={`card flex gap-3 ${n.read ? "opacity-60" : "!border-rog-purple"}`}>
-                  <div className="w-8 shrink-0 flex justify-center text-rog-muted">
-                    {n.kind === "mention" ? (
-                      <span className="font-mono text-[15px] leading-none" aria-hidden>
-                        @
-                      </span>
-                    ) : ICON[n.kind] ? (
-                      <Icon name={ICON[n.kind]} />
-                    ) : (
-                      <span className="font-mono text-[15px] leading-none" aria-hidden>
-                        &middot;
-                      </span>
-                    )}
-                  </div>
+                <div className={`card ${n.read ? "opacity-60" : "!border-rog-purple"}`}>
                   <div className="flex-1">
-                    <p className="font-semibold text-rog-ink text-sm">{n.title}</p>
+                    <p className="kicker">
+                      {n.kind === "mention" ? "@ Mention" : KIND_LABEL[n.kind] ?? "Notice"}
+                    </p>
+                    <p className="font-semibold text-rog-ink text-sm mt-1">{n.title}</p>
                     {n.body && <p className="text-xs text-rog-muted mt-0.5">{n.body}</p>}
                     <p className="text-[10px] text-rog-muted mt-1">
                       {new Date(n.created_at).toLocaleString("en-GB")}

@@ -301,13 +301,6 @@ export default function PrayerWall() {
           </div>
         ) : shown.length === 0 ? (
           <div className="empty-state">
-            <span className="empty-mark" aria-hidden>
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <path d="M12 26c0-4.5 3.5-8 8-8s8 3.5 8 8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-                <line x1="20" y1="12" x2="20" y2="16" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-                <line x1="20" y1="30" x2="20" y2="34" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-              </svg>
-            </span>
             <p className="empty-body">
               {tab === "open" ? "The wall is quiet." : "No answered prayers here yet."}
             </p>

@@ -31,12 +31,6 @@ export default function PulseCheckOn({ rows }: { rows: CheckOnRow[] }) {
   if (rows.length === 0) {
     return (
       <div className="empty-state">
-        <span className="empty-mark" aria-hidden>
-          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-            <circle cx="20" cy="20" r="12" stroke="currentColor" strokeWidth="1.4" />
-            <path d="M14.5 20.5 18.5 24.5 26 17" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </span>
         <p className="empty-body">Nobody has gone quiet.</p>
         <p className="empty-hint">
           When someone has not been seen for a few days, their name will be
