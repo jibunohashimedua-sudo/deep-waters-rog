@@ -1,14 +1,18 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { READING_PLAN, currentDayNumber, formatReading } from "@/lib/plan";
+import {
+  READING_PLAN,
+  currentDayNumber,
+  firstSlotOfTestament,
+  formatReading
+} from "@/lib/plan";
 import { todayForCurrentRequest } from "@/lib/serverToday";
 import Nav from "@/components/Nav";
 import ReflectionForm from "@/components/ReflectionForm";
 import NudgeBanner from "@/components/NudgeBanner";
 import Greeting from "@/components/Greeting";
 import DayHeader from "@/components/DayHeader";
-import ChapterTicker from "@/components/ChapterTicker";
 import TimezoneNotice from "@/components/TimezoneNotice";
 
 /**
@@ -117,9 +121,9 @@ export default async function DayPage({
     .eq("date", dayDateIso)
     .maybeSingle();
 
-  // Chapter ticks for this day — the ChapterTicker seeds itself with
-  // whatever the reader has already marked so a page reload isn't a
-  // fresh slate.
+  // What the reader has already recorded for this day. Chapters record
+  // themselves as they are read — see components/ChapterPager — so this is
+  // a readout, not a control.
   const { data: ticksRows } = await supabase
     .from("chapter_reads")
     .select("book, chapter")
@@ -138,7 +142,6 @@ export default async function DayPage({
     chapter: c.chapter,
     testament: "nt" as const
   }));
-  const allDayChapters = [...otChapters, ...ntChapters];
 
   // A small "N/M" chip on each testament's tile — a partly-read day
   // looks different from an untouched one from the day view too, not
@@ -241,11 +244,13 @@ export default async function DayPage({
           )}
         </div>
 
-        {/* Readings. The /read page carries the day through as ?d= so any
-            day's chapters land here. Each row now shows how much of that
-            testament's chapters have been ticked. */}
+        {/* Readings. Each row opens the day's run of chapters at the
+            first one of its testament, and says how much of that
+            testament is already recorded. The count is the whole report
+            now: there are no boxes to tick, because a chapter records
+            itself when it has been read and the reader moves on. */}
         <div className="read-list">
-          <Link href={`/read?t=ot&d=${day}`} className="read-row select-none">
+          <Link href={`/read/${day}/${firstSlotOfTestament(day, "ot")}`} className="read-row select-none">
             <span>
               <span className="read-ref block">{otRef}</span>
               {otChapters.length > 0 && (
@@ -256,7 +261,7 @@ export default async function DayPage({
             </span>
             <span className="read-arrow" aria-hidden>&rarr;</span>
           </Link>
-          <Link href={`/read?t=nt&d=${day}`} className="read-row select-none">
+          <Link href={`/read/${day}/${firstSlotOfTestament(day, "nt")}`} className="read-row select-none">
             <span>
               <span className="read-ref block">{ntRef}</span>
               {ntChapters.length > 0 && (
@@ -280,21 +285,6 @@ export default async function DayPage({
               <span className="read-arrow" aria-hidden>&rarr;</span>
             </Link>
           )}
-        </div>
-
-        {/* Chapter progress — ticks auto-complete the day when they hit
-            the total. On a future day the ticker is disabled with a note
-            (the API refuses too, so nobody can sneak ahead). */}
-        <div className="mt-16">
-          <ChapterTicker
-            dayNumber={day}
-            chapters={allDayChapters}
-            initialTicks={initialTicks}
-            disabled={isFuture}
-            disabledReason={
-              isFuture ? `You can tick these on ${dayDateHuman}.` : undefined
-            }
-          />
         </div>
 
         {/* Reflection. Future days show it disabled with a note; past and

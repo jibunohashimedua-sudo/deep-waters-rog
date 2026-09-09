@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BIBLE_BOOKS,
   NT_GROUPS,
@@ -12,6 +12,11 @@ import {
   type Testament
 } from "@/lib/bibleBooks";
 import { formatReference, parseReference, referenceHref } from "@/lib/reference";
+import {
+  DEFAULT_BOOK_LAYOUT,
+  readBookLayout,
+  type BookLayout
+} from "@/lib/bookLayout";
 
 /**
  * The whole Bible, one tap from anywhere.
@@ -26,17 +31,33 @@ import { formatReference, parseReference, referenceHref } from "@/lib/reference"
  *      crosses both testaments, so looking for John doesn't require being
  *      on the right tab first — which is the whole reason the tabs hide
  *      while a search is running.
- *   3. Browse: pick a testament, then a section, then a book.
+ *   3. Browse: one list, Genesis to Revelation, with a rule where the
+ *      New Testament starts.
  *
- * The testaments are tabs rather than one long scroll because the two are
- * genuinely separate places in someone's head, and the old single list put
- * Matthew nine screens below Genesis.
+ * The list is one list because that is the shape of the book. It was
+ * split into testament tabs and then into sections — Law, History,
+ * Poetry, Major Prophets — which asks the reader to know which drawer
+ * Habakkuk is in before they can look for him. Someone who does know can
+ * have the sections back: lib/bookLayout keeps both, and a preferences
+ * screen will offer the choice;
+ * for everyone else, the answer to "where is Nahum" is "scroll", and
+ * failing that, type three letters into the box at the top.
  */
 export default function BookPicker() {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [testament, setTestament] = useState<Testament>("ot");
   const tabsRef = useRef<HTMLDivElement>(null);
+
+  // Read after mount, not during render: the server has no localStorage,
+  // and reading it inline would render one layout on the server and the
+  // other on the client. Everyone gets the single list for a frame; only
+  // someone who chose the grouped view sees it change, and only once.
+  const [layout, setLayout] = useState<BookLayout>(DEFAULT_BOOK_LAYOUT);
+  useEffect(() => {
+    setLayout(readBookLayout());
+  }, []);
+  const grouped = layout === "grouped";
 
   const searching = query.trim().length > 0;
 
@@ -105,8 +126,9 @@ export default function BookPicker() {
 
         {/* Tabs live inside the pinned bar so switching testament doesn't
             mean scrolling back up. They disappear while searching, because
-            a search already crosses both. */}
-        {!searching && (
+            a search already crosses both — and they don't exist at all in
+            the single list, which has no two halves to switch between. */}
+        {!searching && grouped && (
           <div
             ref={tabsRef}
             role="tablist"
@@ -163,15 +185,50 @@ export default function BookPicker() {
           </h2>
           <BookGrid books={results} className="mt-3" showTestament />
         </section>
-      ) : (
+      ) : grouped ? (
         <div
           role="tabpanel"
           aria-label={testament === "ot" ? "Old Testament" : "New Testament"}
         >
           <TestamentSections sections={browseSections} />
         </div>
+      ) : (
+        <WholeBibleList />
       )}
     </>
+  );
+}
+
+/**
+ * All sixty-six, in order, one after another.
+ *
+ * A list rather than the card grid: sixty-six names read down a column
+ * far faster than they read across four, and the order is the point —
+ * the whole reason someone scrolls this instead of searching is that
+ * they know roughly where in the Bible they are going.
+ *
+ * One rule, at Matthew. Not a heading and not a section: the two
+ * testaments are a real seam in the book and the eye should be able to
+ * find it, but naming it would be grouping by the back door.
+ */
+function WholeBibleList() {
+  return (
+    <section className="mt-8">
+      <ul className="book-list">
+        {BIBLE_BOOKS.map((b, i) => {
+          const startsNT =
+            b.testament === "nt" && BIBLE_BOOKS[i - 1]?.testament === "ot";
+          return (
+            <li key={b.slug} data-testament-start={startsNT ? "true" : undefined}>
+              <Link href={`/bible/${b.slug}`} className="book-row select-none">
+                <span className="book-row-name">{b.name}</span>
+                <span className="book-row-count">{b.chapters}</span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 

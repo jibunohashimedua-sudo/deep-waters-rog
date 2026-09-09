@@ -1,13 +1,11 @@
 import Nav from "@/components/Nav";
 import ReadingLoading from "@/components/ReadingLoading";
 
-export default function ReadLoading() {
+export default function ReadChapterLoading() {
   return (
     <>
       <Nav />
-      <ReadingLoading
-        label="Loading today’s reading"
-      />
+      <ReadingLoading label="Loading the chapter" />
     </>
   );
 }

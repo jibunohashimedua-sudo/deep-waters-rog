@@ -184,21 +184,47 @@ export default function ScriptureReader({
 
   // ------------------------------------------------------------ painting
 
-  // Highlights and note markers. Highlights are stored as spans (a verse
-  // range), so they're expanded to one attribute per verse here — which is
-  // also what makes "the newest wins" work: later rows simply overwrite the
-  // attribute, so a verse ends up wearing one colour rather than a blend.
+  // Everything a verse can be wearing, painted in one pass, from stored
+  // data, after every render.
+  //
+  // It runs unconditionally — no dependency array — and that is the whole
+  // point rather than an oversight.
+  //
+  // React re-injects this subtree. `dangerouslySetInnerHTML={{__html}}`
+  // builds a new object on every render, and the React the App Router runs
+  // compares that prop by object identity rather than by the HTML string
+  // inside it, so a commit replaces every verse element with a fresh one.
+  // (Memoising the object below stops that happening for a plain re-render,
+  // but it still happens whenever the chapter itself legitimately changes,
+  // and a subtree we do not own is not something to build a guarantee on.)
+  //
+  // A highlight is not a decoration that can be lost in a repaint: once a
+  // verse is highlighted it stays highlighted until the reader removes it.
+  // So the paint is idempotent and re-derives all four states — highlight,
+  // note, selection, focus — every time. This used to be three effects,
+  // one of which was gated on [highlights, notes]; after React replaced the
+  // nodes, the ungated selection effect repainted itself and the gated
+  // highlight effect did not, so selecting any verse wiped every highlight
+  // on screen until the next fetch.
   useEffect(() => {
+    const wanted = new Set(selected.map(keyOf));
+
     for (const [key, root] of chapterRefs.current) {
       const [book, chapter] = key.split("|");
       const chNum = Number(chapter);
-      const verseEls = root.querySelectorAll<HTMLElement>(".dw-verse");
 
-      verseEls.forEach((el) => {
+      // Wipe the slate first, so a highlight the reader has just removed
+      // leaves with the same pass that repaints the ones that remain.
+      root.querySelectorAll<HTMLElement>(".dw-verse").forEach((el) => {
         el.removeAttribute("data-hl");
         el.removeAttribute("data-note");
+        el.removeAttribute("data-sel");
+        el.removeAttribute("data-focus");
       });
 
+      // Highlights. Oldest first, so a later row simply overwrites the
+      // attribute and a verse ends up wearing one colour rather than a
+      // blend — "the newest wins" falls out of the order.
       const chapterHighlights = highlights
         .filter((h) => h.book === book && h.chapter === chNum)
         .sort(
@@ -216,6 +242,7 @@ export default function ScriptureReader({
         }
       }
 
+      // Note dots.
       const chapterNotes = notes.filter(
         (n) => n.book === book && n.chapter === chNum
       );
@@ -229,26 +256,30 @@ export default function ScriptureReader({
           if (last) last.setAttribute("data-note", "true");
         }
       }
-    }
-  }, [highlights, notes]);
 
-  // The selection mark. Written straight onto the DOM rather than rendered,
-  // because React owns this subtree through dangerouslySetInnerHTML — and
-  // re-run on every render for the same reason: when the highlights arrive
-  // React replaces the whole subtree, and any attribute written once would
-  // be left behind on nodes no longer in the document.
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-    const wanted = new Set(selected.map(keyOf));
-    for (const [key, chapterRoot] of chapterRefs.current) {
-      const [book, chapter] = key.split("|");
-      chapterRoot.querySelectorAll<HTMLElement>(".dw-verse").forEach((el) => {
+      // The selection mark. It sits on top of a highlight rather than
+      // instead of it: the attribute is added, the highlight's stays, and
+      // globals.css draws the selected state over the top for as long as
+      // the selection lasts. Let go of the verse and the highlight is
+      // simply there again, because it never went anywhere.
+      root.querySelectorAll<HTMLElement>(".dw-verse").forEach((el) => {
         const v = Number(el.dataset.verse);
-        const on = wanted.has(`${book}|${chapter}|${v}`);
-        if (on) el.setAttribute("data-sel", "true");
-        else el.removeAttribute("data-sel");
+        if (wanted.has(`${book}|${chapter}|${v}`)) {
+          el.setAttribute("data-sel", "true");
+        }
       });
+
+      // The arrived-at verse, from /bible/john/3/16.
+      if (focusVerse && focusPhase !== "off") {
+        for (let v = focusVerse.start; v <= focusVerse.end; v++) {
+          for (const el of verseFragments(root, v)) {
+            el.setAttribute(
+              "data-focus",
+              focusPhase === "fading" ? "fading" : "true"
+            );
+          }
+        }
+      }
     }
   });
 
@@ -425,19 +456,8 @@ export default function ScriptureReader({
     focusVerse ? "on" : "off"
   );
 
-  // No dependency array on purpose — same reason as the selection pass above.
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root || !focusVerse) return;
-    for (let v = focusVerse.start; v <= focusVerse.end; v++) {
-      // All of the verse, so a linked verse set as poetry doesn't light up
-      // its first line and leave the rest dark.
-      for (const el of verseFragments(root, v)) {
-        if (focusPhase === "off") el.removeAttribute("data-focus");
-        else el.setAttribute("data-focus", focusPhase === "fading" ? "fading" : "true");
-      }
-    }
-  });
+  // The focus mark itself is painted with everything else, in the single
+  // pass above — every verse state is written in one place now.
 
   // Scroll to the verse, then start the mark's clock.
   useEffect(() => {
@@ -960,6 +980,27 @@ export default function ScriptureReader({
     };
   }, []);
 
+  /**
+   * The injected chapter markup, held still.
+   *
+   * `dangerouslySetInnerHTML={{ __html: … }}` written inline builds a new
+   * object on every render, and the React the App Router runs compares
+   * that prop by object identity rather than by the string inside it. So
+   * every render of this component — selecting a verse, opening the
+   * toolbar, a toast arriving — threw away every verse element and
+   * re-injected the chapter from scratch. Verified with a MutationObserver
+   * (one wholesale swap of all 22 nodes, no attribute changes) and by
+   * catching the innerHTML setter (React's own commitUpdate).
+   *
+   * Memoised on the HTML string, so the object only changes when the
+   * chapter genuinely does. The paint pass above is written to survive a
+   * re-injection anyway; this stops there being one to survive.
+   */
+  const chapterHtml = useMemo(
+    () => chapters.map((c) => ({ __html: c.html })),
+    [chapters]
+  );
+
   // -------------------------------------------------------------- render
 
   return (
@@ -985,7 +1026,7 @@ export default function ScriptureReader({
               <p className="chapter-mark mb-4">{c.reference}</p>
               <div
                 className="bible-content"
-                dangerouslySetInnerHTML={{ __html: c.html }}
+                dangerouslySetInnerHTML={chapterHtml[i]}
               />
             </article>
           </div>

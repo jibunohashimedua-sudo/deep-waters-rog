@@ -243,3 +243,42 @@ export function readChaptersForBook(book: string, completedDays: Iterable<number
   }
   return out;
 }
+
+/** One chapter of a day, with where it sits in that day's sequence. */
+export type DaySlot = Chapter & {
+  testament: "ot" | "nt";
+  /** 1-based, across the whole day: Old Testament first, then New. */
+  position: number;
+};
+
+/**
+ * A day's reading as one ordered sequence.
+ *
+ * The plan splits a day into an Old Testament reading and a New Testament
+ * one, and the day view still shows them as two rows, because that is how
+ * people talk about them. But reading them is one journey through the day
+ * — "chapter 3 of 14 today", not "chapter 3 of 9 and then chapter 1 of 5"
+ * — so the reader walks a single numbered list and the testament is just a
+ * label each chapter carries.
+ */
+export function daySlots(day: number): DaySlot[] {
+  const reading = READING_PLAN[day - 1];
+  if (!reading) return [];
+  const out: DaySlot[] = [];
+  for (const c of reading.ot) {
+    out.push({ ...c, testament: "ot", position: out.length + 1 });
+  }
+  for (const c of reading.nt) {
+    out.push({ ...c, testament: "nt", position: out.length + 1 });
+  }
+  return out;
+}
+
+/** Where a testament's reading starts in the day's sequence, 1-based. */
+export function firstSlotOfTestament(day: number, testament: "ot" | "nt"): number {
+  const slots = daySlots(day);
+  const found = slots.find((s) => s.testament === testament);
+  // A day with nothing in that testament opens at the top of the day
+  // rather than nowhere.
+  return found?.position ?? 1;
+}
