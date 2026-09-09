@@ -41,7 +41,7 @@ export default function ThemeToggle() {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="tap-target px-2 py-1 kicker hover:text-rog-ink"
+        className="tap-target px-2 py-1 meta hover:text-rog-ink"
         aria-label={`Theme: ${choice}. Change it.`}
         title={`Theme: ${choice}`}
       >
@@ -72,7 +72,7 @@ export default function ThemeToggle() {
                 {/* The tick was the twenty-second icon in a set that is
                     now five. A word says it, and says it in the metadata
                     face the rest of the app's state is written in. */}
-                {choice === c && <span className="ml-auto kicker">On</span>}
+                {choice === c && <span className="ml-auto meta">On</span>}
               </button>
             ))}
           </div>

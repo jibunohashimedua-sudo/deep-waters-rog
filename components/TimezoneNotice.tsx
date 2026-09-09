@@ -62,7 +62,7 @@ export default function TimezoneNotice() {
       <div className="mt-2 flex flex-wrap items-center gap-3">
         <Link
           href="/me/edit"
-          className="kicker kicker-strong underline"
+          className="meta meta-strong underline"
           style={{ color: "var(--accent)" }}
         >
           Adjust your start date
@@ -70,7 +70,7 @@ export default function TimezoneNotice() {
         <button
           type="button"
           onClick={dismiss}
-          className="kicker text-rog-data underline"
+          className="meta text-rog-data underline"
         >
           Dismiss
         </button>

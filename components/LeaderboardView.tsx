@@ -178,13 +178,12 @@ export default function LeaderboardView() {
           ranked.map(({ row, rank }) => (
             <div key={row.user_id} className="card flex items-center gap-4">
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-bold tabular-nums ${
-                  rank === 1
-                    ? "bg-rog-purple text-white outline outline-2 outline-offset-2 outline-rog-purple/30"
-                    : rank <= 3
-                    ? "bg-rog-purple text-white"
-                    : "bg-rog-cream text-rog-purple"
-                }`}
+                /* Square. A rank badge is not something you press, and in
+                   this system only the things you press are round. The
+                   ranking and the order are untouched — this is the shape
+                   of the number, not the meaning of it. */
+                className="rank-badge"
+                data-rank={rank <= 3 ? rank : undefined}
                 aria-label={`Rank ${rank}`}
               >
                 {rank}
@@ -192,7 +191,7 @@ export default function LeaderboardView() {
               <Avatar name={row.name} photoUrl={row.photo_url} size="lg" />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-rog-ink truncate">{row.name}</p>
-                <p className="kicker mt-1">Day {row.highest_day ?? 0}</p>
+                <p className="meta mt-1">Day {row.highest_day ?? 0}</p>
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-rog-purple tabular-nums">

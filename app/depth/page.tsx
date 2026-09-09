@@ -189,7 +189,7 @@ export default async function DepthPage() {
           because it is a position, and the days still to come are the page
           ground with a hairline round them. */}
       <section className="mt-10">
-        <h2 className="kicker kicker-strong">The ninety days</h2>
+        <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">The ninety days</h2>
         <div className="mt-4 grid grid-cols-10 gap-px bg-rog-line">
           {Array.from({ length: 90 }, (_, i) => i + 1).map((d) => {
             const done = doneDays.has(d);
@@ -250,13 +250,13 @@ export default async function DepthPage() {
             );
           })}
         </div>
-        <p className="kicker mt-3">{doneDays.size} kept</p>
+        <p className="meta mt-3">{doneDays.size} kept</p>
       </section>
 
       {/* Milestones. Rows, not a grid of little cards — an unearned badge
           in a card is an empty box asking to be filled. */}
       <section className="mt-10">
-        <h2 className="kicker kicker-strong">Milestones</h2>
+        <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Milestones</h2>
         <ul className="mark-list mt-4">
           {BADGE_ORDER.map((key) => {
             const b = BADGES[key];
@@ -273,7 +273,7 @@ export default async function DepthPage() {
                 <p className="mt-1 text-[13.5px] leading-5 text-rog-muted">
                   {b.description}
                 </p>
-                <p className="kicker mt-2">
+                <p className="meta mt-2">
                   {at ? new Date(at).toLocaleDateString("en-GB") : "Not yet"}
                 </p>
               </li>
@@ -284,7 +284,7 @@ export default async function DepthPage() {
 
       {cohorts.length > 0 && (
         <section className="mt-10">
-          <h2 className="kicker kicker-strong">Your cohorts</h2>
+          <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Your cohorts</h2>
           <ul className="mark-list mt-4">
             {cohorts.map((cm: any) => (
               <li key={cm.cohorts.id} className="mark-row">
@@ -292,7 +292,7 @@ export default async function DepthPage() {
                   <span className="block text-[13.5px] leading-5 font-medium text-rog-ink">
                     {cm.cohorts.name}
                   </span>
-                  <span className="kicker block mt-1">
+                  <span className="meta block mt-1">
                     {cm.role === "leader" ? "Leader" : "Member"}
                   </span>
                 </Link>
@@ -303,7 +303,7 @@ export default async function DepthPage() {
       )}
 
       <section className="mt-10">
-        <h2 className="kicker kicker-strong">Your reflections</h2>
+        <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Your reflections</h2>
         {completions.length === 0 ? (
           <p className="mt-4 font-serif text-[17px] text-rog-muted">
             Your reflections will collect here once you save your first day.
@@ -313,8 +313,8 @@ export default async function DepthPage() {
             {completions.map((c) => (
               <li key={c.id} className="mark-row">
                 <div className="flex items-baseline justify-between gap-3">
-                  <span className="kicker kicker-strong">Day {c.day_number}</span>
-                  <span className="kicker">
+                  <span className="meta meta-strong">Day {c.day_number}</span>
+                  <span className="meta">
                     {new Date(c.completed_at).toLocaleDateString("en-GB")}
                   </span>
                 </div>
@@ -322,7 +322,7 @@ export default async function DepthPage() {
                   <p className="mark-text selectable mt-2">{c.verse_text}</p>
                 )}
                 {c.verse_reference && (
-                  <p className="kicker mt-1.5">{c.verse_reference}</p>
+                  <p className="meta mt-1.5">{c.verse_reference}</p>
                 )}
                 {c.reflection && (
                   <p className="mark-note selectable mt-2">{c.reflection}</p>
@@ -334,7 +334,7 @@ export default async function DepthPage() {
       </section>
 
       <section className="mt-16">
-        <h2 className="kicker kicker-strong">Danger zone</h2>
+        <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Danger zone</h2>
         <div className="mt-4">
           <ResetMyData />
         </div>
@@ -358,7 +358,7 @@ export default async function DepthPage() {
                 readings given equal weight, so none of them landed, and
                 the streak is a number this app no longer puts on screen
                 anywhere. Days kept is the one that describes the reader. */}
-            <p className="kicker mt-2">
+            <p className="meta mt-2">
               {lb?.days_completed ?? doneDays.size} kept
             </p>
             {profile.bio && (

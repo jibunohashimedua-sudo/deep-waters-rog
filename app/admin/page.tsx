@@ -98,7 +98,7 @@ export default async function AdminPage() {
         </div>
 
         <section className="mt-8">
-          <p className="kicker">Global announcement</p>
+          <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Global announcement</h2>
           <p className="text-sm text-rog-muted mt-1 mb-3">Sent to every user as a notification.</p>
           <AnnouncementForm cohortId={null} />
         </section>

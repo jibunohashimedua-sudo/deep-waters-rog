@@ -67,7 +67,6 @@ export default async function CohortManagePage({
       <Nav />
       <main className="max-w-4xl mx-auto px-6 py-10">
         {/* The app bar's arrow goes back to the cohort itself. */}
-        <p className="kicker">Manage</p>
         <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">{cohort.name}</h1>
 
         {/* Dashboard */}
@@ -92,7 +91,7 @@ export default async function CohortManagePage({
 
         {/* Settings */}
         <section className="mt-8">
-          <p className="kicker">Settings</p>
+          <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Settings</h2>
           <div className="mt-3">
             <CohortSettingsForm
               cohortId={cohort.id}
@@ -107,7 +106,7 @@ export default async function CohortManagePage({
 
         {/* Announcements */}
         <section className="mt-8">
-          <p className="kicker">Announcements</p>
+          <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Announcements</h2>
           <div className="mt-3">
             <AnnouncementForm cohortId={cohort.id} />
           </div>
@@ -126,7 +125,7 @@ export default async function CohortManagePage({
 
         {/* Members */}
         <section className="mt-8">
-          <p className="kicker">Members</p>
+          <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Members</h2>
           <div className="mt-3 space-y-2">
             {(members ?? []).map((m: any) => {
               const p = progMap.get(m.user_id);

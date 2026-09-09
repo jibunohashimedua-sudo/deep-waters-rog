@@ -179,7 +179,7 @@ export default function ReferencePicker({
         ? book!.name
         : `${book!.name} ${ch}`;
 
-  const kicker =
+  const meta =
     step === "book" ? "Step 1 of 3" : step === "chapter" ? "Step 2 of 3" : "Step 3 of 3";
 
   return (
@@ -227,7 +227,7 @@ export default function ReferencePicker({
                 Back
               </button>
             )}
-            <p className="kicker">{kicker}</p>
+            <p className="meta">{meta}</p>
           </div>
           <h2 className="mt-2 font-serif text-2xl font-medium text-rog-ink leading-tight">
             {title}
@@ -340,7 +340,7 @@ export default function ReferencePicker({
 
               {verses.status === "ready" && (
                 <>
-                  <p className="mt-6 kicker">
+                  <p className="mt-6 meta">
                     {verses.count} {verses.count === 1 ? "verse" : "verses"}
                   </p>
                   <ul className="mt-3 grid grid-cols-6 sm:grid-cols-8 gap-2 max-h-[42vh] overflow-y-auto">

@@ -19,7 +19,7 @@ type Props = {
 export default function BenchPinned({ reference, text }: Props) {
   return (
     <div className="bench-pinned">
-      <p className="kicker kicker-strong">{reference}</p>
+      <p className="meta meta-strong">{reference}</p>
       <p className="bench-pinned-text">{text}</p>
     </div>
   );

@@ -165,7 +165,7 @@ export default function ReflectionCard({
                   Today's posts are placed by the clock; older ones by the
                   day of the plan they belong to. Both together was a date
                   and a day number saying the same thing twice. */}
-              <p className="kicker mt-1">{stampFor(item)}</p>
+              <p className="meta mt-1">{stampFor(item)}</p>
             </div>
           </>
         );
@@ -185,10 +185,10 @@ export default function ReflectionCard({
           <p className="scripture-prose selectable text-[15px] leading-[1.62] text-rog-ink">
             {item.verse_text}
           </p>
-          {item.verse_reference && <p className="kicker mt-1.5">{item.verse_reference}</p>}
+          {item.verse_reference && <p className="meta mt-1.5">{item.verse_reference}</p>}
         </div>
       ) : (
-        item.verse_reference && <p className="kicker mt-4">{item.verse_reference}</p>
+        item.verse_reference && <p className="meta mt-4">{item.verse_reference}</p>
       )}
       {item.reflection && (
         <p
@@ -203,7 +203,7 @@ export default function ReflectionCard({
       {/* Actions read as a footer, not a button bar: metadata-sized, no
           fills, and drawn rather than set in emoji. Amen goes sonar when
           it's yours — the same green that marks today on the gauge. */}
-      <div className="mt-4 flex items-center gap-5 kicker">
+      <div className="mt-4 flex items-center gap-5 meta">
         <button
           onClick={amen}
           disabled={!currentUserId}
@@ -247,7 +247,7 @@ export default function ReflectionCard({
                   <MentionText text={c.body} />
                 </p>
                 <div className="flex gap-3 mt-1.5">
-                  <p className="kicker">{new Date(c.created_at).toLocaleString("en-GB")}</p>
+                  <p className="meta">{new Date(c.created_at).toLocaleString("en-GB")}</p>
                   {(c.user_id === currentUserId || isAdmin) && (
                     <button onClick={() => deleteComment(c.id)} className="text-[10px] text-rog-muted hover:text-danger">Delete</button>
                   )}

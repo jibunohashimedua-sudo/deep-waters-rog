@@ -5,7 +5,7 @@ import Link from "next/link";
 import Mark from "@/components/Mark";
 
 type Step = {
-  kicker: string;
+  meta: string;
   title: string;
   body: string;
   /** Set on the brand slide, which shows the four-bar mark instead. */
@@ -14,28 +14,28 @@ type Step = {
 
 const STEPS: Step[] = [
   {
-    kicker: "Welcome",
+    meta: "Welcome",
     title: "Deep Waters",
     body: "A 90 day journey through the Bible together. Old Testament and New Testament, every single day. You will finish at day 90.",
     brand: true
   },
   {
-    kicker: "Every day",
+    meta: "Every day",
     title: "Read together",
     body: "Roughly 13 chapters a day, split between OT and NT. Tap the reading cards to open the KJV text right in the app. No jumping between tabs."
   },
   {
-    kicker: "One verse. One thought.",
+    meta: "One verse. One thought.",
     title: "Share what stood out",
     body: "After you read, drop the verse that hit you and a short reflection. It shows up on the community feed. Amen someone. Comment. Tag with @name."
   },
   {
-    kicker: "You are not alone",
+    meta: "You are not alone",
     title: "Prayer, cohorts, and support",
     body: "Post prayer requests. See who is praying with you. Join a cohort to walk with a smaller group. Everyone is reading the same day."
   },
   {
-    kicker: "Track your journey",
+    meta: "Track your journey",
     title: "Progress, badges, finisher wall",
     body: "See your 90 day grid fill up. Earn badges for streaks and milestones. Hit day 90 and land on the finisher wall."
   }
@@ -119,8 +119,8 @@ export default function WelcomePage() {
                   <Mark size={88} className="text-[#F3EDE4] w-20 md:w-24 h-auto" />
                 </div>
               )}
-              <p className="kicker" style={{ color: "#8B87A3" }}>
-                {step.kicker}
+              <p className="meta" style={{ color: "#8B87A3" }}>
+                {step.meta}
               </p>
               <h1 className="mt-4 text-[30px] md:text-4xl font-semibold tracking-[-0.03em] leading-tight">
                 {step.title}

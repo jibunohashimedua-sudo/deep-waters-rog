@@ -187,31 +187,31 @@ function PersonSheet({ row, onClose }: { row: CheckOnRow | null; onClose: () => 
                 <h2 className="text-[19px] font-medium text-rog-ink leading-tight truncate">
                   {row.name}
                 </h2>
-                <p className="kicker mt-1">{reasonFor(row)}</p>
+                <p className="meta mt-1">{reasonFor(row)}</p>
               </div>
             </div>
 
             <div className="pulse-facts mt-5">
               <div className="pulse-fact">
-                <span className="kicker">Last read</span>
+                <span className="meta">Last read</span>
                 <span className="pulse-fact-value">
                   {loading ? "—" : shortDate(person?.last_read_at ?? null)}
                 </span>
               </div>
               <div className="pulse-fact">
-                <span className="kicker">Quiet for</span>
+                <span className="meta">Quiet for</span>
                 <span className="pulse-fact-value">
                   {loading ? "—" : quietFor(person?.days_quiet ?? row.days_quiet)}
                 </span>
               </div>
               <div className="pulse-fact">
-                <span className="kicker">Cohort</span>
+                <span className="meta">Cohort</span>
                 <span className="pulse-fact-value">
                   {loading ? "—" : person?.cohort_name || "None"}
                 </span>
               </div>
               <div className="pulse-fact">
-                <span className="kicker">Their leader</span>
+                <span className="meta">Their leader</span>
                 <span className="pulse-fact-value">
                   {loading ? "—" : person?.leader_name || "None"}
                 </span>
@@ -274,7 +274,7 @@ function PersonSheet({ row, onClose }: { row: CheckOnRow | null; onClose: () => 
             {/* No red on this page — see .pulse-notice. */}
             {error && <p className="pulse-notice">{error}</p>}
 
-            <p className="kicker mt-7">Care log</p>
+            <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Care log</h2>
             {loading ? (
               <div className="mt-3" aria-busy="true">
                 <div className="skeleton h-3 w-40" />
@@ -288,7 +288,7 @@ function PersonSheet({ row, onClose }: { row: CheckOnRow | null; onClose: () => 
               <div className="mt-2">
                 {log.map((e) => (
                   <div key={e.id} className="pulse-care-entry">
-                    <p className="kicker kicker-strong">
+                    <p className="meta meta-strong">
                       {`${e.author_name}, ${stamp(e.created_at)}`}
                     </p>
                     {e.body && <p className="pulse-care-body">{e.body}</p>}

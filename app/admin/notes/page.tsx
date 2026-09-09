@@ -14,7 +14,6 @@ export default async function AdminNotesPage() {
     <>
       <Nav />
       <main className="max-w-4xl mx-auto px-6 py-10">
-        <p className="kicker">Admin</p>
         <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Study notes</h1>
         <p className="mt-2 text-sm text-rog-muted">
           {written.size} of 90 written. Notes appear on each day&rsquo;s reading page.

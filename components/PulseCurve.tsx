@@ -87,8 +87,8 @@ export default function PulseCurve({ points }: { points: PulseCurvePoint[] }) {
       </svg>
 
       <div className="mt-3 flex items-baseline justify-between gap-4">
-        <p className="kicker">Day 1</p>
-        <p className="kicker">{`Day ${last.day_number}`}</p>
+        <p className="meta">Day 1</p>
+        <p className="meta">{`Day ${last.day_number}`}</p>
       </div>
 
       {/* The one fact worth a sentence, said as a sentence. It was

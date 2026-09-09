@@ -42,7 +42,6 @@ export default async function AdminRhapsodyPage({
       <Nav />
       <main className="max-w-3xl mx-auto px-6 py-10">
         <div className="select-none">
-          <p className="kicker">Admin</p>
           <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">
             Rhapsody of Realities
           </h1>

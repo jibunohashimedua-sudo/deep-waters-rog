@@ -182,7 +182,7 @@ export default function EditProfilePage() {
     <>
       <Nav />
       <main className="max-w-lg mx-auto px-6 py-10">
-        {/* No kicker over the heading. "Profile" named the one thing
+        {/* No meta over the heading. "Profile" named the one thing
             directly beneath it, which is the heading saying what the
             heading says. */}
         <h1 className="text-[27px] font-semibold tracking-[-0.025em] text-rog-ink leading-[1.14]">
@@ -210,7 +210,7 @@ export default function EditProfilePage() {
               </div>
               <input type="file" accept="image/*" onChange={handlePhoto} className="hidden" />
             </label>
-            <p className="kicker mt-3">Tap to change</p>
+            <p className="meta mt-3">Tap to change</p>
           </div>
 
           {/* Fields are square recessed plates — the global input rules in
@@ -239,7 +239,7 @@ export default function EditProfilePage() {
             <label htmlFor="pf-bio" className="block text-[13.5px] leading-5 font-medium text-rog-ink">
               Bio
             </label>
-            <p className="kicker mt-1">160 characters</p>
+            <p className="meta mt-1">160 characters</p>
             <textarea
               id="pf-bio"
               value={bio}

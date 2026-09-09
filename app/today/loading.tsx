@@ -9,7 +9,7 @@ import Nav from "@/components/Nav";
  * copied across that goes stale the next time the row is touched.
  *
  * Measured against /today: the greeting is 31px over 20px, the gauge is
- * 15px under a 14px kicker row, and each reading row is 70px — 15px of
+ * 15px under a 14px meta row, and each reading row is 70px — 15px of
  * padding either side of a 21px reference over a 14px label.
  *
  * Two things genuinely can't be reserved, because nothing knows them until

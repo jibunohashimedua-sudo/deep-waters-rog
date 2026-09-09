@@ -15,7 +15,6 @@ export default function CohortGone({ signedIn }: { signedIn: boolean }) {
   return (
     <main className="main-plain min-h-screen flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-md">
-        <p className="kicker">Cohort</p>
         <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">
           This cohort is no longer here.
         </h1>

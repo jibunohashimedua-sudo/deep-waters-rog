@@ -134,7 +134,6 @@ function OnboardingPageInner() {
   return (
     <main className="main-plain min-h-screen flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-md">
-        <p className="kicker text-center">Welcome</p>
         <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight text-center">
           Set up your profile
         </h1>
@@ -144,7 +143,7 @@ function OnboardingPageInner() {
 
         {cohortName && (
           <div className="mt-6 surface-soft text-center">
-            <p className="kicker">Joining cohort</p>
+            <p className="meta">Joining cohort</p>
             <p className="mt-3 font-serif text-lg font-medium text-rog-purple">{cohortName}</p>
           </div>
         )}

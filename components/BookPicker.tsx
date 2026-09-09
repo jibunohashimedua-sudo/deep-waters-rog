@@ -162,7 +162,7 @@ export default function BookPicker() {
         // carries its own testament label instead, so a match is still never
         // ambiguous about which half of the Bible it came from.
         <section className="mt-8">
-          <h2 className="kicker">
+          <h2 className="meta">
             {results.length} {results.length === 1 ? "book" : "books"}
           </h2>
           <BookGrid books={results} className="mt-3" showTestament />
@@ -188,7 +188,7 @@ function TestamentSections({
 }) {
   return (
     <section className="mt-8">
-      {title && <h2 className="kicker">{title}</h2>}
+      {title && <h2 className="meta">{title}</h2>}
       {sections.map((s) => (
         <div key={s.group} className="mt-6">
           <h3 className="text-sm font-semibold text-rog-ink">{s.group}</h3>

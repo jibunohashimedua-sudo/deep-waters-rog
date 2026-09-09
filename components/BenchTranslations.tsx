@@ -43,7 +43,7 @@ export default function BenchTranslations({
           const row = rows.get(t.id) ?? ({ status: "loading" } as ParallelRow);
           return (
             <li key={t.id} className="bench-row">
-              <p className="kicker kicker-strong">
+              <p className="meta meta-strong">
                 {t.abbr} &middot; {t.name}
               </p>
               {row.status === "loading" && (

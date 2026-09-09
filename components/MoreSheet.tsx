@@ -200,7 +200,7 @@ export default function MoreSheet({
                 <span className="block text-[15px] font-medium text-rog-ink truncate">
                   {me.name}
                 </span>
-                <span className="kicker block mt-1">
+                <span className="meta block mt-1">
                   {`Day ${me.day} \u00b7 Streak ${me.streak}`}
                 </span>
               </span>

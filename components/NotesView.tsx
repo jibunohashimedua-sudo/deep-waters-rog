@@ -164,7 +164,7 @@ export default function NotesView({ rows }: { rows: NoteRow[] }) {
         className="chip !min-h-[44px] w-full px-4 !text-[13.5px] border"
       />
 
-      <p className="kicker mt-5">
+      <p className="meta mt-5">
         {filtered.length} {filtered.length === 1 ? "note" : "notes"}
       </p>
 
@@ -181,7 +181,7 @@ export default function NotesView({ rows }: { rows: NoteRow[] }) {
               <li key={r.id} className="mark-row">
                 {editing === r.id ? (
                   <>
-                    <span className="kicker kicker-strong block">{r.reference}</span>
+                    <span className="meta meta-strong block">{r.reference}</span>
                     <label htmlFor={`note-edit-${r.id}`} className="sr-only">
                       Your note
                     </label>
@@ -218,9 +218,9 @@ export default function NotesView({ rows }: { rows: NoteRow[] }) {
                 ) : (
                   <>
                     <Link href={r.href} className="block">
-                      <span className="kicker kicker-strong block">{r.reference}</span>
+                      <span className="meta meta-strong block">{r.reference}</span>
                       <span className="mark-note selectable block mt-2">{r.body}</span>
-                      <span className="kicker block mt-2">
+                      <span className="meta block mt-2">
                         {edited ? "Edited " : ""}
                         {new Date(r.updatedAt).toLocaleDateString("en-GB")}
                       </span>

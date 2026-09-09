@@ -74,11 +74,11 @@ export default function BenchNotepad({
               1500;
             return (
               <li key={n.id} className="bench-row">
-                <p className="kicker kicker-strong">
+                <p className="meta meta-strong">
                   {formatVerseReference(n.book, n.chapter, n.verse_start, n.verse_end)}
                 </p>
                 <p className="bench-said">{n.body}</p>
-                <p className="kicker">
+                <p className="meta">
                   {edited ? "Edited " : ""}
                   {new Date(n.updated_at).toLocaleDateString("en-GB")}
                 </p>
@@ -122,7 +122,7 @@ export default function BenchNotepad({
       )}
 
       <div className="bench-composer" ref={composer}>
-        <label htmlFor="bench-note" className="kicker">
+        <label htmlFor="bench-note" className="meta">
           {editingId ? "Editing your note" : "Your note"}
         </label>
         <textarea

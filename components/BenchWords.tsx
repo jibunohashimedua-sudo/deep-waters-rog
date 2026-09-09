@@ -46,7 +46,7 @@ export default function BenchWords({ words, entries, activeKey, loading, onPick 
               onClick={() => onPick(w)}
               aria-pressed={activeKey === key}
             >
-              <span className="kicker kicker-strong">
+              <span className="meta meta-strong">
                 {w.word.toUpperCase()} {w.strongsIds.join(" ")}
               </span>
             </button>

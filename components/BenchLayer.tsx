@@ -823,7 +823,7 @@ export default function BenchLayer(props: Props) {
                 return (
                   <section key={id} className="bench-panel">
                     <header className="bench-panel-head">
-                      <span className="kicker kicker-strong">{meta.label}</span>
+                      <span className="meta meta-strong">{meta.label}</span>
                       <span className="bench-panel-controls">
                         <button
                           type="button"
@@ -864,7 +864,7 @@ export default function BenchLayer(props: Props) {
             </div>
 
             <div className="bench-notes-col">
-              <p className="kicker kicker-strong">Notes</p>
+              <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Notes</h2>
               {notepad}
             </div>
           </>
@@ -874,7 +874,7 @@ export default function BenchLayer(props: Props) {
           <div className="bench-stack">
             {LENSES.map((l) => (
               <section key={l.id} className="bench-stack-section">
-                <p className="kicker kicker-strong">{l.label}</p>
+                <p className="meta meta-strong">{l.label}</p>
                 <BenchPaneBoundary label={l.label}>
                   <BenchLensBody lens={l.id} data={lensData} />
                 </BenchPaneBoundary>

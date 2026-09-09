@@ -16,7 +16,7 @@ export default function CohortShareBox({ slug }: { slug: string }) {
 
   return (
     <div className="mt-6 card">
-      <p className="kicker">Invite others</p>
+      <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Invite others</h2>
       <h3 className="mt-1 font-bold text-rog-purple">Share this cohort</h3>
       <p className="mt-2 text-sm text-rog-muted">
         Send this link. Anyone who signs up through it joins this cohort with

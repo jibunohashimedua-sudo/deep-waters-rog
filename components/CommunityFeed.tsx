@@ -114,13 +114,13 @@ export default function CommunityFeed() {
     <>
       {votd && (
         <div className="votd mt-6 p-5">
-          <p className="votd-kicker kicker">Verse of the day</p>
+          <p className="votd-meta meta">Verse of the day</p>
           {votd.verse_text && (
             <p className="selectable mt-3 votd-body text-[17px] leading-[1.6]">
               &ldquo;{votd.verse_text}&rdquo;
             </p>
           )}
-          <p className="mt-3 kicker votd-meta">
+          <p className="mt-3 meta votd-meta">
             {votd.verse_reference} &middot; picked by {votd.picks}{" "}
             {votd.picks === 1 ? "person" : "people"} today
           </p>

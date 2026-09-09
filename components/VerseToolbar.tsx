@@ -112,12 +112,12 @@ export default function VerseToolbar({
       )}
 
       <div className="verse-bar-ref">
-        <span className="kicker kicker-strong" aria-live="polite">
+        <span className="meta meta-strong" aria-live="polite">
           {reference}
         </span>
         {/* The cap, mentioned only when it is reached. A counter running
             beside every selection would be the app talking about itself. */}
-        {atCap && <span className="kicker">{cap} at once is the most</span>}
+        {atCap && <span className="meta">{cap} at once is the most</span>}
       </div>
 
       {!showColours ? (

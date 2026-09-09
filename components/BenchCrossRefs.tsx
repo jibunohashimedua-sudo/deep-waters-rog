@@ -19,7 +19,7 @@ export default function BenchCrossRefs({ refs, loading }: Props) {
     <ul className="bench-rows">
       {refs.map((r) => (
         <li key={r.target_ref} className="bench-row">
-          <p className="kicker kicker-strong">{r.target_ref.toUpperCase()}</p>
+          <p className="meta meta-strong">{r.target_ref.toUpperCase()}</p>
           {r.text
             ? <p className="bench-scripture">{r.text}</p>
             : <p className="bench-empty">Text not carried for this reference.</p>}

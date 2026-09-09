@@ -59,7 +59,7 @@ export default function ReflectionForm({
     <>
       {/* The writing surface. The old "Reflection" mark above the heading
           was a label announcing the heading underneath it, which is the
-          one thing a kicker must never be — the heading says it already. */}
+          one thing a meta must never be — the heading says it already. */}
       <section className="surface-soft">
         <h2 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.02em] text-rog-ink leading-tight">
           {future
@@ -153,7 +153,7 @@ export default function ReflectionForm({
       {/* Level 2 — the completion reveal, mounted like a Polaroid on card stock */}
       {done && cardUrl && (
         <section className="card mt-10">
-          <p className="kicker">Today, as a card</p>
+          <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Today, as a card</h2>
           <div className="reveal-mat mt-6">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img

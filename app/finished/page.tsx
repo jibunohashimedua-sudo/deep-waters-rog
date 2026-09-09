@@ -42,7 +42,6 @@ export default async function FinishedPage() {
     <>
       <Nav />
       <main className="max-w-2xl mx-auto px-6 py-16">
-        <p className="kicker kicker-strong">Deep Waters</p>
         <h1 className="mt-3 font-serif text-[32px] md:text-[40px] leading-[1.12] tracking-[-0.01em] text-rog-ink">
           You reached the end of Deep Waters.
         </h1>
@@ -54,7 +53,6 @@ export default async function FinishedPage() {
         {/* Mono metadata about what you actually did, in the same voice as
             the rest of the app — position and count, no ornament. */}
         <div className="mt-10 border-t border-rog-line pt-6">
-          <p className="kicker">Your ninety days</p>
           <p className="mt-3 font-mono text-[17px] tabular-nums text-rog-ink">
             {daysKept} of 90 kept
             {reflectionsWritten > 0 && (

@@ -199,7 +199,7 @@ export default function Nav() {
                 drawing with a dot on it ever did. */}
             <Link
               href="/notifications"
-              className="tap-target kicker px-2 py-2 hover:text-rog-ink"
+              className="tap-target meta px-2 py-2 hover:text-rog-ink"
               aria-label={unread > 0 ? `Alerts, ${unread} unread` : "Alerts"}
             >
               Alerts{unread > 0 ? ` ${unread > 9 ? "9+" : unread}` : ""}

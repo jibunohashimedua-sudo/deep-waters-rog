@@ -344,7 +344,7 @@ export default function RhapsodyAdmin({
       {/* ---------- Upload ---------- */}
       <form onSubmit={onUpload} className="card space-y-4">
         <div>
-          <p className="kicker">Monthly PDF</p>
+          <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Monthly PDF</h2>
           <p className="mt-1 text-sm text-rog-muted">
             Stored privately. Members only ever see it through a short-lived link.
           </p>
@@ -400,7 +400,7 @@ export default function RhapsodyAdmin({
 
       {/* ---------- Existing editions ---------- */}
       <section className="card">
-        <p className="kicker">Editions</p>
+        <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Editions</h2>
         {editions.length === 0 ? (
           <div className="empty-state">
             <p className="empty-body">No editions yet.</p>
@@ -458,7 +458,7 @@ export default function RhapsodyAdmin({
       {/* ---------- Mapping ---------- */}
       <section className="card">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="kicker">Dates</p>
+          <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Dates</h2>
           {monthInput}
         </div>
 

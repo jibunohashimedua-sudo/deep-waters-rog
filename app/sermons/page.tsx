@@ -95,13 +95,13 @@ export default async function SermonsPage() {
               return (
                 <li key={s.id} className="mark-row">
                   <Link href={`/sermons/${s.id}`} className="block">
-                    <span className="kicker kicker-strong block">
+                    <span className="meta meta-strong block">
                       {(s.passage_ref || "No passage yet").toUpperCase()}
                     </span>
                     <span className="mark-note selectable block mt-2">
                       {s.title?.trim() || "Untitled"}
                     </span>
-                    <span className="kicker block mt-2">
+                    <span className="meta block mt-2">
                       {count === null
                         ? date
                         : `${count} block${count === 1 ? "" : "s"}, ${date}`}

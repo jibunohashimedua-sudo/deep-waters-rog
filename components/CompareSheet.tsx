@@ -138,7 +138,6 @@ export default function CompareSheet({
         </div>
 
         <div className="px-5 pb-5">
-          <p className="kicker">Side by side</p>
           <h2 className="mt-2 font-serif text-2xl font-medium text-rog-ink leading-tight">
             {reference}
           </h2>
@@ -158,7 +157,7 @@ export default function CompareSheet({
                   return (
                     <li key={t.id} className="card">
                       <div className="flex items-baseline justify-between gap-3">
-                        <span className="kicker kicker-strong">
+                        <span className="meta meta-strong">
                           {t.abbr} &middot; {t.name}
                         </span>
                         {row.status === "ready" && (

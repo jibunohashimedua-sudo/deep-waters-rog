@@ -224,7 +224,6 @@ export default function SermonEditor({
 
   return (
     <>
-      <p className="kicker">Sermon</p>
 
       <label htmlFor="sermon-title" className="sr-only">
         Title
@@ -241,7 +240,7 @@ export default function SermonEditor({
         className="mt-3 w-full border border-rog-line bg-transparent px-4 py-3 font-serif text-[22px] text-rog-ink focus:border-rog-purple focus:outline-none"
       />
 
-      <label htmlFor="sermon-passage" className="kicker mt-6 block">
+      <label htmlFor="sermon-passage" className="meta mt-6 block">
         Passage
       </label>
       <input
@@ -258,7 +257,7 @@ export default function SermonEditor({
 
       <div className="mt-6 flex flex-wrap gap-3">
         <div>
-          <label htmlFor="sermon-status" className="kicker block">
+          <label htmlFor="sermon-status" className="meta block">
             Status
           </label>
           <select
@@ -273,7 +272,7 @@ export default function SermonEditor({
           </select>
         </div>
         <div>
-          <label htmlFor="sermon-date" className="kicker block">
+          <label htmlFor="sermon-date" className="meta block">
             Preached on
           </label>
           <input
@@ -286,7 +285,7 @@ export default function SermonEditor({
         </div>
       </div>
 
-      <p className="kicker mt-10">
+      <p className="meta mt-10">
         {blocks.length} {blocks.length === 1 ? "block" : "blocks"}
       </p>
 
@@ -294,7 +293,7 @@ export default function SermonEditor({
         {blocks.map((b, i) => (
           <li key={b.id} className="mark-row" data-block-id={b.id}>
             {b.reference && (
-              <span className="kicker kicker-strong block">{b.reference}</span>
+              <span className="meta meta-strong block">{b.reference}</span>
             )}
             <label htmlFor={`block-${b.id}`} className="sr-only">
               Block text
@@ -378,7 +377,7 @@ export default function SermonEditor({
 
       {/* The autosave's own voice. Quiet, and only once there is something
           true to say — it never claims a save that has not happened. */}
-      <p className="kicker mt-3">
+      <p className="meta mt-3">
         {dirty
           ? "Unsaved changes"
           : savedOnce

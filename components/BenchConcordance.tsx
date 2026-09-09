@@ -38,13 +38,13 @@ export default function BenchConcordance({
 
   return (
     <>
-      <p className="kicker">
+      <p className="meta">
         {`${total} ${total === 1 ? "verse" : "verses"}`}
       </p>
       <ul className="bench-rows">
         {hits.map((h) => (
           <li key={`${h.book}|${h.chapter}|${h.verse}`} className="bench-row">
-            <p className="kicker kicker-strong">
+            <p className="meta meta-strong">
               {`${h.book} ${h.chapter}:${h.verse}`.toUpperCase()}
             </p>
             <p className="bench-scripture">{mark(h.text, h.word)}</p>

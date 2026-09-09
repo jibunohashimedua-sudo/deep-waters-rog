@@ -83,7 +83,7 @@ export default function DayPicker({
         </div>
 
         <div className="px-5 pb-5">
-          <p className="kicker">Ninety days</p>
+          <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Ninety days</h2>
           <h2 className="mt-2 text-[22px] md:text-[26px] font-semibold tracking-[-0.02em] text-rog-ink leading-tight">
             Pick a day
           </h2>
@@ -135,7 +135,7 @@ export default function DayPicker({
           </div>
 
           <div className="mt-6 flex items-center justify-between">
-            <p className="kicker">
+            <p className="meta">
               {doneDays.size} kept
             </p>
             {viewedDay !== currentDay && (

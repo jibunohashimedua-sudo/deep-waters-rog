@@ -11,7 +11,7 @@ export default function ChapterLoading() {
       <Nav />
       <ReadingSkeleton
         label="Loading the chapter"
-        kickerWidth="6rem"
+        metaWidth="6rem"
         titleWidth="13rem"
       />
     </>

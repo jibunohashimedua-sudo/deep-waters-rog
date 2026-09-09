@@ -86,7 +86,7 @@ export default function VerseNoteSheet({
         </div>
 
         <div className="px-5 pb-5">
-          <p className="kicker">Note on</p>
+          <p className="meta">Note on</p>
           <h2 className="mt-2 font-serif text-2xl font-medium text-rog-ink leading-tight">
             {reference}
           </h2>

@@ -78,7 +78,6 @@ export default function NewCohortPage() {
     <>
       <Nav />
       <main className="max-w-lg mx-auto px-6 py-10">
-        <p className="kicker">Cohorts</p>
         <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">
           Create a new cohort
         </h1>

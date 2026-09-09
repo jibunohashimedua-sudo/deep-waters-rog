@@ -44,7 +44,7 @@ export default function BenchWordStudy({ entries, loading, verse }: Props) {
           key={`${e.source}-${e.verse_start}-${e.verse_end}`}
           className="bench-commentary"
         >
-          <p className="kicker kicker-strong">
+          <p className="meta meta-strong">
             {SOURCE_NAMES[e.source] ?? e.source}
             {" "}
             {e.verse_start === e.verse_end

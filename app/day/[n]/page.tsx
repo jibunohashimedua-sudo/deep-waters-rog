@@ -165,7 +165,7 @@ export default async function DayPage({
             at the "you finished" page. Non-blocking; the day view still
             renders in full underneath. */}
         {day === 90 && existingIsFull && !!existing && (
-          <p className="kicker mb-4">
+          <p className="meta mb-4">
             <a href="/finished" className="underline" style={{ color: "var(--accent)" }}>
               You finished the plan
             </a>
@@ -187,7 +187,7 @@ export default async function DayPage({
             returning={returning}
           />
         ) : (
-          <p className="kicker">{dayDateHuman}</p>
+          <p className="meta">{dayDateHuman}</p>
         )}
 
         {isCurrent && <NudgeBanner completed={existingIsFull && !!existing} day={day} />}
@@ -202,7 +202,7 @@ export default async function DayPage({
               {day}
               <span className="day-count-of">/90</span>
             </h1>
-            <span className="kicker">{dayDateShort}</span>
+            <span className="meta">{dayDateShort}</span>
           </div>
           <div className="gauge mt-2" role="img" aria-label={`Day ${day} of 90`}>
             <div className="gauge-fill" style={{ width: `${(currentDay / 90) * 100}%` }} />
@@ -249,7 +249,7 @@ export default async function DayPage({
             <span>
               <span className="read-ref block">{otRef}</span>
               {otChapters.length > 0 && (
-                <span className="kicker block mt-1">
+                <span className="meta block mt-1">
                   {otTicksCount}/{otChapters.length} read
                 </span>
               )}
@@ -260,7 +260,7 @@ export default async function DayPage({
             <span>
               <span className="read-ref block">{ntRef}</span>
               {ntChapters.length > 0 && (
-                <span className="kicker block mt-1">
+                <span className="meta block mt-1">
                   {ntTicksCount}/{ntChapters.length} read
                 </span>
               )}
@@ -275,7 +275,7 @@ export default async function DayPage({
                 </span>
                 {/* The one row whose source isn't obvious from position,
                     because it isn't scripture. */}
-                <span className="kicker block mt-1">Rhapsody of Realities</span>
+                <span className="meta block mt-1">Rhapsody of Realities</span>
               </span>
               <span className="read-arrow" aria-hidden>&rarr;</span>
             </Link>

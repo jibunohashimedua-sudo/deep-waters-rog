@@ -19,7 +19,7 @@ export default function BenchCommentary({ entries, loading, verse }: Props) {
     <>
       {entries.map((e) => (
         <section key={`${e.verse_start}-${e.verse_end}`} className="bench-commentary">
-          <p className="kicker kicker-strong">
+          <p className="meta meta-strong">
             {e.verse_start === 0
               ? "On the chapter"
               : e.verse_start === e.verse_end

@@ -128,7 +128,7 @@ export default function ChapterTicker({
         <h2 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.02em] text-rog-ink leading-tight">
           Chapters
         </h2>
-        <span className="kicker" aria-live="polite">
+        <span className="meta" aria-live="polite">
           {done} of {total} read
         </span>
       </div>
@@ -140,7 +140,7 @@ export default function ChapterTicker({
       </div>
 
       {allDone && (
-        <p className="mt-3 kicker" style={{ color: "var(--sonar)" }}>
+        <p className="mt-3 meta" style={{ color: "var(--sonar)" }}>
           Day kept
         </p>
       )}
@@ -169,7 +169,7 @@ export default function ChapterTicker({
         onClick={() => setOverrideOpen((v) => !v)}
         aria-expanded={overrideOpen}
         aria-controls={`chapter-override-${dayNumber}`}
-        className="mt-5 kicker inline-flex items-center gap-2 text-rog-data hover:text-rog-ink transition"
+        className="mt-5 meta inline-flex items-center gap-2 text-rog-data hover:text-rog-ink transition"
       >
         Mark by hand
         <span
@@ -208,7 +208,7 @@ export default function ChapterTicker({
                   <span className="chapter-tick-ref">
                     {c.book} {c.chapter}
                   </span>
-                  <span className="kicker chapter-tick-testament">
+                  <span className="meta chapter-tick-testament">
                     {c.testament === "ot" ? "Old" : "New"}
                   </span>
                 </label>

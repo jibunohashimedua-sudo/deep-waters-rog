@@ -27,7 +27,7 @@ export default async function LandingPage() {
           <h1 className="text-5xl md:text-7xl font-semibold tracking-[-0.03em]">
             DEEP WATERS
           </h1>
-          <p className="mt-5 kicker" style={{ color: "#8B87A3" }}>
+          <p className="mt-5 meta" style={{ color: "#8B87A3" }}>
             A 90 day Bible reading plan
           </p>
           <p className="mt-8 max-w-xl mx-auto text-[15px] leading-relaxed" style={{ color: "#B9B4C9" }}>
@@ -60,14 +60,14 @@ export default async function LandingPage() {
           <p className="font-serif text-xl md:text-[26px] leading-[1.6] text-rog-ink">
             With joy shall ye draw water out of the wells of salvation.
           </p>
-          <p className="mt-4 kicker">Isaiah 12:3</p>
+          <p className="mt-4 meta">Isaiah 12:3</p>
         </div>
       </section>
 
       {/* How it works */}
       <section className="py-16 px-6">
         <div className="max-w-5xl mx-auto">
-          {/* No kicker over the heading — the heading is the heading. */}
+          {/* No meta over the heading — the heading is the heading. */}
           <h2 className="text-[30px] md:text-[38px] font-semibold tracking-[-0.03em] text-rog-ink text-center leading-tight">
             Read. Reflect. Share. Finish.
           </h2>
@@ -80,7 +80,7 @@ export default async function LandingPage() {
             ].map((s) => (
               <div key={s.n} className="card">
                 {/* The numbers stay: these four really are a sequence. */}
-                <p className="kicker">Step {s.n}</p>
+                <p className="meta">Step {s.n}</p>
                 <h3 className="mt-3 text-[19px] font-semibold text-rog-ink leading-tight tracking-[-0.02em]">{s.t}</h3>
                 <p className="mt-2 text-sm text-rog-muted leading-relaxed">{s.d}</p>
               </div>
@@ -90,7 +90,7 @@ export default async function LandingPage() {
       </section>
 
       <footer
-        className="text-center py-8 kicker"
+        className="text-center py-8 meta"
         style={{ background: "#0C0A18", color: "#8B87A3" }}
       >
         Deep Waters

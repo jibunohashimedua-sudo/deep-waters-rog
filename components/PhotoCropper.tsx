@@ -37,7 +37,6 @@ export default function PhotoCropper({
     <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
       <div className="bg-white w-full max-w-md overflow-hidden">
         <div className="p-5 border-b border-rog-line">
-          <p className="kicker">Adjust</p>
           <h3 className="mt-1 text-xl font-bold text-rog-purple">
             Your profile photo
           </h3>

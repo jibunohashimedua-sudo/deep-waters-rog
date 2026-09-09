@@ -190,7 +190,7 @@ export default function HighlightsView({ rows, textError }: Props) {
         />
       </div>
 
-      <p className="kicker mt-5">
+      <p className="meta mt-5">
         {verseCount} {verseCount === 1 ? "verse" : "verses"}
       </p>
 
@@ -212,7 +212,7 @@ export default function HighlightsView({ rows, textError }: Props) {
             return (
               <li key={r.id} className="mark-row" data-c={r.colour}>
                 <Link href={r.href} className="block">
-                  <span className="kicker kicker-strong block">{r.reference}</span>
+                  <span className="meta meta-strong block">{r.reference}</span>
                   {r.text && (
                     <span
                       className="mark-text selectable block mt-2"
@@ -221,14 +221,14 @@ export default function HighlightsView({ rows, textError }: Props) {
                       {r.text}
                     </span>
                   )}
-                  <span className="kicker block mt-2">
+                  <span className="meta block mt-2">
                     {new Date(r.createdAt).toLocaleDateString("en-GB")}
                   </span>
                 </Link>
                 {r.text && r.text.length > 190 && (
                   <button
                     type="button"
-                    className="kicker mt-2 hover:text-rog-ink"
+                    className="meta mt-2 hover:text-rog-ink"
                     onClick={() =>
                       setExpanded((prev) => {
                         const next = new Set(prev);
@@ -257,7 +257,7 @@ export default function HighlightsView({ rows, textError }: Props) {
             Copy all as text
           </button>
           {copied && (
-            <span className="kicker" role="status" aria-live="polite">
+            <span className="meta" role="status" aria-live="polite">
               {copied}
             </span>
           )}

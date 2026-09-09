@@ -91,7 +91,6 @@ export default async function PulsePage() {
     <>
       <Nav />
       <main className="max-w-3xl mx-auto px-6 py-10">
-        <p className="kicker">Pastoral</p>
         <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">
           Church pulse
         </h1>
@@ -162,11 +161,11 @@ export default async function PulsePage() {
                       <p className="text-[15px] font-medium text-rog-ink truncate">
                         {c.name}
                       </p>
-                      <p className="kicker shrink-0">
+                      <p className="meta shrink-0">
                         {`${c.read_this_week} of ${c.member_count} reading`}
                       </p>
                     </div>
-                    <p className="kicker mt-1.5">
+                    <p className="meta mt-1.5">
                       {c.last_activity_at
                         ? `Last activity ${shortDate(c.last_activity_at)}`
                         : "No activity yet"}
@@ -228,7 +227,7 @@ export default async function PulsePage() {
                     <Avatar name={p.name} photoUrl={p.photo_url} size="sm" decorative className="shrink-0" />
                     <div className="min-w-0">
                       <p className="text-[14px] font-medium text-rog-ink truncate">{p.name}</p>
-                      <p className="kicker mt-1">
+                      <p className="meta mt-1">
                         {p.needs_pastor
                           ? `Asked for a pastor, ${shortDate(p.created_at)}`
                           : `Waiting ${days(

@@ -14,6 +14,7 @@ import {
 } from "@/lib/highlights";
 import { bookByName } from "@/lib/bibleBooks";
 import { verseFragments, verseTextOnPage } from "@/lib/verseFragments";
+import PlumbLine from "@/components/PlumbLine";
 import VerseToolbar from "./VerseToolbar";
 import VerseNoteSheet from "./VerseNoteSheet";
 import CompareSheet from "./CompareSheet";
@@ -936,11 +937,29 @@ export default function ScriptureReader({
     [benchPhase, selectionText]
   );
 
+  // The Mark control lives on the page, outside this component and across
+  // a server boundary, so arrival is published as an attribute on the
+  // reading surface rather than passed down. CSS does the rest.
+  const publishArrival = useCallback((arrived: boolean) => {
+    const surface = rootRef.current?.closest<HTMLElement>('[data-surface="reading"]');
+    if (!surface) return;
+    if (arrived) surface.dataset.arrived = "true";
+    else delete surface.dataset.arrived;
+  }, []);
+
+  useEffect(() => {
+    const surface = rootRef.current?.closest<HTMLElement>('[data-surface="reading"]');
+    return () => {
+      if (surface) delete surface.dataset.arrived;
+    };
+  }, []);
+
   // -------------------------------------------------------------- render
 
   return (
     <>
-      <div ref={rootRef} className="mt-10">
+      <div ref={rootRef} className="scripture-column mt-10">
+        <PlumbLine containerRef={rootRef} onArrive={publishArrival} />
         {chapters.map((c, i) => (
           <div key={`${c.book}-${c.chapter}`}>
             {i > 0 && (

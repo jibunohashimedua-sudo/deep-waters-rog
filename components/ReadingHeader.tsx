@@ -12,7 +12,7 @@ type Props = {
   /** Mono line *under* the title — how much there is to read, and nothing
       else. It sat above as "DAY 34 · OLD TESTAMENT", which put a label and a
       number the reader already had in front of the only thing they came for. */
-  kicker?: string;
+  meta?: string;
   /** The reference itself — "Genesis 1–2", "Psalm 42". */
   reference: string;
   userId: string;
@@ -45,7 +45,7 @@ type Props = {
 export default function ReadingHeader({
   backHref,
   backLabel,
-  kicker,
+  meta,
   reference,
   userId,
   translationId,
@@ -125,7 +125,7 @@ export default function ReadingHeader({
             </span>
           </button>
         </h1>
-        {kicker && <p className="kicker mt-2">{kicker}</p>}
+        {meta && <p className="meta mt-2">{meta}</p>}
       </div>
 
       {/* Zero-height tell-tale. When this passes under the bar, the bar

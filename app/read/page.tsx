@@ -122,7 +122,7 @@ export default async function ReadPage({
         <ReadingHeader
           backHref="/today"
           backLabel={`Back to day ${day}`}
-          kicker={
+          meta={
             chapters.length > 1 ? `${chapters.length} chapters` : "1 chapter"
           }
           reference={reference}
@@ -205,7 +205,9 @@ export default async function ReadPage({
           <Link href={`/read?t=${otherT}`} className="btn-secondary flex-1 text-center">
             Read {otherLabel}
           </Link>
-          <Link href="/today" className="btn-primary flex-1 text-center">
+          {/* Quiet until the plumb marker reaches the last tick, ink
+              after it. Pressable the whole way down either way. */}
+          <Link href="/today" className="btn-primary mark-read flex-1 text-center">
             Mark day complete
           </Link>
         </div>

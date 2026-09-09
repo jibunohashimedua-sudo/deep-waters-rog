@@ -74,7 +74,6 @@ export default function NotificationsPage() {
       <main className="max-w-2xl mx-auto px-6 py-10">
         <div className="flex items-center justify-between">
           <div>
-            <p className="kicker">Inbox</p>
             <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Notifications</h1>
           </div>
           {items.some((n) => !n.read) && (
@@ -106,7 +105,7 @@ export default function NotificationsPage() {
               const inner = (
                 <div className={`card ${n.read ? "opacity-60" : "!border-rog-purple"}`}>
                   <div className="flex-1">
-                    <p className="kicker">
+                    <p className="meta">
                       {n.kind === "mention" ? "@ Mention" : KIND_LABEL[n.kind] ?? "Notice"}
                     </p>
                     <p className="font-semibold text-rog-ink text-sm mt-1">{n.title}</p>

@@ -51,12 +51,12 @@ export default function BenchHouse({ rows, planDay, loading }: Props) {
   return (
     <>
       {planDay !== null && (
-        <p className="kicker">The house reads this on day {planDay}</p>
+        <p className="meta">The house reads this on day {planDay}</p>
       )}
       <ul className="bench-rows">
         {rows.map((r) => (
           <li key={r.id} className="bench-row">
-            <p className="kicker">
+            <p className="meta">
               {`Day ${r.day}`}
               {r.reference ? ` ${r.reference}` : ""}
             </p>

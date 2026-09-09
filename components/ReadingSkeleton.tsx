@@ -9,11 +9,11 @@
 export default function ReadingSkeleton({
   label,
   titleWidth,
-  kickerWidth
+  metaWidth
 }: {
   label: string;
   titleWidth: string;
-  kickerWidth: string;
+  metaWidth: string;
 }) {
   // Verse-shaped groups, not one column of even bars — a verse is two or
   // three lines with air round it, and that is the rhythm of the page.
@@ -40,7 +40,7 @@ export default function ReadingSkeleton({
       </div>
 
       <div className="pt-8">
-        <div className="skeleton h-2.5" style={{ width: kickerWidth }} />
+        <div className="skeleton h-2.5" style={{ width: metaWidth }} />
         <div className="skeleton mt-3 h-8" style={{ width: titleWidth }} />
       </div>
 

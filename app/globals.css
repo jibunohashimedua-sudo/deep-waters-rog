@@ -104,7 +104,7 @@
      nothing in between.
        1 · hair     4  · mt-1  · label ↔ helper
        2 · tight    8  · mt-2  · helper ↔ input, small breath
-       3 · close   12  · mt-3  · kicker ↔ title
+       3 · close   12  · mt-3  · meta ↔ title
        4 · interior 24 · mt-6  · card padding, siblings in a group
        5 · major   40  · mt-10 · between grouped sections
        6 · page    64  · mt-16 · between page sections
@@ -381,7 +381,7 @@ body {
    pink instead of purple, taken from the theme token so it tracks
    light and dark like every other accent. */
 .accent-pink,
-.kicker.accent-pink,
+.meta.accent-pink,
 .chapter-mark.accent-pink { color: var(--pink); }
 .tile-pink:hover { border-color: var(--pink); }
 .group:hover .group-accent-pink { color: var(--pink); }
@@ -479,37 +479,31 @@ body {
    TYPOGRAPHY & UTILITIES
    ========================================================= */
 
-/* Data is monospaced; prose is not. That split does the hierarchy work
-   the old uppercase kickers were doing, which is why a .kicker is now
-   simply a line of metadata — a reference, a count, a timestamp — rather
-   than a label announcing the heading underneath it.
+/* Data is monospaced; prose is not — and that split, not a change of
+   case, is what tells the two apart.
 
-   The rule for adding one: if it names a number or a state, it is a
-   kicker. If it names the thing below it, delete it and let the heading
-   be the heading. */
+   This replaced .kicker, which was uppercase at 0.13em tracking. The
+   token split moved it from 5.7:1 to 9.0:1, which was right by the rule
+   and wrong on the screen: it promoted the quietest thing in the system
+   into the loudest, and a column of tracked caps at full contrast is the
+   house style this design set out to leave behind. Lowering the contrast
+   back would have broken the rule to hide the symptom. The shout was the
+   problem, so the shout went instead.
 
-/* Horizontal scrollers whose scrollbar is noise — the People page's
-   five-chip segmented control is the main one. Content still scrolls
-   naturally on touch, just without the bar. */
-.no-scrollbar {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-.kicker {
+   .meta is what is left: mono, small, tabular, and set in the case it
+   was written in. A date, a count, a reference, a field label beside its
+   value. Never a word announcing the heading underneath it — that is
+   what the heading is for. */
+.meta {
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 400;
-  line-height: 1.4;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
   font-variant-numeric: tabular-nums;
   color: var(--ink-data);
 }
-.kicker-strong { color: var(--text); }
+.meta-strong { color: var(--text); }
 
 /* =========================================================
    SCRIPTURE READING
@@ -564,6 +558,12 @@ body {
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.06em;
   color: var(--ink-data);
+  /* Right-aligned inside the column, with 0.75ch of clearance before the
+     words. Tabular figures were already in a straight line; this puts
+     that line hard against the text instead of against the rule, which
+     is what leaves x=0 of the column free for the plumb line. */
+  text-align: right;
+  padding-right: 0.75ch;
   /* Part of the verse's tap target, never part of what you copy. */
   -webkit-user-select: none;
   user-select: none;
@@ -998,7 +998,6 @@ button:focus-visible, a:focus-visible {
   border-radius: 0;
   color: var(--text);
 }
-.votd-kicker { color: var(--ink-data); }
 .votd-body   { color: var(--text); font-family: var(--font-serif), Georgia, serif; }
 .votd-meta   { color: var(--ink-data); }
 
@@ -1891,7 +1890,7 @@ select:focus-visible {
 /* ---- The header lockup ---------------------------------------------
    The same size and the same place as the standard one, so the header
    never changes shape when the flag is on. ELITE is set in mono with
-   the kicker's tracking — it is a label, and labels in this system are
+   the metadata tracking — it is a label, and labels in this system are
    mono. */
 .dw-elite-lockup {
   display: inline-flex;
@@ -2791,4 +2790,105 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   font-size: 15px;
   letter-spacing: 0.02em;
   color: var(--ink-data);
+}
+
+/* =========================================================
+   RANK BADGE
+   The number, squared. It was a 40px circle with an outline on first
+   place, and neither belonged: only touch targets curve here, and a
+   badge is not one.
+
+   The top three keep their emphasis by ink, not by shape — a filled
+   square for the first three, a tint for everyone else.
+   ========================================================= */
+
+.rank-badge {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  color: var(--ink-data);
+  background: var(--soft-bg);
+  border: var(--rule-hairline) solid var(--line);
+}
+.rank-badge[data-rank] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+
+/* =========================================================
+   THE PLUMB LINE
+   Main reader only. A rule down the far left of the scripture column, a
+   tick at every verse, and a marker that descends as you scroll.
+
+   All of it is absolutely positioned and none of it takes part in
+   layout, which is the condition of the thing: the 36ch measure and the
+   highlight band have to be exactly what they were without it.
+   ========================================================= */
+
+.scripture-column {
+  position: relative;
+}
+
+.plumb {
+  position: absolute;
+  left: 0;
+  top: 0;
+  /* Over the verses, not under them. A highlight's tint bleeds 14px past
+     the column to make a band, which means it paints straight across
+     x=0 — and a rule that disappears behind every highlight is not a
+     rule that runs the full height of the passage. */
+  z-index: 1;
+  pointer-events: none;
+}
+.plumb-rule,
+.plumb-tick {
+  fill: var(--line);
+}
+
+/* The bob. Fixed height, so it reads as a position rather than as a
+   proportion — a scrollbar thumb grows and shrinks; this does not. */
+.plumb-marker {
+  position: absolute;
+  left: 0;
+  width: 2px;
+  height: 20px;
+  background: var(--sonar);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* =========================================================
+   ARRIVAL
+   Mark read is pressable from the first line to the last. It is quiet
+   until the marker reaches the bottom tick and then it is ink.
+
+   It is not gated. Somebody who skims, or who read the passage in a
+   paper Bible on the train, still finishes their day — withholding the
+   control would punish them for reading, which is the opposite of the
+   job.
+   ========================================================= */
+
+.mark-read {
+  background: transparent;
+  color: var(--ink-quiet);
+  border-color: var(--line);
+  transition: background-color 240ms ease, color 240ms ease, border-color 240ms ease;
+}
+[data-surface="reading"][data-arrived="true"] .mark-read {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+@media (max-width: 379.98px) {
+  .plumb-marker { width: 2px; }
 }

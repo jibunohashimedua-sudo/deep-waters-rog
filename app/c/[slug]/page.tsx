@@ -86,7 +86,6 @@ export default async function CohortLandingPage({
           <div className="mb-4 flex justify-center">
             <Mark size={56} className="text-[#F3EDE4]" />
           </div>
-          <p className="kicker !text-white/70">Deep Waters</p>
           <h1 className="mt-3 text-5xl md:text-6xl font-bold tracking-tight">{cohort.name}</h1>
           {cohort.description && (
             <p className="mt-4 text-white/85 max-w-xl mx-auto">{cohort.description}</p>
@@ -110,7 +109,6 @@ export default async function CohortLandingPage({
             <p className="text-rog-purple font-semibold">You&rsquo;re in this cohort.</p>
             {cohort.welcome_message && (
               <div className="mt-4 p-4 bg-rog-cream text-left">
-                <p className="kicker">Welcome</p>
                 <p className="selectable mt-1 text-sm whitespace-pre-wrap">{cohort.welcome_message}</p>
               </div>
             )}
@@ -149,7 +147,7 @@ export default async function CohortLandingPage({
         {/* Announcements */}
         {membership && announcements && announcements.length > 0 && (
           <div>
-            <p className="kicker">Announcements</p>
+            <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Announcements</h2>
             <div className="mt-3 space-y-2">
               {announcements.map((a) => (
                 <div key={a.id} className="card">
@@ -167,7 +165,7 @@ export default async function CohortLandingPage({
         {/* Members preview */}
         {members && members.length > 0 && (
           <div>
-            <p className="kicker">Who&rsquo;s here</p>
+            <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Who&rsquo;s here</h2>
             <div className="mt-3 flex flex-wrap gap-2">
               {members.map((m: any) => (
                 <div key={m.user_id} title={m.profiles?.name}>
