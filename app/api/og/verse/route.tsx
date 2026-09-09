@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    return await verseCard(reference, text);
+    return await verseCard(reference, text, Number(searchParams.get("day")) || undefined);
   } catch (err) {
     console.error("[deep-waters] verse card:", err);
     return new Response("Couldn't build that card.", { status: 500 });

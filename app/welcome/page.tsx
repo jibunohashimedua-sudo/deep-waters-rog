@@ -36,8 +36,8 @@ const STEPS: Step[] = [
   },
   {
     meta: "Track your journey",
-    title: "Progress, badges, finisher wall",
-    body: "See your 90 day grid fill up. Earn badges for streaks and milestones. Hit day 90 and land on the finisher wall."
+    title: "Progress, depths, finisher wall",
+    body: "Watch your ninety days take shape. Reach four depths as you go. Hit day 90 and land on the finisher wall."
   }
 ];
 

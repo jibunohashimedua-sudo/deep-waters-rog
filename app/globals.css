@@ -1011,10 +1011,6 @@ input::placeholder, textarea::placeholder {
   72%  { opacity: 1; transform: translate3d(0,  0,   0) scale(1); }
   100% { opacity: 1; transform: translate3d(0,  0,   0) scale(1); }
 }
-@keyframes dw-word-rise {
-  from { opacity: 0; transform: translate3d(0, 10px, 0); }
-  to   { opacity: 1; transform: translate3d(0,  0,   0); }
-}
 @keyframes dw-stage-out { to { opacity: 0; } }
 @keyframes dw-fade { from { opacity: 0; } to { opacity: 1; } }
 
@@ -1065,28 +1061,9 @@ input::placeholder, textarea::placeholder {
 .dw-bar3 { width: 48px; animation-delay:  80ms; }
 .dw-bar4 { width: 24px; animation-delay:   0ms; }
 
-.dw-word {
-  margin-top: 24px;
-  text-align: center;
-  opacity: 0;
-  animation: dw-word-rise 300ms cubic-bezier(.22, .61, .36, 1) 480ms both;
-}
-.dw-word .d {
-  font: 600 32px/1 var(--font-sans), sans-serif;
-  letter-spacing: 2px;
-  color: #E9E6F2;
-}
-.dw-word .w {
-  font: 400 32px/1 var(--font-sans), sans-serif;
-  letter-spacing: 8px;
-  color: #E9E6F2;
-  display: block;
-  margin-top: 6px;
-}
 
 @media (prefers-reduced-motion: reduce) {
   .dw-bar   { animation: none; opacity: 1; transform: none; }
-  .dw-word  { animation: dw-fade 300ms ease-out both; }
   .dw-launch { animation: dw-stage-out 280ms ease-out 620ms both; }
 }
 

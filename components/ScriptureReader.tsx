@@ -876,7 +876,13 @@ export default function ScriptureReader({
   async function shareImage() {
     const text = selectionText();
     if (!text) return;
-    const params = new URLSearchParams({ ref: reference, text });
+    // The day travels with the verse so the mark on the card fills to
+    // the depth the sharer is actually at.
+    const params = new URLSearchParams({
+      ref: reference,
+      text,
+      day: String(dayNumber)
+    });
     showToast("Building your card…");
     try {
       const res = await fetch(`/api/og/verse?${params.toString()}`);

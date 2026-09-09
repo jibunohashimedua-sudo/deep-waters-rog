@@ -69,10 +69,6 @@ export default function SplashScreen() {
               <div className="dw-bar dw-bar3" />
               <div className="dw-bar dw-bar4" />
             </div>
-            <div className="dw-word">
-              <span className="d">DEEP</span>
-              <span className="w">WATERS</span>
-            </div>
           </div>
         </div>
       )}

@@ -105,7 +105,15 @@ export function fitVerse(text: string): { text: string; size: number } {
 }
 
 /** The four-bar mark, drawn in divs — Satori has no SVG path layout. */
-function FourBarMark({ colour = INK }: { colour?: string }) {
+function FourBarMark({
+  colour = INK,
+  depth
+}: {
+  colour?: string;
+  /** 0 to 1. Fills the bars to the sharer's day. Undefined leaves them
+      unfilled, which is what a card with no day behind it should show. */
+  depth?: number;
+}) {
   // The brand mark's own proportions, scaled up a little for a 1080px
   // card: at the drawn size the four bars closed up into one shape.
   const bars = [
@@ -114,6 +122,7 @@ function FourBarMark({ colour = INK }: { colour?: string }) {
     { w: 36, h: 12 },
     { w: 18, h: 12 }
   ];
+  const fill = depth === undefined ? null : Math.max(0, Math.min(1, depth));
   return (
     <div
       style={{
@@ -127,21 +136,36 @@ function FourBarMark({ colour = INK }: { colour?: string }) {
         <div
           key={i}
           style={{
+            display: "flex",
             width: b.w,
             height: b.h,
             // The bars are the one round thing on the card, because they
             // are the mark and the mark is drawn that way.
             borderRadius: b.h / 2,
-            background: colour
+            background: fill === null ? colour : RULE,
+            overflow: "hidden"
           }}
-        />
+        >
+          {/* The identity and the data are the same object: the mark is
+              filled to the day the sharer is on. */}
+          {fill !== null && (
+            <div
+              style={{
+                width: b.w * fill,
+                height: b.h,
+                borderRadius: b.h / 2,
+                background: colour
+              }}
+            />
+          )}
+        </div>
       ))}
     </div>
   );
 }
 
 /** Mark + wordmark, small and quiet in the bottom corner. */
-function Footer({ mono }: { mono: string }) {
+function Footer({ mono, depth }: { mono: string; depth?: number }) {
   return (
     <div
       style={{
@@ -152,7 +176,7 @@ function Footer({ mono }: { mono: string }) {
         paddingTop: 40
       }}
     >
-      <FourBarMark colour={QUIET} />
+      <FourBarMark colour={INK} depth={depth} />
       <div
         style={{
           fontFamily: mono,
@@ -180,9 +204,10 @@ const shell = (serif: string): React.CSSProperties => ({
 });
 
 /** A verse, shared. The scripture is the hero and everything else is a gauge. */
-export async function verseCard(reference: string, text: string) {
+export async function verseCard(reference: string, text: string, day?: number) {
   const { fonts, serif, mono } = await loadCardFonts();
   const verse = fitVerse(text);
+  const depth = day && day > 0 ? Math.min(1, day / 90) : undefined;
   // A reference is metadata, so it is set as metadata. Ranges like
   // "Psalm 42:1–4" come through whole — nothing here parses them.
   const ref = reference.replace(/\s+/g, " ").trim().toUpperCase();
@@ -191,21 +216,12 @@ export async function verseCard(reference: string, text: string) {
     (
       <div style={shell(serif)}>
         <div style={{ display: "flex", flexDirection: "column" }}>
+          {/* The verse leads. It is a quotation, not a passage: no verse
+              number, no hanging margin, ragged right, and a measure that
+              still reads when this lands in somebody's feed as a
+              screenshot on a phone. */}
           <div
             style={{
-              fontFamily: mono,
-              fontSize: 26,
-              letterSpacing: "0.13em",
-              color: QUIET,
-              paddingBottom: 36,
-              borderBottom: `1px solid ${RULE}`
-            }}
-          >
-            {ref || "DEEP WATERS"}
-          </div>
-          <div
-            style={{
-              marginTop: 64,
               fontSize: verse.size,
               lineHeight: 1.44,
               color: INK
@@ -213,9 +229,22 @@ export async function verseCard(reference: string, text: string) {
           >
             {verse.text}
           </div>
+          {/* The reference sits under what it names, the way it does
+              everywhere else in the app. */}
+          <div
+            style={{
+              fontFamily: mono,
+              fontSize: 26,
+              letterSpacing: "0.13em",
+              color: QUIET,
+              marginTop: 40
+            }}
+          >
+            {ref || "DEEP WATERS"}
+          </div>
         </div>
 
-        <Footer mono={mono} />
+        <Footer mono={mono} depth={depth} />
       </div>
     ),
     { width: CARD_W, height: CARD_H, fonts: fonts.length > 0 ? fonts : undefined }
@@ -316,7 +345,7 @@ export async function dayCard(opts: {
           )}
         </div>
 
-        <Footer mono={mono} />
+        <Footer mono={mono} depth={Math.min(1, (Number(opts.day) || 0) / 90)} />
       </div>
     ),
     { width: CARD_W, height: CARD_H, fonts: fonts.length > 0 ? fonts : undefined }

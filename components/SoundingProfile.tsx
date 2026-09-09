@@ -57,7 +57,25 @@ export default function SoundingProfile({
           const day = i + 1;
           if (day > today) return null;
           const h = step(days.get(day) ?? 0) * (H - 1);
-          if (h <= 0) return null;
+          // Today, before the first reading of the day, has a share of
+          // zero and would vanish — taking the only mark of where "now"
+          // sits with it, at exactly the hour most people open the app.
+          // A 2px tick on the baseline marks the position instead. It is
+          // the plumb marker's job, done here: not progress, just where
+          // the kept days stop and the ones still ahead begin.
+          if (h <= 0) {
+            if (day !== today) return null;
+            return (
+              <rect
+                key={day}
+                className="sounding-today"
+                x={i * (BAR + GAP)}
+                y={H - 3}
+                width={BAR}
+                height="2"
+              />
+            );
+          }
           return (
             <rect
               key={day}
