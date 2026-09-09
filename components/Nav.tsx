@@ -174,7 +174,7 @@ export default function Nav() {
   return (
     <>
       {!reading && (
-      <header className="glass-nav sticky top-0 z-40">
+      <header className="glass-nav safe-top-bar sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 shrink-0">
             {showBack &&

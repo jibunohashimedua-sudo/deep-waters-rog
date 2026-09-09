@@ -2,6 +2,7 @@ import Link from "next/link";
 import Nav from "@/components/Nav";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth";
+import { countPeople } from "@/lib/adminFigures";
 import AnnouncementForm from "@/components/AnnouncementForm";
 
 export default async function AdminPage() {
@@ -15,8 +16,8 @@ export default async function AdminPage() {
   const [
     { count: totalUsers },
     { count: newUsersWeek },
-    { count: completionsToday },
-    { count: completionsWeek },
+    completionsToday,
+    completionsWeek,
     { count: openReports },
     { count: pendingTestimonials },
     { count: pendingUsers },
@@ -25,8 +26,11 @@ export default async function AdminPage() {
   ] = await Promise.all([
     supabase.from("profiles").select("*", { count: "exact", head: true }),
     supabase.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", weekAgo),
-    supabase.from("completions").select("*", { count: "exact", head: true }).gte("completed_at", dayAgo),
-    supabase.from("completions").select("*", { count: "exact", head: true }).gte("completed_at", weekAgo),
+    // Counted as people, not rows. Somebody catching two days up in one
+    // evening is one person reading, and the figure has to agree with
+    // the list of names behind it — see lib/adminFigures.
+    countPeople("completions-today"),
+    countPeople("completions-week"),
     supabase.from("reports").select("*", { count: "exact", head: true }).eq("resolved", false),
     supabase.from("testimonials").select("*", { count: "exact", head: true }).eq("approved", false),
     supabase.from("profiles").select("*", { count: "exact", head: true }).eq("approved", false),
@@ -36,14 +40,33 @@ export default async function AdminPage() {
 
   const notesWritten = notesCount?.length ?? 0;
 
+  /**
+   * One figure.
+   *
+   * A number with people behind it is always openable — that is the
+   * whole rule. A figure with a href is a question somebody can follow;
+   * one without is a dead end, and the two are drawn differently so it
+   * is obvious which is which before you press it.
+   */
   const stat = (label: string, value: number | null | undefined, href?: string) => {
     const inner = (
       <div className="card text-center hover:border-rog-purple transition">
         <p className="text-3xl font-bold text-rog-purple">{value ?? 0}</p>
         <p className="text-xs text-rog-muted mt-1">{label}</p>
+        {href && (
+          <p className="meta mt-2" aria-hidden>
+            Who &rarr;
+          </p>
+        )}
       </div>
     );
-    return href ? <Link href={href}>{inner}</Link> : inner;
+    return href ? (
+      <Link href={href} aria-label={`${label}: ${value ?? 0}. See who.`}>
+        {inner}
+      </Link>
+    ) : (
+      inner
+    );
   };
 
   return (
@@ -55,8 +78,8 @@ export default async function AdminPage() {
         <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
           {stat("Total users", totalUsers, "/admin/users")}
           {stat("New this week", newUsersWeek, "/admin/users")}
-          {stat("Completions today", completionsToday)}
-          {stat("Completions this week", completionsWeek)}
+          {stat("Read today", completionsToday, "/admin/figures/completions-today")}
+          {stat("Read this week", completionsWeek, "/admin/figures/completions-week")}
           {stat("Finishers", finishers, "/finishers")}
           {stat("Study notes written", notesWritten, "/admin/notes")}
           {stat("Open reports", openReports, "/admin/reports")}

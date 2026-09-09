@@ -1,9 +1,8 @@
 import Link from "next/link";
-import Avatar from "@/components/Avatar";
 import Nav from "@/components/Nav";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth";
-import UserAdminControls from "@/components/UserAdminControls";
+import AdminUserRow from "@/components/AdminUserRow";
 
 export default async function AdminUsersPage({
   searchParams
@@ -50,53 +49,29 @@ export default async function AdminUsersPage({
           )}
         </form>
 
-        <div className="mt-6 space-y-2">
+        <div className="mt-6">
           {(users ?? []).length === 0 && (
             <div className="empty">
               <p>No one matches that search.</p>
             </div>
           )}
-          {(users ?? []).map((u) => (
-            <div key={u.id} className="card flex items-center gap-3">
-              <Avatar name={u.name} photoUrl={u.photo_url} size="md" decorative />
-              <div className="flex-1">
-                <p className="font-semibold text-rog-ink">
-                  {u.name}
-                  {u.role === "admin" && (
-                    <span className="ml-2 text-[10px] uppercase tracking-[0.2em] text-rog-purple font-medium">Admin</span>
-                  )}
-                  {u.is_pastoral === true && (
-                    <span className="ml-2 text-[10px] uppercase tracking-[0.2em] text-rog-purple font-medium">Elite</span>
-                  )}
-                  {!u.approved && (
-                    <span className="ml-2 text-[10px] uppercase tracking-wider text-warning">Pending</span>
-                  )}
-                </p>
-                {/* The account name is the heading above; this is the
-                    name the church actually sees them by. Both, always,
-                    and in this order — a pastor following up on "Tobi"
-                    has to be able to find Oluwatobiloba, and a directory
-                    that quietly renamed everybody would be useless to
-                    them. Never shown instead of the account name. */}
-                {u.nickname && (
-                  <p className="text-xs text-rog-muted">
-                    Goes by <span className="text-rog-ink">{u.nickname}</span>
-                  </p>
-                )}
-                <p className="text-xs text-rog-muted">
-                  Started {new Date(u.start_date).toLocaleDateString("en-GB")}
-                </p>
-              </div>
-              {u.id !== me && (
-                <UserAdminControls
-                  userId={u.id}
-                  role={u.role}
-                  approved={u.approved}
-                  isPastoral={u.is_pastoral === true}
-                />
-              )}
-            </div>
-          ))}
+          <div className="admin-list">
+            {(users ?? []).map((u) => (
+              <AdminUserRow
+                key={u.id}
+                id={u.id}
+                name={u.name}
+                nickname={u.nickname}
+                photoUrl={u.photo_url}
+                role={u.role}
+                approved={u.approved}
+                isPastoral={u.is_pastoral === true}
+                startDate={u.start_date}
+                joinedAt={u.created_at}
+                isSelf={u.id === me}
+              />
+            ))}
+          </div>
         </div>
       </main>
     </>

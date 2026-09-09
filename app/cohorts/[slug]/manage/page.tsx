@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile, isCohortLeader } from "@/lib/auth";
 import CohortSettingsForm from "@/components/CohortSettingsForm";
 import AnnouncementForm from "@/components/AnnouncementForm";
-import RemoveMemberButton from "@/components/RemoveMemberButton";
+import AdminMemberRow from "@/components/AdminMemberRow";
 import CohortGone from "@/components/CohortGone";
 
 export default async function CohortManagePage({
@@ -34,7 +34,7 @@ export default async function CohortManagePage({
   const [{ data: members }, { data: announcements }] = await Promise.all([
     supabase
       .from("cohort_members")
-      .select("user_id, role, joined_at, profiles(id, name, photo_url)")
+      .select("user_id, role, joined_at, profiles(id, name, nickname, photo_url, start_date)")
       .eq("cohort_id", cohort.id)
       .order("joined_at"),
     supabase
@@ -127,29 +127,27 @@ export default async function CohortManagePage({
         <section className="mt-8">
           <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Members</h2>
           <div className="mt-3 space-y-2">
-            {(members ?? []).map((m: any) => {
-              const p = progMap.get(m.user_id);
-              return (
-                <div key={m.user_id} className="card flex items-center gap-3">
-                  <Avatar name={m.profiles?.name ?? "?"} photoUrl={m.profiles?.photo_url} size="md" decorative />
-                  <div className="flex-1">
-                    <p className="font-semibold text-rog-ink">
-                      {m.profiles?.name}{" "}
-                      {m.role === "leader" && (
-                        <span className="text-[10px] uppercase tracking-[0.2em] text-rog-purple font-medium ml-1">Leader</span>
-                      )}
-                    </p>
-                    <p className="text-xs text-rog-muted">
-                      {p?.days_completed ?? 0} kept{" "}
-                      {p?.current_streak ?? 0} streak
-                    </p>
-                  </div>
-                  {m.user_id !== userId && (
-                    <RemoveMemberButton cohortId={cohort.id} userId={m.user_id} />
-                  )}
-                </div>
-              );
-            })}
+            <div className="admin-list">
+              {(members ?? []).map((m: any) => {
+                const p = progMap.get(m.user_id);
+                return (
+                  <AdminMemberRow
+                    key={m.user_id}
+                    cohortId={cohort.id}
+                    userId={m.user_id}
+                    name={m.profiles?.name ?? "Someone"}
+                    nickname={m.profiles?.nickname}
+                    photoUrl={m.profiles?.photo_url}
+                    isLeader={m.role === "leader"}
+                    joinedAt={m.joined_at}
+                    startDate={m.profiles?.start_date}
+                    daysKept={p?.days_completed ?? 0}
+                    streak={p?.current_streak ?? 0}
+                    isSelf={m.user_id === userId}
+                  />
+                );
+              })}
+            </div>
           </div>
         </section>
       </main>

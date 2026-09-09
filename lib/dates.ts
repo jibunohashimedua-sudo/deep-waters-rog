@@ -59,3 +59,31 @@ export function todayISOForUser(tz?: string | null): string {
 function isoDateFromParts(y: number, m: number, d: number): string {
   return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 }
+
+/**
+ * A date as a person would write it: "7 Sep 2026".
+ *
+ * Not toLocaleDateString("en-GB"), which gives 07/09/2026 — ambiguous to
+ * anyone who reads the month first, and this is a church with people in
+ * it who do. Spelling the month out costs three characters and removes
+ * the question entirely.
+ *
+ * Returns an empty string for a missing or unparseable date rather than
+ * "Invalid Date", because an admin list should have a gap in it, not a
+ * error message where a date goes.
+ */
+export function humanDate(value: string | Date | null | undefined): string {
+  if (!value) return "";
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  // The year goes when it is this year. Two dates and a separator do not
+  // fit on one line of a 390px phone with "2026" on both of them, and a
+  // truncated date is worse than an implied one. A date from another
+  // year still says which.
+  const sameYear = d.getFullYear() === new Date().getFullYear();
+  return d.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    ...(sameYear ? {} : { year: "numeric" })
+  });
+}

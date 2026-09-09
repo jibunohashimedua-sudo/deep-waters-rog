@@ -82,7 +82,7 @@ export default function ReadingHeader({
     <>
       <header
         ref={bar}
-        className="reading-bar"
+        className="reading-bar safe-top-bar"
         data-condensed={condensed ? "true" : undefined}
         aria-label="Reading"
       >

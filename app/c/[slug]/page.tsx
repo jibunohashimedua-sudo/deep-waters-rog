@@ -67,11 +67,32 @@ export default async function CohortLandingPage({
     .order("created_at", { ascending: false })
     .limit(5);
 
-  const { data: members } = await supabase
-    .from("cohort_members")
-    .select("user_id, profiles(name:display_name, photo_url)")
+  // cohort_faces, not cohort_members joined to profiles: this page is a
+  // public share link, and profiles is signed-in only now. The view
+  // exposes a name and a picture for approved, visible members and
+  // nothing else — see 2026_09_19_close_anonymous_reads.sql.
+  let { data: members } = await supabase
+    .from("cohort_faces")
+    .select("user_id, name, photo_url")
     .eq("cohort_id", cohort.id)
     .limit(12);
+
+  // The view arrives with the migration. Between a deploy and that
+  // migration, fall back to the join it replaced — the old path still
+  // works right up until profiles is closed, and the two changes land
+  // together, so whichever order they land in the faces show.
+  if (!members) {
+    const { data: legacy } = await supabase
+      .from("cohort_members")
+      .select("user_id, profiles(name:display_name, photo_url)")
+      .eq("cohort_id", cohort.id)
+      .limit(12);
+    members = (legacy ?? []).map((m: any) => ({
+      user_id: m.user_id,
+      name: m.profiles?.name,
+      photo_url: m.profiles?.photo_url
+    }));
+  }
 
   const startDate = new Date(cohort.start_date);
   const today = new Date();
@@ -188,8 +209,8 @@ export default async function CohortLandingPage({
             <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Who&rsquo;s here</h2>
             <div className="mt-3 flex flex-wrap gap-2">
               {members.map((m: any) => (
-                <div key={m.user_id} title={m.profiles?.name}>
-                  <Avatar name={m.profiles?.name ?? "?"} photoUrl={m.profiles?.photo_url} size="md" className="border-2 border-white" decorative />
+                <div key={m.user_id} title={m.name}>
+                  <Avatar name={m.name ?? "?"} photoUrl={m.photo_url} size="md" className="border-2 border-white" decorative />
                 </div>
               ))}
               {cohort.member_count > 12 && (
