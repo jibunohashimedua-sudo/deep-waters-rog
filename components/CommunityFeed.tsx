@@ -117,7 +117,7 @@ export default function CommunityFeed() {
           <p className="votd-kicker kicker">Verse of the day</p>
           {votd.verse_text && (
             <p className="selectable mt-3 votd-body text-[17px] leading-[1.6]">
-              {votd.verse_text}
+              &ldquo;{votd.verse_text}&rdquo;
             </p>
           )}
           <p className="mt-3 kicker votd-meta">

@@ -524,25 +524,68 @@ body {
   font-size: 18px;
   line-height: 1.74;
   color: var(--text);
-  max-width: 34rem;
+  /* The column is the number's 3.25ch plus the text's 36ch. Setting it
+     here as well as on .verse-text is what keeps a highlight band hugging
+     the words: the tinted ground is drawn on the verse block, so if the
+     block ran to the old 34rem the band would stretch a long way past the
+     end of a short line. */
+  max-width: calc(36ch + 3.25ch);
   font-variant-numeric: oldstyle-nums;
   font-feature-settings: "kern", "liga", "onum";
   text-rendering: optimizeLegibility;
 }
-@media (min-width: 640px) {
-  .bible-content { font-size: 19px; }
-}
+/* The 640px bump to 19px is gone. The verse grid is built on a 31.3px
+   baseline that only holds at 18px, and one size everywhere is the point:
+   the same passage on a phone and on a laptop should be the same setting,
+   not two. */
 /* Verse numbers are data, so they are set as data: monospaced, tabular,
-   quiet. Raised slightly, never interrupting the serif line. */
-.bible-content .v {
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-weight: 400;
-  font-size: 0.56em;
-  vertical-align: 0.42em;
-  color: var(--muted);
-  margin-right: 0.3em;
-  letter-spacing: 0.04em;
+   quiet — and they hang in the margin rather than sitting in the prose.
+   This is how a printed Bible is set, and it is the whole reason the left
+   edge of the serif column below is flush.
+
+   The 31.3px line-height is not a spacing choice. It is the line box of
+   the verse text beside it (18px on 1.74), and matching it is what drops
+   this 9.5px number onto the first baseline of the verse instead of the
+   top of its own little box. Change one and you change both. */
+.bible-content .verse-num {
+  font: 400 9.5px/31.3px var(--font-mono), ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  /* Part of the verse's tap target, never part of what you copy. */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* The prose. Ragged right, never justified, never hyphenated: a 36ch
+   measure on a phone cannot absorb justification without opening rivers,
+   and Fathom is ragged right anyway.
+
+   `font:` is a shorthand, and shorthands reset what they don't name — so
+   font-variant-numeric and font-feature-settings are re-stated under it.
+   Without those two lines every number inside scripture prose (a cubit
+   count, a genealogy) would silently fall back to lining figures in the
+   middle of a serif paragraph. */
+.bible-content .verse-text {
+  font: 400 18px/31.3px var(--font-serif), "Iowan Old Style", Georgia, serif;
+  font-variant-numeric: oldstyle-nums;
+  font-feature-settings: "kern", "liga", "onum";
+  max-inline-size: 36ch;
+  text-wrap: pretty;
+  hyphens: none;
+  text-align: left;
+}
+
+/* API.Bible marks the KJV's supplied words — the ones the translators
+   added for English sense that aren't in the Hebrew or the Greek — as
+   `<span class="add">`. Every printed KJV since 1769 sets them in italic,
+   and this app was rendering them as plain roman, which quietly asserts
+   they're in the original text. They are not. */
+.bible-content .add,
+.bible-content .verse-text i,
+.bible-content .verse-text em {
+  font-style: italic;
+  font-synthesis-style: none;
 }
 
 /* Per-verse wrappers, injected server-side by lib/verseParse.ts.
@@ -559,7 +602,13 @@ body {
    now, which is the honest place for it: the old text selection barely
    worked on a phone, gave no feedback, and fought iOS's own callout. */
 .dw-verse {
-  display: block;
+  /* Two columns: the number hangs in the first, the prose runs in the
+     second. The rule a highlight draws stays outside both, on the very
+     left edge of the block — see the box-shadow below. */
+  display: grid;
+  grid-template-columns: 3.25ch 1fr;
+  column-gap: 0;
+  align-items: start;
   position: relative;
   /* 7px, down from 10px. A verse is 18px on 1.74, so the line box is 31px
      and the block comes out at 45px — still over the 44px a thumb needs,
@@ -617,8 +666,12 @@ body {
   background-color: transparent;
 }
 
-/* Verses that already carry a note get a small mark after them. */
-.dw-verse[data-note="true"]::after {
+/* Verses that already carry a note get a small mark after them.
+
+   On .verse-text, not on the verse: ::after on a grid container becomes a
+   grid item of its own, which would land the dot in a third cell on a new
+   row rather than at the end of the last line. */
+.dw-verse[data-note="true"] .verse-text::after {
   content: "";
   display: inline-block;
   width: 6px;
@@ -700,16 +753,15 @@ body {
 .bible-content p.q4 {
   margin-bottom: 0.15em;
 }
-.bible-content p.q1 > .dw-verse { padding-left: calc(14px + 2.0em); }
-.bible-content p.q2 > .dw-verse { padding-left: calc(14px + 3.1em); }
-.bible-content p.q3 > .dw-verse { padding-left: calc(14px + 4.2em); }
-.bible-content p.q4 > .dw-verse { padding-left: calc(14px + 5.3em); }
-.bible-content p.q1 > .dw-verse,
-.bible-content p.q2 > .dw-verse,
-.bible-content p.q3 > .dw-verse,
-.bible-content p.q4 > .dw-verse {
-  text-indent: -0.9em;
-}
+/* The indent moves the words, not the verse and not its number. It is on
+   .verse-text now, inside the grid's second column, so a psalm's numbers
+   stay in one straight line down the margin however deep the poetry is
+   indented — which is what the old negative text-indent was reaching for
+   and couldn't have while the number was still inline in the prose. */
+.bible-content p.q1 > .dw-verse > .verse-text { padding-left: 1.1em; }
+.bible-content p.q2 > .dw-verse > .verse-text { padding-left: 2.2em; }
+.bible-content p.q3 > .dw-verse > .verse-text { padding-left: 3.3em; }
+.bible-content p.q4 > .dw-verse > .verse-text { padding-left: 4.4em; }
 
 /* The same indents for a poetry line no verse could be found for — rare,
    and only at the very top of a chapter, but it should still look like
@@ -1721,6 +1773,11 @@ select:focus-visible {
   line-height: 1.62;
   color: var(--text);
   overflow-wrap: anywhere;
+  max-inline-size: 36ch;
+  text-wrap: pretty;
+  hyphens: none;
+  font-variant-numeric: oldstyle-nums;
+  font-feature-settings: "kern", "liga", "onum";
 }
 .mark-text[data-clamped="true"] {
   display: -webkit-box;
@@ -2578,4 +2635,63 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   color: var(--text);
   background: var(--hl-shoal-ground);
   box-shadow: inset 2px 0 0 var(--hl-shoal-rule);
+}
+
+/* =========================================================
+   SCRIPTURE — THE NARROW PHONE, AND EVERYWHERE THAT ISN'T THE READER
+
+   The reader's grid is above. These are the same decisions applied to
+   every other surface that puts scripture on the screen, so a verse in
+   the study bench, in Compare, in the feed and in the reader are all
+   visibly the same piece of typesetting.
+   ========================================================= */
+
+/* Under 380px — an iPhone SE, a Mini, a phone with the text size turned
+   up — 3.25ch of margin is a real bite out of a 36ch measure. The number
+   still hangs; it just hangs closer. */
+@media (max-width: 379.98px) {
+  .dw-verse {
+    grid-template-columns: 2.5ch 1fr;
+  }
+}
+
+/* Scripture rendered as plain prose: no verse markers to hang, because
+   these surfaces quote one verse and name it in their own label. What
+   they share with the reader is everything else — the face, the measure,
+   ragged right, and old-style figures so a number inside the verse sits
+   in the line rather than standing up out of it. */
+.scripture-prose {
+  font-family: var(--font-serif), "Iowan Old Style", Georgia, serif;
+  max-inline-size: 36ch;
+  text-wrap: pretty;
+  hyphens: none;
+  text-align: left;
+  font-variant-numeric: oldstyle-nums;
+  font-feature-settings: "kern", "liga", "onum";
+}
+
+/* The study bench and Compare both line translations up against each
+   other, so the measure matters twice over there: two renderings of one
+   verse can only be read against each other if they break in the same
+   places for the same reasons. */
+.bench-scripture {
+  max-inline-size: 36ch;
+  text-wrap: pretty;
+  hyphens: none;
+  text-align: left;
+  font-variant-numeric: oldstyle-nums;
+  font-feature-settings: "kern", "liga", "onum";
+}
+
+/* Verse of the day. The opening quote mark is pulled into the margin so
+   the first letter of the verse lines up with every line beneath it —
+   without this the quote mark punches a visible notch into the left edge
+   of the only piece of scripture on the Community screen. */
+.votd-body {
+  max-inline-size: 36ch;
+  text-wrap: pretty;
+  hyphens: none;
+  font-variant-numeric: oldstyle-nums;
+  font-feature-settings: "kern", "liga", "onum";
+  text-indent: -0.42em;
 }

@@ -183,7 +183,7 @@ export default function CompareSheet({
                       )}
 
                       {row.status === "ready" && (
-                        <p className="mt-2 font-serif text-[16px] leading-relaxed text-rog-ink selectable">
+                        <p className="scripture-prose mt-2 text-[16px] leading-relaxed text-rog-ink selectable">
                           {row.text}
                         </p>
                       )}

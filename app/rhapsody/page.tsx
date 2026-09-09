@@ -93,7 +93,7 @@ export default async function RhapsodyPage() {
             in the devotional itself. */}
         {entry?.verse_text?.trim() && (
           <blockquote className="mt-10 surface-soft selectable">
-            <p className="font-serif text-lg leading-relaxed text-rog-ink italic">
+            <p className="scripture-prose text-lg leading-relaxed text-rog-ink">
               {entry.verse_text.trim()}
             </p>
           </blockquote>

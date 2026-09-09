@@ -181,7 +181,7 @@ export default function ReflectionCard({
           more quietly than quotation marks and an italic ever did. */}
       {item.verse_text ? (
         <div className="quoted mt-4">
-          <p className="selectable font-serif text-[15px] leading-[1.62] text-rog-ink">
+          <p className="scripture-prose selectable text-[15px] leading-[1.62] text-rog-ink">
             {item.verse_text}
           </p>
           {item.verse_reference && <p className="kicker mt-1.5">{item.verse_reference}</p>}

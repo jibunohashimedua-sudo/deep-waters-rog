@@ -9,12 +9,26 @@
  *
  * After wrapping:
  *   <p class="p"><span class="dw-verse" data-verse="1">
- *      <span data-number="1" class="v">1</span> In the beginning... </span>
+ *      <span data-number="1" class="v verse-num">1</span>
+ *      <span class="verse-text">In the beginning...</span></span>
  *      <span class="dw-verse" data-verse="2">
- *      <span data-number="2" class="v">2</span> The earth was...</span></p>
+ *      <span data-number="2" class="v verse-num">2</span>
+ *      <span class="verse-text">The earth was...</span></span></p>
  *
- * The verse marker (`<span class="v">…</span>`) stays untouched so the
- * existing pink superscript styling in globals.css keeps working.
+ * Two children, always, in that order. `.dw-verse` is a two-column grid
+ * and the number hangs in the first column, the way a printed Bible sets
+ * it — so the left edge of the serif column is flush all the way down and
+ * nothing in the prose has to make room for a number.
+ *
+ * The body has to be wrapped for that to work at all. A grid container
+ * makes a grid item of every child, and a run of bare text becomes one
+ * anonymous item — so a verse carrying any inline markup (the KJV's
+ * italicised supplied words, the words of Christ) would shatter into a
+ * cell per fragment. `.verse-text` is what keeps a verse one thing.
+ *
+ * The marker keeps its own class and its attributes; `verse-num` is added
+ * alongside `v` rather than replacing it, because `lib/verseFragments.ts`
+ * strips `.v` when it reads a verse back as plain text.
  *
  * A verse is a verse id, not a paragraph.
  * ---------------------------------------------------------------------
@@ -69,8 +83,23 @@ function isBlank(inner: string): boolean {
   return inner.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim() === "";
 }
 
+/** The empty first column a continuation fragment needs to stay in line
+    with the verse it belongs to. A poetry line has no number of its own;
+    it still has to sit under the one above it. */
+const EMPTY_NUM = '<span class="verse-num" aria-hidden="true"></span>';
+
 const contSpan = (verse: number, inner: string) =>
-  `<span class="dw-verse" data-verse="${verse}" data-dw-part="cont">${inner}</span>`;
+  `<span class="dw-verse" data-verse="${verse}" data-dw-part="cont">` +
+  `${EMPTY_NUM}<span class="verse-text">${inner}</span></span>`;
+
+/** Adds `verse-num` to the marker's class list, leaving everything else
+    about the span — `data-number`, `data-sid` — exactly as it arrived. */
+function asVerseNum(markerHtml: string): string {
+  return markerHtml.replace(
+    /class="([^"]*)"/,
+    (_m, cls: string) => `class="${cls} verse-num"`
+  );
+}
 
 /**
  * One paragraph's inner HTML, with each verse wrapped.
@@ -85,11 +114,16 @@ function wrapVersesInParagraph(
   inner: string,
   carry: number | null
 ): { html: string; carry: number | null; continues: boolean } {
-  const markers: { num: string; start: number }[] = [];
+  const markers: { num: string; start: number; end: number; raw: string }[] = [];
   MARKER_RE.lastIndex = 0;
   let m: RegExpExecArray | null;
   while ((m = MARKER_RE.exec(inner)) !== null) {
-    markers.push({ num: m[1], start: m.index });
+    markers.push({
+      num: m[1],
+      start: m.index,
+      end: m.index + m[0].length,
+      raw: m[0]
+    });
   }
 
   // No number in this paragraph: it continues the verse before it. That is
@@ -117,10 +151,14 @@ function wrapVersesInParagraph(
   }
 
   for (let i = 0; i < markers.length; i++) {
-    const start = markers[i].start;
-    const end = i + 1 < markers.length ? markers[i + 1].start : inner.length;
-    const segment = inner.slice(start, end);
-    out += `<span class="dw-verse" data-verse="${markers[i].num}">${segment}</span>`;
+    const stop = i + 1 < markers.length ? markers[i + 1].start : inner.length;
+    // The marker becomes the first grid cell; everything up to the next
+    // marker becomes the second. Splitting here rather than in the browser
+    // is what lets the column widths be set in CSS alone.
+    const body = inner.slice(markers[i].end, stop);
+    out +=
+      `<span class="dw-verse" data-verse="${markers[i].num}">` +
+      `${asVerseNum(markers[i].raw)}<span class="verse-text">${body}</span></span>`;
   }
 
   const last = Number.parseInt(markers[markers.length - 1].num, 10);
