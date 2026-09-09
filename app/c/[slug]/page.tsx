@@ -6,6 +6,7 @@ import CohortShareBox from "@/components/CohortShareBox";
 import BackButton from "@/components/BackButton";
 import CohortGone from "@/components/CohortGone";
 import Mark from "@/components/Mark";
+import { redirect } from "next/navigation";
 
 export default async function CohortLandingPage({
   params
@@ -22,6 +23,22 @@ export default async function CohortLandingPage({
   const {
     data: { user }
   } = await supabase.auth.getUser();
+
+  // /c is a public path, so the middleware serves it without a session
+  // lookup and its private-member gate never runs here. A cohort page is
+  // one of the surfaces a private member does not have, so the gate is
+  // repeated on this one route by hand. Signed-out visitors following a
+  // share link are unaffected.
+  if (user) {
+    const { data: me } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
+    if ((me as { is_private?: boolean } | null)?.is_private === true) {
+      redirect("/today");
+    }
+  }
 
   // Notifications and shared links outlive the cohort they point at, so
   // land the reader on a friendly page instead of a raw 404.

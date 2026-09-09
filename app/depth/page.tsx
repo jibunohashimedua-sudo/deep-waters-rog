@@ -8,7 +8,7 @@ import HighlightsView, { type HighlightRow } from "@/components/HighlightsView";
 import NotesView, { type NoteRow } from "@/components/NotesView";
 import ResetMyData from "@/components/ResetMyData";
 import { createClient } from "@/lib/supabase/server";
-import { requireProfile } from "@/lib/auth";
+import { isPrivateMember, requireProfile } from "@/lib/auth";
 import { READING_PLAN, currentDayNumber } from "@/lib/plan";
 import { todayForCurrentRequest } from "@/lib/serverToday";
 import { bookByName } from "@/lib/bibleBooks";
@@ -234,7 +234,9 @@ export default async function DepthPage() {
         </ul>
       </section>
 
-      {cohorts.length > 0 && (
+      {/* A private member has no cohorts screen, so Depth doesn't offer
+          him a door into one. See lib/privacy.ts. */}
+      {!isPrivateMember(profile) && cohorts.length > 0 && (
         <section className="mt-10">
           <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Your cohorts</h2>
           <ul className="mark-list mt-4">

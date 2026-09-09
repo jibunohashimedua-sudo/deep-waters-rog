@@ -22,6 +22,30 @@ export async function POST(request: Request) {
     { auth: { persistSession: false } }
   );
 
+  // The service role bypasses RLS completely, so the restrictive policy
+  // that hides a private member from this admin does not apply to the
+  // client above. Nothing in the UI would ever offer them the id — the
+  // user list cannot see him — but "the UI doesn't offer it" is not a
+  // control, and a delete is the one action that would be visible from
+  // the outside even to someone who could not read the row.
+  //
+  // So the filter is written here, in code, exactly as it would be for a
+  // cron job or an export: read the target with the service role, and if
+  // it is a private member, refuse unless the caller is the owner. The
+  // refusal is a 400 with the same words as an unknown id, because
+  // "that user is protected" is itself an answer about who exists.
+  const { data: target } = await admin
+    .from("profiles")
+    .select("id, is_private, private_owner_id")
+    .eq("id", user_id)
+    .maybeSingle();
+
+  const targetIsPrivate = (target as { is_private?: boolean } | null)?.is_private === true;
+  const targetOwner = (target as { private_owner_id?: string } | null)?.private_owner_id ?? null;
+  if (targetIsPrivate && targetOwner !== user.id) {
+    return NextResponse.json({ error: "bad request" }, { status: 400 });
+  }
+
   const { error } = await admin.auth.admin.deleteUser(user_id);
 
   // Idempotent: if the auth user is already gone (deleted from the console

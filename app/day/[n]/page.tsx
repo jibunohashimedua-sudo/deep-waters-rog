@@ -308,6 +308,7 @@ export default async function DayPage({
             userPhoto={profile.photo_url}
             future={isFuture}
             futureDate={isFuture ? dayDateHuman : null}
+            isPrivate={(profile as { is_private?: boolean }).is_private === true}
           />
         </div>
       </main>

@@ -2,12 +2,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { isReadingRoute } from "@/lib/routes";
-import { NAV_TABS, MORE_ICON, moreMatches } from "@/lib/nav";
+import { MORE_ICON, moreMatches, type NavTab } from "@/lib/nav";
 
 type Props = {
   /** Both come from Nav, which has already looked them up. Fetching them again
       here cost a second getUser + profiles round trip on every page load. */
   isAdmin: boolean;
+  /** The sections this reader gets, decided once in Nav. A private member
+      has no People tab, so the bar draws four items rather than five —
+      the grid counts what it is given rather than assuming five. */
+  tabs: NavTab[];
+  /** False until the profile lookup has answered. The bar holds still
+      rather than drawing five tabs and taking one away a beat later. */
+  ready: boolean;
   /**
    * Whether the current path is one of More's pastoral rows.
    *
@@ -26,6 +33,8 @@ type Props = {
 
 export default function BottomNav({
   isAdmin,
+  tabs,
+  ready,
   pastoralMore,
   hasUser,
   moreOpen,
@@ -43,6 +52,7 @@ export default function BottomNav({
   // kept its tab bar and the verse toolbar landed on top of it.
   const hidden =
     !hasUser ||
+    !ready ||
     isReadingRoute(pathname) ||
     pathname === "/" ||
     pathname.startsWith("/login") ||
@@ -70,8 +80,8 @@ export default function BottomNav({
       className="md:hidden bottom-glass fixed inset-x-0 bottom-0 z-40"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <ul className="grid grid-cols-5">
-        {NAV_TABS.map((t) => {
+      <ul className="grid" style={{ gridTemplateColumns: `repeat(${tabs.length + 1}, minmax(0, 1fr))` }}>
+        {tabs.map((t) => {
           const active = t.match(pathname);
           return (
             <li key={t.href}>

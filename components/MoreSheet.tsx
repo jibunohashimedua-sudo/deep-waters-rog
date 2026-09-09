@@ -24,6 +24,14 @@ const PastoralRows = dynamic(() => import("./MoreSheetPastoralRows"), {
   ssr: false
 });
 
+/**
+ * The private members row, loaded only once the database has said this
+ * account owns somebody. Same chunking argument as the pastoral rows.
+ */
+const PrivateRow = dynamic(() => import("./MoreSheetPrivateRow"), {
+  ssr: false
+});
+
 type Choice = "light" | "dark" | "system";
 
 function applyTheme(choice: Choice) {
@@ -43,6 +51,11 @@ type Props = {
   /** The Elite gate. False means the Sermons row does not exist — no
       locked row, no greyed row, nothing to notice. */
   isPastoral: boolean;
+  /** A private member. The rows that lead into the church — the prayer
+      wall, cohorts, the finisher wall, the testimony form and Church
+      pulse — are not in the sheet for him. Not greyed, not locked: not
+      there. See lib/privacy.ts. */
+  isPrivate: boolean;
   /** Passed straight down to the pastoral rows, which report whether the
       current path is one of theirs. See PastoralNavHelpers. */
   onPastoralMoreMatch?: (matches: boolean) => void;
@@ -55,12 +68,18 @@ export default function MoreSheet({
   onClose,
   isAdmin,
   isPastoral,
+  isPrivate,
   onPastoralMoreMatch
 }: Props) {
   const router = useRouter();
   const supabase = createClient();
   const [theme, setTheme] = useState<Choice>("system");
   const [me, setMe] = useState<Me | null>(null);
+  // Does this account own a private member? Asked of the database, which
+  // answers for the caller and nobody else — my_private_members() returns
+  // rows only to the owner, so an empty array is the whole answer and the
+  // other admin's copy of this sheet never learns the section exists.
+  const [ownsPrivate, setOwnsPrivate] = useState(false);
 
   // Who you are, fetched the first time the sheet is opened and then kept.
   // Two plain queries, no nested join — this project has had HTTP 300s out
@@ -73,16 +92,20 @@ export default function MoreSheet({
         data: { user }
       } = await supabase.auth.getUser();
       if (!user || cancelled) return;
-      const [{ data: profile, error: pErr }, { data: done, error: cErr }] =
+      const [{ data: profile, error: pErr }, { data: done, error: cErr }, mine] =
         await Promise.all([
           supabase
             .from("profiles")
             .select("name, photo_url, start_date")
             .eq("id", user.id)
             .maybeSingle(),
-          supabase.from("completions").select("day_number").eq("user_id", user.id)
+          supabase.from("completions").select("day_number").eq("user_id", user.id),
+          supabase.rpc("my_private_members")
         ]);
       if (cancelled) return;
+      // A missing function is a migration that hasn't run yet, which is
+      // "you own nobody" — the right answer for every account but one.
+      setOwnsPrivate(((mine?.data as unknown[] | null) ?? []).length > 0);
       if (pErr) console.error("[deep-waters] more sheet profile:", pErr.message);
       if (cErr) console.error("[deep-waters] more sheet completions:", cErr.message);
       if (!profile) return;
@@ -246,24 +269,30 @@ export default function MoreSheet({
               <PastoralRows
                 className={link}
                 onClose={onClose}
+                showPulse={!isPrivate}
                 onMoreMatch={onPastoralMoreMatch}
               />
             )}
-            <Link href="/prayer" onClick={onClose} className={link}>
-              Prayer wall
-            </Link>
-            <Link href="/cohorts" onClick={onClose} className={link}>
-              Cohorts
-            </Link>
-            <Link href="/finishers" onClick={onClose} className={link}>
-              Finishers
-            </Link>
-            <Link href="/testimonials" onClick={onClose} className={link}>
-              Share testimony
-            </Link>
+            {!isPrivate && (
+              <>
+                <Link href="/prayer" onClick={onClose} className={link}>
+                  Prayer wall
+                </Link>
+                <Link href="/cohorts" onClick={onClose} className={link}>
+                  Cohorts
+                </Link>
+                <Link href="/finishers" onClick={onClose} className={link}>
+                  Finishers
+                </Link>
+                <Link href="/testimonials" onClick={onClose} className={link}>
+                  Share testimony
+                </Link>
+              </>
+            )}
             <Link href="/announcements" onClick={onClose} className={link}>
               Announcements
             </Link>
+            {ownsPrivate && <PrivateRow className={link} onClose={onClose} />}
           </div>
 
           <div className={group}>

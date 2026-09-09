@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+export { PRIVATE_MEMBER_BLOCKED_PREFIXES, isBlockedForPrivateMember } from "@/lib/privacy";
 
 export type Profile = {
   id: string;
@@ -12,6 +13,12 @@ export type Profile = {
   /** The Elite gate. Optional until the pastoral migration has been run —
       absent reads as false everywhere, so the layer simply doesn't appear. */
   is_pastoral?: boolean | null;
+  /** A private member is invisible to everyone but himself and the account
+      named in private_owner_id. Optional until the private-members
+      migration has been run — absent reads as false, which is every
+      ordinary member. */
+  is_private?: boolean | null;
+  private_owner_id?: string | null;
   approved: boolean;
   email_reminders: boolean;
   push_reminders: boolean;
@@ -107,6 +114,51 @@ export async function getPastoralUser(): Promise<{
   if (!profile) return null;
   if (!isPastoral(profile as Profile)) return null;
   return { userId: user.id, profile: profile as Profile };
+}
+
+/** True when this profile is a private member. One reading of the flag,
+    used by every server surface that consults it. */
+export function isPrivateMember(profile: Pick<Profile, "is_private">): boolean {
+  return profile.is_private === true;
+}
+
+/**
+ * Does this account own a private member?
+ *
+ * Gated on ownership, never on the admin flag. The other admin on this
+ * project has the same role, the same is_admin(), the same everything —
+ * and must not see that this section exists. my_private_members() answers
+ * for the caller only; an empty array is the whole answer.
+ */
+export async function privateMembersFor(): Promise<
+  { user_id: string; name: string; photo_url: string | null; start_date: string; created_at: string; is_pastoral: boolean }[]
+> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("my_private_members");
+  if (error) {
+    // A missing function means the migration has not been run yet. That is
+    // "you own nobody", which is the right answer for every account but one.
+    if (!/function|does not exist|schema cache/i.test(error.message)) {
+      // eslint-disable-next-line no-console
+      console.error("[deep-waters] private members:", error.message);
+    }
+    return [];
+  }
+  return (data ?? []) as any;
+}
+
+/** Require that this account owns at least one private member, else 404.
+    Not a redirect to /today and not a "you do not have access" — an admin
+    who tries the route directly is told the route does not exist. */
+export async function requirePrivateOwner(): Promise<{
+  userId: string;
+  profile: Profile;
+  members: Awaited<ReturnType<typeof privateMembersFor>>;
+}> {
+  const r = await requireProfile();
+  const members = await privateMembersFor();
+  if (members.length === 0) notFound();
+  return { ...r, members };
 }
 
 /** Require admin, else redirect to /today. */

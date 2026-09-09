@@ -9,22 +9,45 @@ import MoreSheet from "./MoreSheet";
 import Mark from "./Mark";
 import EliteLockup from "./EliteLockup";
 import { backHrefFor, isReadingRoute } from "@/lib/routes";
-import { NAV_TABS, MORE_ICON, moreMatches } from "@/lib/nav";
+import { navTabsFor, MORE_ICON, moreMatches } from "@/lib/nav";
 
 // The wide-screen bar and the phone's tab bar read the same list — see
 // lib/nav.tsx for why. There used to be a second list here naming
 // Leaderboard, Cohorts and Finishers as top-level sections; all three are
 // views inside People, and had been for three refactors.
 
+/**
+ * Who you are, remembered for the length of the tab.
+ *
+ * Nav is rendered by each page rather than by the layout, so it mounts
+ * again on every navigation and its profile query runs again with it.
+ * That was invisible while the query only decided whether an Admin row
+ * appeared inside a sheet. It stopped being invisible once it decides how
+ * many tabs the bar has: a private member would have watched a People tab
+ * appear and vanish on every screen he opened.
+ *
+ * Module scope, not localStorage: it is per tab, it dies with the tab, and
+ * it is null during the server render and null again on the first client
+ * render after a hard load — so there is nothing for hydration to
+ * disagree about. The bar holds still for one query on a cold load and is
+ * instant for every navigation after it.
+ */
+let cachedNav: { isAdmin: boolean; isPastoral: boolean; isPrivate: boolean } | null = null;
+
 export default function Nav() {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
   const [unread, setUnread] = useState(0);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(() => cachedNav?.isAdmin ?? false);
   // The Elite gate, read in the same breath as the role so there is one
   // place in the client that decides who is pastoral.
-  const [isPastoral, setIsPastoral] = useState(false);
+  const [isPastoral, setIsPastoral] = useState(() => cachedNav?.isPastoral ?? false);
+  // The private member's shape of the app. The bar holds still until this
+  // is known rather than drawing a People tab and taking it away a beat
+  // later — see cachedNav above.
+  const [isPrivate, setIsPrivate] = useState(() => cachedNav?.isPrivate ?? false);
+  const [ready, setReady] = useState(() => cachedNav !== null);
   // Reported up by the pastoral rows in the More sheet, which are the only
   // place that knows those routes' names. False for everyone else, because
   // for everyone else the component that would set it never mounts.
@@ -60,8 +83,15 @@ export default function Nav() {
         .maybeSingle();
       if (cancelled) return;
       if (error) console.error("[deep-waters] nav profile:", error.message);
-      setIsAdmin(p?.role === "admin");
-      setIsPastoral(p?.is_pastoral === true);
+      cachedNav = {
+        isAdmin: p?.role === "admin",
+        isPastoral: p?.is_pastoral === true,
+        isPrivate: p?.is_private === true
+      };
+      setIsAdmin(cachedNav.isAdmin);
+      setIsPastoral(cachedNav.isPastoral);
+      setIsPrivate(cachedNav.isPrivate);
+      setReady(true);
       if (p) setMe({ name: p.name, photoUrl: p.photo_url ?? null });
       const refresh = async () => {
         const { count } = await supabase
@@ -121,6 +151,9 @@ export default function Nav() {
   // is what carries the admin flag and the sheet.
   const reading = isReadingRoute(pathname);
 
+  // One list for both bars, narrowed for a private member.
+  const tabs = navTabsFor(isPrivate);
+
   return (
     <>
       {!reading && (
@@ -167,7 +200,7 @@ export default function Nav() {
               same sheet and carries the same rows. Admin lives in there,
               where the phone has always kept it. */}
           <nav className="hidden md:flex items-center gap-1" aria-label="Sections">
-            {NAV_TABS.map((t) => {
+            {(ready ? tabs : []).map((t) => {
               const active = t.match(pathname);
               return (
                 <Link
@@ -240,6 +273,8 @@ export default function Nav() {
 
       <BottomNav
         isAdmin={isAdmin}
+        tabs={tabs}
+        ready={ready}
         pastoralMore={pastoralMore}
         hasUser={hasUser}
         moreOpen={moreOpen}
@@ -254,6 +289,7 @@ export default function Nav() {
         onClose={() => setMoreOpen(false)}
         isAdmin={isAdmin}
         isPastoral={isPastoral}
+        isPrivate={isPrivate}
         onPastoralMoreMatch={setPastoralMore}
       />
     </>

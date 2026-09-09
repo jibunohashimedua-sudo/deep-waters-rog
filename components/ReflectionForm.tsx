@@ -8,7 +8,8 @@ export default function ReflectionForm({
   userName,
   userPhoto,
   future = false,
-  futureDate = null
+  futureDate = null,
+  isPrivate = false
 }: {
   dayNumber: number;
   existing: { verse_reference: string | null; verse_text: string | null; reflection: string | null } | null;
@@ -18,6 +19,11 @@ export default function ReflectionForm({
   future?: boolean;
   /** The date this day maps to, for the "save on …" line. Not shown when null. */
   futureDate?: string | null;
+  /** A private member's reflection is not shared anywhere, because there is
+      no feed in his app. The line under the label has to say what is
+      actually true for him rather than promising an audience he has not
+      got. */
+  isPrivate?: boolean;
 }) {
   const router = useRouter();
   const [verseRef, setVerseRef] = useState(existing?.verse_reference ?? "");
@@ -122,7 +128,9 @@ export default function ReflectionForm({
               What it stirred
             </label>
             <p className="mt-1 mb-2 text-xs text-rog-muted">
-              Shared to the community feed when you save. Leave empty to keep it private.
+              {isPrivate
+                ? "Kept with your day. Yours to read back, nobody else's."
+                : "Shared to the community feed when you save. Leave empty to keep it private."}
             </p>
             <textarea
               value={reflection}

@@ -9,6 +9,10 @@ type Props = {
       object as the six around them rather than a near-copy of them. */
   className: string;
   onClose: () => void;
+  /** Church pulse is a screen about the congregation, and a private member
+      is not staff. He keeps the sermon desk, which is what the Elite flag
+      is for in his case. */
+  showPulse: boolean;
   /**
    * Reports whether the current path is one of these rows' routes, so the
    * bars can light the More tab without shared code ever naming a
@@ -41,6 +45,7 @@ type Props = {
 export default function MoreSheetPastoralRows({
   className,
   onClose,
+  showPulse,
   onMoreMatch
 }: Props) {
   const pathname = usePathname();
@@ -55,9 +60,11 @@ export default function MoreSheetPastoralRows({
 
   return (
     <>
-      <Link href="/pulse" onClick={onClose} className={className}>
-        Church pulse
-      </Link>
+      {showPulse && (
+        <Link href="/pulse" onClick={onClose} className={className}>
+          Church pulse
+        </Link>
+      )}
       <Link href="/sermons" onClick={onClose} className={className}>
         Sermons
       </Link>

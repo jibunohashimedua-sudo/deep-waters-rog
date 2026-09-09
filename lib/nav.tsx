@@ -88,6 +88,23 @@ export const NAV_TABS: NavTab[] = [
 export const MORE_ICON = <Icon name="more" />;
 
 /**
+ * The sections this reader gets.
+ *
+ * A private member has no People tab. Not a greyed one and not one that
+ * leads to an empty page — the tab simply is not in the list, so the bar
+ * draws four items instead of five and nothing about the shape of the app
+ * says a fifth was removed. The routes behind it are turned away in the
+ * middleware; this is the half that means he never reaches for them.
+ *
+ * Everything else is untouched: Today, Bible and Depth are his, and the
+ * Bench sits inside Bible where it always has.
+ */
+export function navTabsFor(isPrivate: boolean): NavTab[] {
+  if (!isPrivate) return NAV_TABS;
+  return NAV_TABS.filter((t) => t.href !== "/community");
+}
+
+/**
  * The routes that live behind More rather than under a tab: the rows in
  * the sheet, and Admin. Kept beside the tabs so More lights up for its
  * own pages on both bars.

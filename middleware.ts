@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isBlockedForPrivateMember } from "@/lib/privacy";
 
 /** Cap for the Supabase auth roundtrip inside middleware. A stalled Supabase
     used to drag every in-flight navigation; now we give up, send them to the
@@ -110,11 +111,31 @@ export async function middleware(request: NextRequest) {
 
   // Check for profile completion
   if (pathname !== "/onboarding") {
+    // `*` rather than a column list: is_private arrives with a migration,
+    // and a named select for a column that isn't there yet is a 400 —
+    // which this code would read as "no profile" and send the whole church
+    // back through onboarding. A row without the column reads as false,
+    // which is the right answer for every member but one.
     const { data: profile } = await supabase
       .from("profiles")
-      .select("id")
+      .select("*")
       .eq("id", user.id)
       .maybeSingle();
+
+    // The private member's routes. He is not shown a locked door and he is
+    // not shown a message: for him these paths are 404, the same answer the
+    // app gives for a path that was never built. The navigation never draws
+    // them either (lib/nav.tsx) — this is the half that catches a typed URL,
+    // an old bookmark and a link in a notification.
+    if (profile && (profile as { is_private?: boolean }).is_private === true) {
+      if (isBlockedForPrivateMember(pathname)) {
+        if (isApi) {
+          return NextResponse.json({ error: "not-found" }, { status: 404 });
+        }
+        return redirectTo("/today");
+      }
+    }
+
     if (!profile) {
       if (isApi) {
         // Signed in with no profile row is only reachable if onboarding was
