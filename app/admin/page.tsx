@@ -50,8 +50,7 @@ export default async function AdminPage() {
     <>
       <Nav />
       <main className="max-w-4xl mx-auto px-6 py-10">
-        <p className="kicker">Admin</p>
-        <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Dashboard</h1>
+        <h1 className="text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Admin dashboard</h1>
 
         <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
           {stat("Total users", totalUsers, "/admin/users")}

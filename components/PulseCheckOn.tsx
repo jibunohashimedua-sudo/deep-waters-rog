@@ -289,7 +289,7 @@ function PersonSheet({ row, onClose }: { row: CheckOnRow | null; onClose: () => 
                 {log.map((e) => (
                   <div key={e.id} className="pulse-care-entry">
                     <p className="kicker kicker-strong">
-                      {`${e.kind === "reached_out" ? "Reached out" : "Note"} · ${e.author_name} · ${stamp(e.created_at)}`}
+                      {`${e.author_name}, ${stamp(e.created_at)}`}
                     </p>
                     {e.body && <p className="pulse-care-body">{e.body}</p>}
                   </div>

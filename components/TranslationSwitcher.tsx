@@ -175,7 +175,7 @@ export default function TranslationSwitcher({
                             aria-current={on ? "true" : undefined}
                             className="card w-full text-left flex items-start gap-3 disabled:opacity-60"
                           >
-                            <span className="font-mono text-[10px] tracking-[0.13em] uppercase text-rog-muted pt-1 w-[64px] shrink-0">
+                            <span className="font-mono text-[10px] tracking-[0.13em] uppercase text-rog-data pt-1 w-[64px] shrink-0">
                               {t.abbr}
                             </span>
                             <span className="min-w-0 flex-1">

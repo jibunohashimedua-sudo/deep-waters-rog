@@ -58,8 +58,7 @@ export default function BenchHouse({ rows, planDay, loading }: Props) {
           <li key={r.id} className="bench-row">
             <p className="kicker">
               {`Day ${r.day}`}
-              {r.reference ? ` · ${r.reference}` : ""}
-              {r.amens > 0 ? ` · ${r.amens} amen${r.amens === 1 ? "" : "s"}` : ""}
+              {r.reference ? ` ${r.reference}` : ""}
             </p>
             <p className="bench-said">{r.reflection}</p>
           </li>

@@ -25,7 +25,7 @@ export default function BenchCommentary({ entries, loading, verse }: Props) {
               : e.verse_start === e.verse_end
                 ? `Verse ${e.verse_start}`
                 : `Verses ${e.verse_start}–${e.verse_end}`}
-            {e.verse_start !== 0 && ` · containing verse ${verse}`}
+            {e.verse_start !== 0 && `, containing verse ${verse}`}
           </p>
           <p className="bench-said">{e.body}</p>
         </section>

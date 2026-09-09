@@ -86,7 +86,7 @@ export default function CohortsView() {
                       {c.name}
                     </p>
                     <p className="text-xs text-rog-muted mt-1">
-                      {status} · {c.member_count} member
+                      {c.member_count} member
                       {c.member_count === 1 ? "" : "s"}
                     </p>
                   </div>

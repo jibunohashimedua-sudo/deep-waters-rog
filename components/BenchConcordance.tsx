@@ -39,8 +39,7 @@ export default function BenchConcordance({
   return (
     <>
       <p className="kicker">
-        {`${strongsId} · ${total} ${total === 1 ? "verse" : "verses"}`}
-        {word ? ` · ${word}` : ""}
+        {`${total} ${total === 1 ? "verse" : "verses"}`}
       </p>
       <ul className="bench-rows">
         {hits.map((h) => (

@@ -115,11 +115,16 @@ export default function DayPicker({
                           ? "var(--soft-bg)"
                           : "var(--bg)",
                     color:
-                      done || isToday ? "var(--on-accent)" : "var(--muted)",
-                    boxShadow: isViewing
-                      ? "inset 0 0 0 2px var(--accent)"
+                      done || isToday ? "var(--on-accent)" : "var(--ink-data)",
+                    outline: isViewing
+                      ? "var(--rule-section) solid var(--accent)"
                       : isToday
-                        ? "inset 0 0 0 1px var(--sonar)"
+                        ? "var(--rule-hairline) solid var(--sonar)"
+                        : undefined,
+                    outlineOffset: isViewing
+                      ? "calc(var(--rule-section) * -1)"
+                      : isToday
+                        ? "calc(var(--rule-hairline) * -1)"
                         : undefined
                   }}
                 >
@@ -131,7 +136,7 @@ export default function DayPicker({
 
           <div className="mt-6 flex items-center justify-between">
             <p className="kicker">
-              {doneDays.size} kept · {Math.max(0, 90 - currentDay)} to go
+              {doneDays.size} kept
             </p>
             {viewedDay !== currentDay && (
               <button

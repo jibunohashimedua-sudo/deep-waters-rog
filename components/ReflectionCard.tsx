@@ -161,10 +161,11 @@ export default function ReflectionCard({
             <Avatar name={item.name} photoUrl={item.photo_url} size="md" decorative />
             <div className="flex-1 min-w-0">
               <p className="text-[14px] font-semibold text-rog-ink leading-tight">{item.name}</p>
-              <p className="kicker mt-1">
-                Day {item.day_number} &middot;{" "}
-                {new Date(item.completed_at).toLocaleDateString("en-GB")}
-              </p>
+              {/* One fact, and which one depends on when it was written.
+                  Today's posts are placed by the clock; older ones by the
+                  day of the plan they belong to. Both together was a date
+                  and a day number saying the same thing twice. */}
+              <p className="kicker mt-1">{stampFor(item)}</p>
             </div>
           </>
         );
@@ -274,4 +275,17 @@ export default function ReflectionCard({
       )}
     </article>
   );
+}
+
+/** "07:41" for something written today, "Day 32" for anything older. */
+function stampFor(item: { completed_at: string; day_number: number }): string {
+  const at = new Date(item.completed_at);
+  const now = new Date();
+  const sameDay =
+    at.getFullYear() === now.getFullYear() &&
+    at.getMonth() === now.getMonth() &&
+    at.getDate() === now.getDate();
+  return sameDay
+    ? at.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
+    : `Day ${item.day_number}`;
 }

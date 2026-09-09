@@ -70,7 +70,7 @@ export default function TimezoneNotice() {
         <button
           type="button"
           onClick={dismiss}
-          className="kicker text-rog-muted underline"
+          className="kicker text-rog-data underline"
         >
           Dismiss
         </button>

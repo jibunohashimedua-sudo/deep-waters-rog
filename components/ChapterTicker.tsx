@@ -169,7 +169,7 @@ export default function ChapterTicker({
         onClick={() => setOverrideOpen((v) => !v)}
         aria-expanded={overrideOpen}
         aria-controls={`chapter-override-${dayNumber}`}
-        className="mt-5 kicker inline-flex items-center gap-2 text-rog-muted hover:text-rog-ink transition"
+        className="mt-5 kicker inline-flex items-center gap-2 text-rog-data hover:text-rog-ink transition"
       >
         Mark by hand
         <span

@@ -167,9 +167,9 @@ export default async function PulsePage() {
                       </p>
                     </div>
                     <p className="kicker mt-1.5">
-                      {`Led by ${c.leader_name ?? "nobody yet"} · Last activity ${
-                        c.last_activity_at ? shortDate(c.last_activity_at) : "none yet"
-                      }`}
+                      {c.last_activity_at
+                        ? `Last activity ${shortDate(c.last_activity_at)}`
+                        : "No activity yet"}
                     </p>
                     <div
                       className="pulse-bar"
@@ -230,7 +230,7 @@ export default async function PulsePage() {
                       <p className="text-[14px] font-medium text-rog-ink truncate">{p.name}</p>
                       <p className="kicker mt-1">
                         {p.needs_pastor
-                          ? `Asked for a pastor · ${shortDate(p.created_at)}`
+                          ? `Asked for a pastor, ${shortDate(p.created_at)}`
                           : `Waiting ${days(
                               Math.max(
                                 0,
@@ -238,7 +238,7 @@ export default async function PulsePage() {
                                   (Date.now() - new Date(p.created_at).getTime()) / 86400000
                                 )
                               )
-                            )} · ${shortDate(p.created_at)}`}
+                            )}`}
                       </p>
                     </div>
                   </div>

@@ -44,7 +44,7 @@ export default async function AdminNotesPage() {
                     {n?.title || `Day ${d.day}`}
                   </p>
                   <p className="text-[11px] text-rog-muted truncate">
-                    {formatReading(d.ot)} &bull; {formatReading(d.nt)}
+                    {formatReading(d.ot)}, {formatReading(d.nt)}
                   </p>
                 </div>
               </Link>

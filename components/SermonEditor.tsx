@@ -224,7 +224,7 @@ export default function SermonEditor({
 
   return (
     <>
-      <p className="kicker">Elite · Sermon</p>
+      <p className="kicker">Sermon</p>
 
       <label htmlFor="sermon-title" className="sr-only">
         Title

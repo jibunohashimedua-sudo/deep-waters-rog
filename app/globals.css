@@ -11,17 +11,34 @@
 :root {
   --bg: #EDEFF2;        /* cold paper */
   --text: #0C0F16;      /* ink        · 16.6:1 */
-  --muted: #565E6D;     /* ink, quiet ·  5.7:1 */
+  /* Two secondary tones, not one. They are not interchangeable, and the
+     rule is the font, not the importance:
+
+       --ink-quiet  Plex Sans prose only.  5.7:1
+       --ink-data   Plex Mono only.        9.0:1
+
+     Data is the higher contrast of the two, which reads backwards until
+     you look at a screen: mono at 9.5px with 0.13em tracking needs more
+     separation from the ground than prose at 13.5px does. One token doing
+     both jobs is what flattened the two into the same grey texture. */
+  --ink-quiet: #565E6D;
+  --ink-data: #3C424D;
   --line: #CFD4DC;      /* every rule in the app */
 
+  /* Hairline weight encodes rank, and there are only two weights.
+       2px  opens a section
+       1px  separates entries inside one
+     Nothing between things that belong together. */
+  --rule-section: 2px;
+  --rule-hairline: 1px;
+
   /* There is no elevation in this system. What used to be a glass card
-     is now a recessed plate with a hairline round it: no blur, no
-     shadow, no inset highlight. The token names are kept so the 40-odd
-     .card call sites re-skin without being edited. */
+     is now a recessed plate with a hairline round it: no blur, no lift,
+     no inset highlight. The token names are kept so the 40-odd .card
+     call sites re-skin without being edited. */
   --card-bg: #E7EAEE;
   --card-border: #CFD4DC;
   --card-highlight: transparent;
-  --card-shadow: transparent;
 
   --nav-bg: #EDEFF2;    /* opaque. Nothing is frosted anywhere. */
   --nav-border: #CFD4DC;
@@ -109,13 +126,13 @@
      decision is why this dark mode doesn't look like every other one. */
   --bg: #0C0A18;
   --text: #E9E6F2;      /* 15.9:1 */
-  --muted: #8B87A3;     /*  5.7:1 */
+  --ink-quiet: #8B87A3; /* 5.7:1 */
+  --ink-data: #B4B0C6;  /* 9.4:1 */
   --line: #262239;
 
   --card-bg: #15122A;
   --card-border: #262239;
   --card-highlight: transparent;
-  --card-shadow: transparent;
 
   --nav-bg: #0C0A18;
   --nav-border: #262239;
@@ -350,7 +367,7 @@ body {
 .card-list > .card:first-child { border-top: 0; }
 
 /* Elevation 1 — a warm plate lying flat on the page.
-   For grouping content without lifting it. No shadow, no blur. */
+   For grouping content without lifting it. No lift, no blur. */
 .surface-soft {
   @apply p-6;
   background: var(--soft-bg);
@@ -390,7 +407,7 @@ body {
 .empty-state .empty-hint {
   font-size: 13px;
   line-height: 1.55;
-  color: var(--muted);
+  color: var(--ink-quiet);
   max-width: 42ch;
   margin: 0;
 }
@@ -490,7 +507,7 @@ body {
   letter-spacing: 0.13em;
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
-  color: var(--muted);
+  color: var(--ink-data);
 }
 .kicker-strong { color: var(--text); }
 
@@ -510,7 +527,7 @@ body {
   letter-spacing: 0.13em;
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
-  color: var(--muted);
+  color: var(--ink-data);
 }
 
 .bible-content {
@@ -546,7 +563,7 @@ body {
   font: 400 9.5px/31.3px var(--font-mono), ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.06em;
-  color: var(--muted);
+  color: var(--ink-data);
   /* Part of the verse's tap target, never part of what you copy. */
   -webkit-user-select: none;
   user-select: none;
@@ -599,7 +616,7 @@ body {
 .dw-verse {
   /* Two columns: the number hangs in the first, the prose runs in the
      second. The rule a highlight draws stays outside both, on the very
-     left edge of the block — see the box-shadow below. */
+     left edge of the block — see the gradient below. */
   display: grid;
   grid-template-columns: 3.25ch 1fr;
   column-gap: 0;
@@ -621,17 +638,23 @@ body {
   user-select: none;
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
-  box-shadow: inset 2px 0 0 transparent;
-  transition: background-color 160ms ease, box-shadow 160ms ease;
+  /* Every state below paints a background-image rather than an inset
+     rule. A gradient costs no layout either, and it keeps a stacking
+     idea out of a system that has no elevation in it: borrowing a
+     lifting effect to draw a flat line is the wrong thing borrowed. */
+  transition: background-color 160ms ease, background-image 160ms ease;
 }
 
-/* A verse carrying a highlight: the tinted ground, and a 2px rule down
-   the left edge saying which of the five it is. Square, flat, no glow.
-   Overlaps don't blend — the newest highlight wins the verse outright
-   (decided in ScriptureReader, painted here). */
+/* A verse carrying a highlight: one gradient doing both jobs — 2px of
+   rule, then the tint for the rest of the band. Overlaps don't blend;
+   the newest highlight wins the verse outright (decided in
+   ScriptureReader, painted here). */
 .dw-verse[data-hl] {
-  background-color: var(--hl-ground);
-  box-shadow: inset 2px 0 0 var(--hl-rule);
+  background-image: linear-gradient(
+    to right,
+    var(--hl-rule) 0 var(--rule-section),
+    var(--hl-ground) var(--rule-section)
+  );
 }
 .dw-verse[data-hl="shoal"]   { --hl-ground: var(--hl-shoal-ground);    --hl-rule: var(--hl-shoal-rule); }
 .dw-verse[data-hl="current"] { --hl-ground: var(--hl-current-ground);  --hl-rule: var(--hl-current-rule); }
@@ -646,19 +669,22 @@ body {
    Adjacent selected verses have no gap between them, so their grounds
    meet and a run of them reads as one block rather than as a stack. */
 .dw-verse[data-sel="true"] {
-  background-color: var(--soft-bg);
-  box-shadow: inset 2px 0 0 var(--sonar);
+  background-image: linear-gradient(
+    to right,
+    var(--sonar) 0 var(--rule-section),
+    var(--soft-bg) var(--rule-section)
+  );
 }
 
 /* A verse arrived at from a link — /bible/john/3/16. Marked so the eye
    finds it after the scroll, then faded, because the mark is a pointer
    and not a state the reader chose. */
 .dw-verse[data-focus] {
-  background-color: var(--accent-soft);
-  transition: background-color 600ms ease;
+  background-image: linear-gradient(var(--accent-soft) 0 0);
+  transition: background-image 600ms ease;
 }
 .dw-verse[data-focus="fading"] {
-  background-color: transparent;
+  background-image: none;
 }
 
 /* Verses that already carry a note get a small mark after them.
@@ -822,11 +848,12 @@ select {
 input:focus, textarea:focus, select:focus {
   background: var(--input-bg-focus) !important;
   border-color: var(--accent) !important;
-  box-shadow: inset 0 0 0 1px var(--accent);
+  outline: var(--rule-hairline) solid var(--accent);
+  outline-offset: calc(var(--rule-hairline) * -1);
   outline: none;
 }
 input::placeholder, textarea::placeholder {
-  color: var(--muted);
+  color: var(--ink-quiet);
   opacity: 0.7;
 }
 
@@ -848,7 +875,8 @@ button:focus-visible, a:focus-visible {
    ========================================================= */
 
 [data-theme="dark"] .text-rog-ink { color: var(--text); }
-[data-theme="dark"] .text-rog-muted { color: var(--muted); }
+[data-theme="dark"] .text-rog-muted { color: var(--ink-quiet); }
+[data-theme="dark"] .text-rog-data { color: var(--ink-data); }
 [data-theme="dark"] .text-rog-purple { color: var(--accent); }
 [data-theme="dark"] .bg-white { background-color: var(--soft-bg); }
 [data-theme="dark"] .bg-rog-cream { background-color: var(--soft-bg); }
@@ -907,7 +935,7 @@ button:focus-visible, a:focus-visible {
   background: linear-gradient(
     90deg,
     var(--soft-bg) 25%,
-    color-mix(in oklab, var(--soft-bg) 55%, var(--muted) 45%) 37%,
+    color-mix(in oklab, var(--soft-bg) 55%, var(--ink-quiet) 45%) 37%,
     var(--soft-bg) 63%
   );
   background-size: 400% 100%;
@@ -971,9 +999,9 @@ button:focus-visible, a:focus-visible {
   border-radius: 0;
   color: var(--text);
 }
-.votd-kicker { color: var(--muted); }
+.votd-kicker { color: var(--ink-data); }
 .votd-body   { color: var(--text); font-family: var(--font-serif), Georgia, serif; }
-.votd-meta   { color: var(--muted); }
+.votd-meta   { color: var(--ink-data); }
 
 /* =========================================================
    FOCUS & TAP TARGETS
@@ -1208,12 +1236,16 @@ select:focus-visible {
 }
 .tab-item {
   position: relative;
-  color: var(--muted);
+  color: var(--ink-data);
   transition: color 0.15s ease;
 }
 .tab-item[data-active="true"] {
   color: var(--text);
-  box-shadow: inset 0 2px 0 var(--sonar);
+  background-image: linear-gradient(
+    to bottom,
+    var(--sonar) 0 var(--rule-section),
+    transparent var(--rule-section)
+  );
 }
 
 /* =========================================================
@@ -1344,7 +1376,7 @@ select:focus-visible {
 .read-list { border-bottom: 1px solid var(--line); }
 .read-row {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) 16px;
+  grid-template-columns: minmax(0, 1fr) 16px;
   align-items: center;
   gap: 12px;
   padding: 15px 0;
@@ -1358,7 +1390,7 @@ select:focus-visible {
   line-height: 1.25;
   color: var(--text);
 }
-.read-row .read-arrow { color: var(--muted); justify-self: end; font-size: 13px; }
+.read-row .read-arrow { color: var(--ink-quiet); justify-self: end; font-size: 13px; }
 .read-row:hover .read-arrow { color: var(--accent); }
 
 /* =========================================================
@@ -1377,7 +1409,7 @@ select:focus-visible {
   border-radius: 999px;
   border: 1px solid var(--line);
   background: transparent;
-  color: var(--muted);
+  color: var(--ink-quiet);
   font-size: 13px;
   font-weight: 500;
   transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
@@ -1395,7 +1427,7 @@ select:focus-visible {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  color: var(--muted);
+  color: var(--ink-data);
   transition: color 0.15s ease;
 }
 .act:hover { color: var(--text); }
@@ -1406,7 +1438,11 @@ select:focus-visible {
    scripture serif, no quotation marks doing the work of the rule. */
 .quoted {
   padding-left: 12px;
-  box-shadow: inset 2px 0 0 var(--line);
+  background-image: linear-gradient(
+    to right,
+    var(--line) 0 var(--rule-section),
+    transparent var(--rule-section)
+  );
 }
 
 /* =========================================================
@@ -1428,7 +1464,7 @@ select:focus-visible {
   padding: 0 10px;
   font-size: 13px;
   font-weight: 500;
-  color: var(--muted);
+  color: var(--ink-quiet);
   background: transparent;
   border: 0;
   cursor: pointer;
@@ -1545,7 +1581,7 @@ select:focus-visible {
   font-size: 10px;
   letter-spacing: 0.13em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--ink-data);
   transition: color 0.15s ease;
 }
 .reading-back:hover { color: var(--text); }
@@ -1620,7 +1656,7 @@ select:focus-visible {
 }
 .reading-caret {
   font-size: 13px;
-  color: var(--muted);
+  color: var(--ink-quiet);
   transition: color 0.15s ease;
 }
 .reading-title-btn:hover .reading-caret { color: var(--text); }
@@ -1754,7 +1790,11 @@ select:focus-visible {
   border-top: 1px solid var(--line);
   padding: 14px 14px 14px 16px;
   margin: 0 -14px 0 -16px;
-  box-shadow: inset 2px 0 0 var(--hl-rule, var(--line));
+  background-image: linear-gradient(
+    to right,
+    var(--hl-rule, var(--line)) 0 var(--rule-section),
+    transparent var(--rule-section)
+  );
   transition: background-color 0.12s ease;
 }
 .mark-row:hover { background-color: var(--soft-bg); }
@@ -1819,7 +1859,7 @@ select:focus-visible {
   justify-content: center;
   background: var(--soft-bg);
   border: 1px solid var(--line);
-  color: var(--muted);
+  color: var(--ink-data);
   font-family: var(--font-mono), ui-monospace, monospace;
   letter-spacing: 0.08em;
   font-variant-numeric: tabular-nums;
@@ -1846,7 +1886,7 @@ select:focus-visible {
    accent violet for anything that belongs to Elite, sonar kept for
    position and state only (the pinned verse's rule, the active lens's
    underline), square containers, pills only on things you press, no
-   shadow, no blur, no gradient.
+   lift, no blur, no tint.
    ========================================================= */
 
 /* ---- The header lockup ---------------------------------------------
@@ -2071,7 +2111,11 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   flex: 1 1 auto;
   min-width: 0;
   padding-left: 12px;
-  box-shadow: inset 2px 0 0 var(--sonar);
+  background-image: linear-gradient(
+    to right,
+    var(--sonar) 0 var(--rule-section),
+    transparent var(--rule-section)
+  );
 }
 .bench-pinned-text {
   margin-top: 6px;
@@ -2096,7 +2140,7 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   font-size: 10px;
   letter-spacing: 0.13em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--ink-data);
 }
 .bench-close:hover { color: var(--text); }
 
@@ -2135,7 +2179,7 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 10px;
   letter-spacing: 0.13em;
-  color: var(--muted);
+  color: var(--ink-data);
   font-variant-numeric: tabular-nums;
 }
 .bench-word[data-on="true"] .bench-word-num { color: var(--accent); }
@@ -2154,19 +2198,23 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   min-height: 44px;
   padding: 0 12px;
   background: transparent;
-  color: var(--muted);
+  color: var(--ink-data);
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 10px;
   letter-spacing: 0.13em;
   text-transform: uppercase;
   white-space: nowrap;
-  box-shadow: inset 0 -2px 0 transparent;
+  background-image: none;
 }
 .bench-tab:hover { color: var(--text); }
 /* Sonar, because the underline is reporting where you are. */
 .bench-tab[data-on="true"] {
   color: var(--text);
-  box-shadow: inset 0 -2px 0 var(--sonar);
+  background-image: linear-gradient(
+    to top,
+    var(--sonar) 0 var(--rule-section),
+    transparent var(--rule-section)
+  );
 }
 
 /* ---- The body ------------------------------------------------------
@@ -2223,7 +2271,7 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   border: 1px solid var(--line);
   border-radius: 999px;
   background: transparent;
-  color: var(--muted);
+  color: var(--ink-data);
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 10px;
   letter-spacing: 0.13em;
@@ -2268,7 +2316,7 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 11.5px;
   line-height: 1.6;
-  color: var(--muted);
+  color: var(--ink-data);
 }
 
 /* Where a lens's content comes from. Every lens carries one. */
@@ -2278,7 +2326,7 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   font-size: 10px;
   letter-spacing: 0.06em;
   line-height: 1.5;
-  color: var(--muted);
+  color: var(--ink-data);
 }
 
 .bench-more,
@@ -2315,7 +2363,7 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   min-height: 44px;
   padding: 0 2px;
   background: transparent;
-  color: var(--muted);
+  color: var(--ink-data);
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 10px;
   letter-spacing: 0.13em;
@@ -2371,7 +2419,7 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   border: 1px solid var(--line);
   border-radius: 999px;
   background: transparent;
-  color: var(--muted);
+  color: var(--ink-data);
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 10px;
   letter-spacing: 0.13em;
@@ -2415,7 +2463,11 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
    because it is reporting a position — the same thing it reports on the
    selected verse and on the active lens. */
 .bench-row[data-on="true"] {
-  box-shadow: inset 2px 0 0 var(--sonar);
+  background-image: linear-gradient(
+    to right,
+    var(--sonar) 0 var(--rule-section),
+    transparent var(--rule-section)
+  );
   padding-left: 12px;
   margin-left: -12px;
 }
@@ -2454,7 +2506,7 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
    CHURCH PULSE
 
    The pastoral care screen. Built from tokens already here: square
-   containers, pills only on things you press, no shadow, no blur, no
+   containers, pills only on things you press, no lift, no blur, no
    gradient, Plex Mono on every number and label.
 
    Two colours and no more. Sonar keeps its job — position and state,
@@ -2498,13 +2550,17 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   line-height: 1.4;
   letter-spacing: 0.13em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--ink-data);
 }
 /* The one tile that is a call to action. Nothing else on the page takes
    this treatment except the rows and marks that carry the same meaning. */
 .pulse-stat[data-care="true"] {
   background: var(--hl-shoal-ground);
-  box-shadow: inset 2px 0 0 var(--hl-shoal-rule);
+  background-image: linear-gradient(
+    to right,
+    var(--hl-shoal-rule) 0 var(--rule-section),
+    transparent var(--rule-section)
+  );
 }
 .pulse-stat[data-care="true"] .pulse-stat-label { color: var(--text); opacity: 0.72; }
 
@@ -2520,11 +2576,19 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   text-align: left;
   border-top: 1px solid var(--line);
   background: var(--hl-shoal-ground);
-  box-shadow: inset 2px 0 0 var(--hl-shoal-rule);
+  background-image: linear-gradient(
+    to right,
+    var(--hl-shoal-rule) 0 var(--rule-section),
+    transparent var(--rule-section)
+  );
 }
 /* Hover deepens the rule rather than tinting the ground. No filter, no
    second colour — the row already says what it is. */
-.pulse-row:hover { box-shadow: inset 3px 0 0 var(--hl-shoal-rule); }
+.pulse-row:hover { background-image: linear-gradient(
+    to right,
+    var(--hl-shoal-rule) 0 var(--rule-section),
+    transparent var(--rule-section)
+  ); }
 .pulse-row-name {
   display: block;
   font-size: 15px;
@@ -2569,16 +2633,12 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
 .pulse-bar[data-state="quiet"] .pulse-bar-fill { background: var(--hl-shoal-rule); }
 
 /* ---- where people fall away ---- */
-.pulse-curve { width: 100%; height: auto; display: block; }
-.pulse-curve-line {
-  fill: none;
-  stroke: var(--text);
-  stroke-width: 1.4;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-}
-.pulse-curve-axis { stroke: var(--line); stroke-width: 1; }
-.pulse-curve-mark { stroke: var(--hl-shoal-rule); stroke-width: 1.4; }
+/* Ninety bars. No stroke anywhere in here, so there is no cap and no
+   join to have an opinion about. */
+.pulse-days { width: 100%; height: auto; display: block; }
+.pulse-day { fill: var(--text); }
+.pulse-day-empty { fill: var(--line); }
+.pulse-day-care { fill: var(--hl-shoal-rule); }
 
 /* ---- prayers waiting ---- */
 .pulse-prayer {
@@ -2589,7 +2649,11 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
 .pulse-prayer[data-care="true"] {
   padding: 14px;
   background: var(--hl-shoal-ground);
-  box-shadow: inset 2px 0 0 var(--hl-shoal-rule);
+  background-image: linear-gradient(
+    to right,
+    var(--hl-shoal-rule) 0 var(--rule-section),
+    transparent var(--rule-section)
+  );
 }
 .pulse-prayer-body {
   margin-top: 8px;
@@ -2639,7 +2703,11 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   line-height: 1.5;
   color: var(--text);
   background: var(--hl-shoal-ground);
-  box-shadow: inset 2px 0 0 var(--hl-shoal-rule);
+  background-image: linear-gradient(
+    to right,
+    var(--hl-shoal-rule) 0 var(--rule-section),
+    transparent var(--rule-section)
+  );
 }
 
 /* =========================================================
@@ -2699,4 +2767,29 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   font-variant-numeric: oldstyle-nums;
   font-feature-settings: "kern", "liga", "onum";
   text-indent: -0.42em;
+}
+
+
+/* =========================================================
+   THE DAY COUNT
+   One number at scale per screen, and on the day screen this is it.
+   Mono because it is data, --text because it is the loudest thing on
+   the page, and "/90" set quiet beside it so the eye reads the day
+   first and the denominator second.
+   ========================================================= */
+
+.day-count {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  margin: 0;
+}
+.day-count-of {
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  color: var(--ink-data);
 }

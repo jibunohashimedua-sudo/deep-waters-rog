@@ -122,7 +122,9 @@ export default async function ReadPage({
         <ReadingHeader
           backHref="/today"
           backLabel={`Back to day ${day}`}
-          kicker={`Day ${day} · ${label}`}
+          kicker={
+            chapters.length > 1 ? `${chapters.length} chapters` : "1 chapter"
+          }
           reference={reference}
           userId={userId}
           translationId={

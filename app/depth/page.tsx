@@ -226,8 +226,9 @@ export default async function DepthPage() {
                       : d < day
                         ? "var(--soft-bg)"
                         : "var(--bg)",
-                  color: done || isToday ? "var(--on-accent)" : "var(--muted)",
-                  boxShadow: isToday ? "inset 0 0 0 1px var(--sonar)" : undefined
+                  color: done || isToday ? "var(--on-accent)" : "var(--ink-data)",
+                  outline: isToday ? "var(--rule-hairline) solid var(--sonar)" : undefined,
+                  outlineOffset: isToday ? "calc(var(--rule-hairline) * -1)" : undefined
                 }}
               >
                 {/* Partial fill from the bottom of the cell, proportional
@@ -249,9 +250,7 @@ export default async function DepthPage() {
             );
           })}
         </div>
-        <p className="kicker mt-3">
-          {doneDays.size} kept &middot; {Math.max(0, 90 - day)} to go
-        </p>
+        <p className="kicker mt-3">{doneDays.size} kept</p>
       </section>
 
       {/* Milestones. Rows, not a grid of little cards — an unearned badge
@@ -355,14 +354,12 @@ export default async function DepthPage() {
             <h1 className="font-serif text-[26px] leading-tight text-rog-ink break-words">
               {profile.name}
             </h1>
-            {/* Terse on purpose. "Day 34 · 30 completed · 12 day streak"
-                is 34 characters, and beside an 80px portrait on a 390px
-                phone that wraps onto a second line and leaves "streak"
-                stranded on its own. Mono metadata should read as one
-                instrument reading, not as a sentence. */}
+            {/* One fact. It was "Day 34 · 30 kept · Streak 12" — three
+                readings given equal weight, so none of them landed, and
+                the streak is a number this app no longer puts on screen
+                anywhere. Days kept is the one that describes the reader. */}
             <p className="kicker mt-2">
-              Day {day} &middot; {lb?.days_completed ?? doneDays.size} kept
-              &middot; Streak {lb?.current_streak ?? 0}
+              {lb?.days_completed ?? doneDays.size} kept
             </p>
             {profile.bio && (
               <p className="selectable mt-3 text-[13.5px] leading-5 text-rog-muted break-words">

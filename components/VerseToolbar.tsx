@@ -59,7 +59,7 @@ type Props = {
  * it arrived under the reader's own thumb. A fixed place at the foot of the
  * screen is both easier to reach and impossible to lose.
  *
- * Opaque ground, one hairline along the top, no blur, no shadow. It slides
+ * Opaque ground, one hairline along the top, no blur, no lift. It slides
  * up and down in 200ms on transform alone.
  */
 export default function VerseToolbar({

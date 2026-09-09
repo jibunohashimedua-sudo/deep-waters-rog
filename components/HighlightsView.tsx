@@ -191,8 +191,7 @@ export default function HighlightsView({ rows, textError }: Props) {
       </div>
 
       <p className="kicker mt-5">
-        {verseCount} {verseCount === 1 ? "verse" : "verses"} &middot; {bookCount}{" "}
-        {bookCount === 1 ? "book" : "books"}
+        {verseCount} {verseCount === 1 ? "verse" : "verses"}
       </p>
 
       {textError && (

@@ -20,7 +20,10 @@ export default {
           cream: "#EDEFF2",
           peach: "#E3E6EB",
           ink: "#0C0F16",
+          /* Prose. Its mono counterpart is `data`, and they are not
+             swappable — see the --ink-quiet / --ink-data note in globals. */
           muted: "#565E6D",
+          data: "#3C424D",
           line: "#CFD4DC",
           sonar: "#067A5A"
         }

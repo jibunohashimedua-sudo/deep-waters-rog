@@ -40,13 +40,6 @@ const SUBLINES = {
     "That's today done.",
     "Today's saved. Rest easy."
   ],
-  // {n} is replaced with the streak length.
-  streak: [
-    "{n} days running.",
-    "{n} in a row.",
-    "That's {n} days straight.",
-    "{n} days on the bounce."
-  ],
   // Shown when someone comes back after a gap. Warm only — the gap is
   // never counted, named, or alluded to.
   returning: [
@@ -80,6 +73,8 @@ export type GreetingProps = {
   name: string;
   day: number;
   completedToday: boolean;
+  /** Still passed, still never printed: a run is something the gauge
+      shows by being full, not a number the app reads back to you. */
   streak: number;
   /** They have history, but there's a gap between it and today. */
   returning: boolean;
@@ -101,7 +96,6 @@ function subline(
   if (day === 90 && !completedToday) return pick(SUBLINES.lastDay, seed);
   if (day === 89 && !completedToday) return pick(SUBLINES.penultimate, seed);
   if (completedToday) return pick(SUBLINES.doneToday, seed);
-  if (streak >= 7) return pick(SUBLINES.streak, seed).replace("{n}", String(streak));
   if (returning) return pick(SUBLINES.returning, seed);
   return pick(SUBLINES.everyday, seed);
 }

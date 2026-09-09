@@ -7,7 +7,7 @@ import { ImageResponse } from "@vercel/og";
  *
  * Violet-black ground, ink at full strength, Literata for the scripture and
  * Plex Mono for everything that is a label or a number. Square corners, no
- * shadows, no orbs, no blur. The mark sits small and quiet in the corner
+ * lift, no orbs, no blur. The mark sits small and quiet in the corner
  * with the wordmark beside it: branding present, not dominating.
  *
  * Shared by /api/og (a day kept) and /api/og/verse (a verse shared) so the

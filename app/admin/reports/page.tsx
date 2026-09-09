@@ -149,7 +149,7 @@ export default async function AdminReportsPage() {
                 )}
                 <p className="mt-2 text-xs text-rog-muted">
                   Reported by {r.reporter}
-                  {r.reason && <> &bull; Reason: {r.reason}</>}
+                  {r.reason && <>. {r.reason}</>}
                 </p>
                 {!r.resolved && (
                   <div className="mt-3">

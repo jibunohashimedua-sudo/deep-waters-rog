@@ -75,7 +75,7 @@ export default async function AdminUsersPage({
                   )}
                 </p>
                 <p className="text-xs text-rog-muted">
-                  Joined {new Date(u.created_at).toLocaleDateString("en-GB")} &bull; Start {new Date(u.start_date).toLocaleDateString("en-GB")}
+                  Started {new Date(u.start_date).toLocaleDateString("en-GB")}
                 </p>
               </div>
               {u.id !== me && (

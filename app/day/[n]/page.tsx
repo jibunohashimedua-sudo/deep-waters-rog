@@ -99,6 +99,9 @@ export default async function DayPage({
   dayDate.setUTCHours(0, 0, 0, 0);
   dayDate.setUTCDate(dayDate.getUTCDate() + (day - 1));
   const dayDateIso = dayDate.toISOString().slice(0, 10);
+  const dayDateShort = dayDate
+    .toLocaleDateString("en-GB", { day: "2-digit", month: "short" })
+    .toUpperCase();
   const dayDateHuman = dayDate.toLocaleDateString("en-GB", {
     weekday: "short",
     day: "numeric",
@@ -184,9 +187,7 @@ export default async function DayPage({
             returning={returning}
           />
         ) : (
-          <p className="kicker">
-            {isFuture ? "Reading ahead" : "Catching up"} · {dayDateHuman}
-          </p>
+          <p className="kicker">{dayDateHuman}</p>
         )}
 
         {isCurrent && <NudgeBanner completed={existingIsFull && !!existing} day={day} />}
@@ -197,10 +198,11 @@ export default async function DayPage({
             hairline outline on its own cell so the eye can find it too. */}
         <div className="mb-10">
           <div className="flex items-baseline justify-between gap-3">
-            <h1 className="kicker kicker-strong">Day {day}</h1>
-            <span className="kicker">
-              of 90 · {Math.max(0, 90 - currentDay)} to go
-            </span>
+            <h1 className="day-count">
+              {day}
+              <span className="day-count-of">/90</span>
+            </h1>
+            <span className="kicker">{dayDateShort}</span>
           </div>
           <div className="gauge mt-2" role="img" aria-label={`Day ${day} of 90`}>
             <div className="gauge-fill" style={{ width: `${(currentDay / 90) * 100}%` }} />
@@ -216,7 +218,8 @@ export default async function DayPage({
                 style={{
                   left: `calc(${(day / 90) * 100}% - 1px)`,
                   background: "transparent",
-                  boxShadow: "inset 0 0 0 1px var(--accent)"
+                  outline: "var(--rule-hairline) solid var(--accent)",
+                  outlineOffset: "calc(var(--rule-hairline) * -1)"
                 }}
                 aria-hidden
               />
@@ -243,34 +246,35 @@ export default async function DayPage({
             testament's chapters have been ticked. */}
         <div className="read-list">
           <Link href={`/read?t=ot&d=${day}`} className="read-row select-none">
-            <span className="kicker">OT</span>
             <span>
               <span className="read-ref block">{otRef}</span>
-              <span className="kicker block mt-1">
-                Old Testament
-                {otChapters.length > 0 && ` · ${otTicksCount}/${otChapters.length}`}
-              </span>
+              {otChapters.length > 0 && (
+                <span className="kicker block mt-1">
+                  {otTicksCount}/{otChapters.length} read
+                </span>
+              )}
             </span>
             <span className="read-arrow" aria-hidden>&rarr;</span>
           </Link>
           <Link href={`/read?t=nt&d=${day}`} className="read-row select-none">
-            <span className="kicker">NT</span>
             <span>
               <span className="read-ref block">{ntRef}</span>
-              <span className="kicker block mt-1">
-                New Testament
-                {ntChapters.length > 0 && ` · ${ntTicksCount}/${ntChapters.length}`}
-              </span>
+              {ntChapters.length > 0 && (
+                <span className="kicker block mt-1">
+                  {ntTicksCount}/{ntChapters.length} read
+                </span>
+              )}
             </span>
             <span className="read-arrow" aria-hidden>&rarr;</span>
           </Link>
           {rhapsody && isCurrent && (
             <Link href="/rhapsody" className="read-row select-none">
-              <span className="kicker">RoR</span>
               <span>
                 <span className="read-ref block">
                   {rhapsody.title?.trim() || "Today’s article"}
                 </span>
+                {/* The one row whose source isn't obvious from position,
+                    because it isn't scripture. */}
                 <span className="kicker block mt-1">Rhapsody of Realities</span>
               </span>
               <span className="read-arrow" aria-hidden>&rarr;</span>

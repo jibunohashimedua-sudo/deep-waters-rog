@@ -239,7 +239,7 @@ export default function EditProfilePage() {
             <label htmlFor="pf-bio" className="block text-[13.5px] leading-5 font-medium text-rog-ink">
               Bio
             </label>
-            <p className="kicker mt-1">Optional &middot; 160 characters</p>
+            <p className="kicker mt-1">160 characters</p>
             <textarea
               id="pf-bio"
               value={bio}

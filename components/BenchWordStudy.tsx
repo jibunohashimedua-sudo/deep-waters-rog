@@ -46,11 +46,11 @@ export default function BenchWordStudy({ entries, loading, verse }: Props) {
         >
           <p className="kicker kicker-strong">
             {SOURCE_NAMES[e.source] ?? e.source}
-            {" · "}
+            {" "}
             {e.verse_start === e.verse_end
               ? `Verse ${e.verse_start}`
               : `Verses ${e.verse_start}–${e.verse_end}`}
-            {e.verse_start !== e.verse_end && ` · containing verse ${verse}`}
+            {e.verse_start !== e.verse_end && `, containing verse ${verse}`}
           </p>
           <p className="bench-said">{e.body}</p>
         </section>

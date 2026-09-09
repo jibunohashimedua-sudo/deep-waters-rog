@@ -67,8 +67,7 @@ export default async function SermonsPage() {
     <>
       <Nav />
       <main className="max-w-3xl mx-auto px-6 py-10">
-        <p className="kicker">Elite</p>
-        <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">
+        <h1 className="text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">
           Sermons
         </h1>
         <p className="mt-3 text-[13.5px] leading-5 text-rog-muted max-w-[34rem]">
@@ -104,8 +103,8 @@ export default async function SermonsPage() {
                     </span>
                     <span className="kicker block mt-2">
                       {count === null
-                        ? `${s.status} · ${date}`
-                        : `${s.status} · ${count} block${count === 1 ? "" : "s"} · ${date}`}
+                        ? date
+                        : `${count} block${count === 1 ? "" : "s"}, ${date}`}
                     </span>
                   </Link>
                 </li>

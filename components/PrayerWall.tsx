@@ -336,7 +336,7 @@ export default function PrayerWall() {
                     onClick={() => pray(p.id)}
                     className={`px-3 py-1.5 rounded-full ${prayedByMe ? "bg-rog-purple text-white" : "bg-rog-cream text-rog-purple hover:bg-rog-peach"}`}
                   >
-                    &#128591; {prayedByMe ? "Praying" : "I'm praying"} {count > 0 && `· ${count}`}
+                    {prayedByMe ? "Praying" : "I'm praying"} {count > 0 && count}
                   </button>
                   {p.user_id === me && !p.is_answered && (
                     answering === p.id ? (

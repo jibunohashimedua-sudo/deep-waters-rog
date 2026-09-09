@@ -192,9 +192,7 @@ export default function LeaderboardView() {
               <Avatar name={row.name} photoUrl={row.photo_url} size="lg" />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-rog-ink truncate">{row.name}</p>
-                <p className="text-xs text-rog-muted">
-                  Day {row.highest_day ?? 0} · {row.current_streak} day streak
-                </p>
+                <p className="kicker mt-1">Day {row.highest_day ?? 0}</p>
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-rog-purple tabular-nums">

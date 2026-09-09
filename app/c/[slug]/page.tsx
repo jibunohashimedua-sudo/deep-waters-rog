@@ -92,7 +92,7 @@ export default async function CohortLandingPage({
             <p className="mt-4 text-white/85 max-w-xl mx-auto">{cohort.description}</p>
           )}
           <p className="mt-4 text-white/70 text-sm">
-            {status} &bull; {cohort.member_count} member{cohort.member_count === 1 ? "" : "s"}
+            {cohort.member_count} member{cohort.member_count === 1 ? "" : "s"}
           </p>
           {isLeader && (
             <Link href={`/cohorts/${cohort.slug}/manage`} className="mt-6 inline-block text-sm underline text-white/80 hover:text-white">

@@ -37,8 +37,7 @@ export default function TestimonialPage() {
     <>
       <Nav />
       <main className="max-w-lg mx-auto px-6 py-10">
-        <p className="kicker">Your story</p>
-        <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Share a testimony</h1>
+        <h1 className="text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Share a testimony</h1>
         <p className="mt-2 text-sm text-rog-muted">
           What did God do in you through Deep Waters? Your story will be reviewed before it goes public.
         </p>

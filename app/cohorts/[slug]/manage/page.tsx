@@ -141,7 +141,7 @@ export default async function CohortManagePage({
                       )}
                     </p>
                     <p className="text-xs text-rog-muted">
-                      Day {p?.highest_day ?? 0} &bull; {p?.days_completed ?? 0} done &bull;{" "}
+                      {p?.days_completed ?? 0} kept{" "}
                       {p?.current_streak ?? 0} streak
                     </p>
                   </div>

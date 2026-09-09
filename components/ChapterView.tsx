@@ -59,7 +59,6 @@ export default async function ChapterView({ bookSlug, chapter, focus }: Props) {
         <ReadingHeader
           backHref={`/bible/${book.slug}`}
           backLabel={`Back to ${book.name}`}
-          kicker={book.group}
           reference={`${book.name} ${chapter}`}
           userId={userId}
           translationId={resolved.chosen.id}

@@ -4,7 +4,7 @@
 // it: they carry a reader's own meaning rather than decorating a screen.
 // They are built inside the system's logic all the same — a tinted ground
 // the verse sits on, a 2px coloured rule down its left edge, square corners,
-// no shadow, no glow. None of the five is green, so sonar keeps its one job.
+// no lift, no glow. None of the five is green, so sonar keeps its one job.
 //
 // They are named for the sounding instrument the mark comes from, and those
 // names go all the way down: the database stores 'shoal', not 'amber'. The

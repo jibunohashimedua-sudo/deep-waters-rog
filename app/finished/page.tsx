@@ -58,7 +58,7 @@ export default async function FinishedPage() {
           <p className="mt-3 font-mono text-[17px] tabular-nums text-rog-ink">
             {daysKept} of 90 kept
             {reflectionsWritten > 0 && (
-              <> &middot; {reflectionsWritten} reflection{reflectionsWritten === 1 ? "" : "s"} written</>
+              <>, and wrote {reflectionsWritten} reflection{reflectionsWritten === 1 ? "" : "s"}</>
             )}
           </p>
         </div>

@@ -47,7 +47,7 @@ export default function BenchWords({ words, entries, activeKey, loading, onPick 
               aria-pressed={activeKey === key}
             >
               <span className="kicker kicker-strong">
-                {w.word.toUpperCase()} &middot; {w.strongsIds.join(" · ")}
+                {w.word.toUpperCase()} {w.strongsIds.join(" ")}
               </span>
             </button>
             {w.strongsIds.map((id) => {
@@ -63,7 +63,7 @@ export default function BenchWords({ words, entries, activeKey, loading, onPick 
                 <div key={id} className="bench-word-entry">
                   <p className="bench-lemma">
                     {e.lemma}
-                    {e.transliteration ? ` · ${e.transliteration}` : ""}
+                    {e.transliteration ? ` ${e.transliteration}` : ""}
                   </p>
                   <p className="bench-said">{e.definition}</p>
                 </div>
