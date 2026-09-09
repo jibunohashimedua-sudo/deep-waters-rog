@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { useRouter } from "next/navigation";
@@ -8,6 +9,20 @@ import Avatar from "./Avatar";
 import Icon from "./Icons";
 import { currentDayNumber } from "@/lib/plan";
 import { todayISOForUser } from "@/lib/dates";
+
+/**
+ * The two pastoral rows, fetched only when the flag is on.
+ *
+ * This sheet ships on every signed-in page, so anything inline here is in
+ * every member's bundle whether it renders or not. Behind next/dynamic the
+ * rows are their own chunk and the chunk is requested only when isPastoral
+ * is true — the same rule the render already followed, now followed by the
+ * network too. ssr:false because the sheet is opened by a tap; there is no
+ * server render of it to take part in.
+ */
+const PastoralRows = dynamic(() => import("./MoreSheetPastoralRows"), {
+  ssr: false
+});
 
 type Choice = "light" | "dark" | "system";
 
@@ -218,21 +233,9 @@ export default function MoreSheet({ open, onClose, isAdmin, isPastoral }: Props)
           <div className={group}>
             {/* The pastoral rows. Above the prayer wall because they are
                 the pastor's own work rather than the church's, and they
-                only exist at all when the flag is on.
-
-                Church pulse sits above Sermons: it is about people, and a
-                sermon is about a passage. Neither is a bottom tab and
-                neither is inside Admin — admin is running the app. */}
-            {isPastoral && (
-              <Link href="/pulse" onClick={onClose} className={link}>
-                <Icon name="pulse" /> Church pulse
-              </Link>
-            )}
-            {isPastoral && (
-              <Link href="/sermons" onClick={onClose} className={link}>
-                <Icon name="sermon" /> Sermons
-              </Link>
-            )}
+                only exist at all when the flag is on — in the bundle as
+                well as on the screen. See MoreSheetPastoralRows. */}
+            {isPastoral && <PastoralRows className={link} onClose={onClose} />}
             <Link href="/prayer" onClick={onClose} className={link}>
               <Icon name="prayer" /> Prayer wall
             </Link>

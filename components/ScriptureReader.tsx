@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/errors";
@@ -16,8 +17,29 @@ import { verseFragments, verseTextOnPage } from "@/lib/verseFragments";
 import VerseToolbar from "./VerseToolbar";
 import VerseNoteSheet from "./VerseNoteSheet";
 import CompareSheet from "./CompareSheet";
-import BenchLayer, { type BenchPhase } from "./BenchLayer";
+import type { BenchPhase } from "./BenchLayer";
 import { DEFAULT_BIBLE_ID } from "@/lib/translations";
+
+/**
+ * The Bench, fetched only for a reader who can open it.
+ *
+ * It used to be a plain import, which put the whole Elite study layer —
+ * seven lens components, lib/studyData, every source line — into the chunk
+ * for /read and /bible/[book]/[chapter]. Every member downloaded and parsed
+ * a feature they cannot reach, and could read its vocabulary out of the
+ * bundle.
+ *
+ * The type comes across as a type-only import, which is erased at compile
+ * time and pulls nothing in with it. The component comes across through
+ * next/dynamic, so the request is made the first time `showBench && anchor`
+ * is true — a pastoral reader holding a verse. That is one selection ahead
+ * of the tap on the Bench chip, so the panel is warm by the time it is
+ * asked for.
+ *
+ * ssr:false because the Bench only exists once a verse is selected, which
+ * is client state; there was never a server render of it to keep.
+ */
+const BenchLayer = dynamic(() => import("./BenchLayer"), { ssr: false });
 
 type ChapterInput = {
   /** Book name, e.g. "Isaiah". */
