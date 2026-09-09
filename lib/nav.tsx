@@ -118,12 +118,21 @@ export const MORE_ICON = (
  * The routes that live behind More rather than under a tab: the rows in
  * the sheet, and Admin. Kept beside the tabs so More lights up for its
  * own pages on both bars.
+ *
+ * This function names no pastoral route, deliberately. It is imported by
+ * Nav and BottomNav, which ship on every signed-in page, so a route named
+ * here is a route every member can read out of their own bundle —
+ * "/sermons" used to be, and was the second of the two leaks the
+ * excellence pass closed. ELITE_EXCELLENCE_AUDIT P2-J.
+ *
+ * The pastoral half of this answer comes from MoreSheetPastoralRows, which
+ * reports its own matches and only exists behind the flag. See
+ * components/PastoralNavHelpers.tsx.
  */
 export function moreMatches(pathname: string): boolean {
   return (
     pathname.startsWith("/announcements") ||
     pathname.startsWith("/testimonials") ||
-    pathname.startsWith("/sermons") ||
     pathname.startsWith("/admin")
   );
 }

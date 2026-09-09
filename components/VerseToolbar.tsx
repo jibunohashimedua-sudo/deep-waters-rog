@@ -1,10 +1,22 @@
 "use client";
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import {
   HIGHLIGHT_COLOURS,
   highlightName,
   type HighlightColour
 } from "@/lib/highlights";
+
+/**
+ * The chip that opens the Bench, fetched only for a reader who has it.
+ *
+ * This toolbar is a static import in ScriptureReader and therefore in
+ * every member's bundle. The chip's label and its data-elite marker used
+ * to be written here, so both were readable by anyone who opened devtools
+ * on the reading screen. Behind this boundary they are in a chunk no page
+ * lists. See components/BenchChip.tsx.
+ */
+const BenchChip = dynamic(() => import("./BenchChip"), { ssr: false });
 
 type Props = {
   /** True when at least one verse is selected. */
@@ -132,21 +144,9 @@ export default function VerseToolbar({
           <button type="button" className="verse-action" onClick={onCompare}>
             Compare
           </button>
-          {/* The seventh chip. It sits after Compare because comparing and
-              opening the Bench are the same motion — you are still with the
-              verse — and it carries the Fathom violet on its border and its
-              label so it reads as another kind of thing without shouting.
-              A reader without the flag never sees it at all. */}
-          {showBench && (
-            <button
-              type="button"
-              className="verse-action"
-              data-elite="true"
-              onClick={onBench}
-            >
-              Bench
-            </button>
-          )}
+          {/* The seventh chip. A reader without the flag never sees it,
+              and never downloads it either — see BenchChip. */}
+          {showBench && <BenchChip onClick={onBench} />}
           <button type="button" className="verse-action" onClick={onCopy}>
             Copy
           </button>

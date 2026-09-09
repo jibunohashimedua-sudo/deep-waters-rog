@@ -31,6 +31,25 @@ export const TESTIMONY_MAX = 1500;
 export const CARE_NOTE_MAX = 2000;
 
 /**
+ * The sermon workspace.
+ *
+ * A sermon is longer than anything else a member writes, so these caps are
+ * generous — but they exist, which is the point. Every one of them is
+ * enforced in app/api/sermon, the way every other write path in this app
+ * has been since the hardening pass.
+ *
+ * SERMON_BLOCK_TEXT_MAX is 20 000 because a block can hold a whole passage
+ * plus the notes under it, and a preacher who writes long should not be
+ * refused at the point they are actually working. The count cap is what
+ * stops the jsonb growing without limit.
+ */
+export const SERMON_TITLE_MAX = 200;
+export const SERMON_PASSAGE_MAX = 200;
+export const SERMON_BLOCK_TEXT_MAX = 20000;
+export const SERMON_BLOCK_REFERENCE_MAX = 200;
+export const SERMON_BLOCKS_MAX_COUNT = 200;
+
+/**
  * Trim whitespace and truncate to `max` characters. Returns `null` when the
  * result is empty, so callers can distinguish "not provided" from "actually
  * blank". `undefined` and `null` inputs come back as `null`.
@@ -43,4 +62,55 @@ export function capText(
   const trimmed = s.trim();
   if (trimmed.length === 0) return null;
   return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
+}
+
+/**
+ * Trim a sermon's blocks to size: the count first, then each block's text
+ * and reference.
+ *
+ * Shaped like capText — it takes whatever the client sent, including
+ * nothing recognisable, and returns something safe to write. A value that
+ * is not an array is an empty list; a block without a string body is
+ * dropped, because a block with no text is not a block.
+ *
+ * Ids are preserved when they are strings and minted when they are not, so
+ * the editor's React keys survive a round trip through here.
+ */
+export type CappedBlock = {
+  id: string;
+  kind: "verse" | "text";
+  reference?: string;
+  text: string;
+};
+
+export function capBlocks(
+  blocks: unknown,
+  maxCount: number,
+  textMax: number,
+  refMax: number
+): CappedBlock[] {
+  if (!Array.isArray(blocks)) return [];
+  const out: CappedBlock[] = [];
+  for (const raw of blocks.slice(0, Math.max(0, maxCount))) {
+    if (!raw || typeof raw !== "object") continue;
+    const row = raw as Record<string, unknown>;
+    if (typeof row.text !== "string") continue;
+
+    const text = row.text.slice(0, textMax);
+    const reference =
+      typeof row.reference === "string" && row.reference.trim().length > 0
+        ? row.reference.trim().slice(0, refMax)
+        : undefined;
+
+    out.push({
+      id:
+        typeof row.id === "string" && row.id.length > 0
+          ? row.id.slice(0, 64)
+          : `b-${out.length}-${Date.now().toString(36)}`,
+      kind: row.kind === "verse" ? "verse" : "text",
+      ...(reference ? { reference } : {}),
+      text
+    });
+  }
+  return out;
 }

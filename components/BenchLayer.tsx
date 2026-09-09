@@ -18,6 +18,7 @@ import {
   LENSES,
   LENS_BY_ID,
   PRESETS,
+  STACK_SEED,
   isRackMode,
   isSheetMode,
   type LensId
@@ -167,9 +168,9 @@ export default function BenchLayer(props: Props) {
   // every open panel; in Stack it is all of them, and `stackReady` lets
   // them in one at a time so a stacked Bench fills from the top rather
   // than firing every query at once.
-  const [stackReady, setStackReady] = useState(0);
+  const [stackReady, setStackReady] = useState(STACK_SEED);
   useEffect(() => {
-    setStackReady(0);
+    setStackReady(STACK_SEED);
   }, [passageKey, stack]);
   const advanceStack = useCallback(() => setStackReady((n) => n + 1), []);
 
@@ -296,6 +297,15 @@ export default function BenchLayer(props: Props) {
     if (mode !== "split") setNotesTab(false);
   }, [mode]);
 
+  // Stack is the sheet's own idea, and the One/Stack toggle that turns it
+  // off lives in the sheet dock. Carried into Split by a rotation it left
+  // the reader looking at seven stacked lenses, no tab marked as chosen,
+  // and no control anywhere on screen that explained the state or undid
+  // it. ELITE_EXCELLENCE_AUDIT P2-D.
+  useEffect(() => {
+    if (mode !== "sheet") setStack(false);
+  }, [mode]);
+
   // In a rack every panel is on screen, so the lens you were reading has to
   // be one of them or switching layout would lose your place.
   useEffect(() => {
@@ -359,17 +369,25 @@ export default function BenchLayer(props: Props) {
     [ordered, shown]
   );
 
-  const wantsTranslations = rack
-    ? panels.includes("translations")
-    : stack || activeLens === "translations";
+  // lensVisible, not a hand-written parallel of it. These two were copies
+  // that had drifted: both omitted its `notesTab` clause, so Translations
+  // and The house went on fetching behind the Notes tab in Split.
+  // ELITE_EXCELLENCE_AUDIT P2-H. One predicate now, so they cannot drift
+  // again.
+  const wantsTranslations = lensVisible("translations");
 
   const rows = useParallelRows({
-    active: open && wantsTranslations,
+    // lensVisible already answers "is the Bench open"; the extra `open`
+    // here was saying it twice.
+    active: wantsTranslations,
     bookSlug,
     chapter,
     start: spanStart,
     end: spanEnd,
-    visible: visibleTranslations
+    visible: visibleTranslations,
+    // The first lens in the stack reports that it has settled, so the
+    // reveal has a starter at both ends of the chain. See STACK_SEED.
+    onSettled: stack ? advanceStack : undefined
   });
 
   // ------------------------------------------------------------- the house
@@ -377,10 +395,10 @@ export default function BenchLayer(props: Props) {
   const [houseLoading, setHouseLoading] = useState(false);
   const houseFor = useRef<string | null>(null);
 
-  const wantsHouse = rack ? panels.includes("house") : stack || activeLens === "house";
+  const wantsHouse = lensVisible("house");
 
   useEffect(() => {
-    if (!open || !wantsHouse) return;
+    if (!wantsHouse) return;
     if (houseFor.current === passageKey) return;
     houseFor.current = passageKey;
 
@@ -453,7 +471,7 @@ export default function BenchLayer(props: Props) {
     return () => {
       cancelled = true;
     };
-  }, [open, wantsHouse, passageKey, book, abbr, chapter, verses, supabase, onToast]);
+  }, [wantsHouse, passageKey, book, abbr, chapter, verses, supabase, onToast]);
 
   // --------------------------------------------------------------- notes
   const notesHere = useMemo(
@@ -512,6 +530,10 @@ export default function BenchLayer(props: Props) {
       text
     };
 
+    // The read stays here — it is a plain own-rows select and RLS is the
+    // whole guard on it. Both writes go through /api/sermon so the caps in
+    // lib/limits.ts are enforced server-side, the way every other write
+    // path in this app has been since the hardening pass.
     const { data: draftRow, error: readErr } = await supabase
       .from("sermons")
       .select("id, blocks")
@@ -527,32 +549,40 @@ export default function BenchLayer(props: Props) {
       return;
     }
 
-    if (draftRow) {
-      const blocks = Array.isArray(draftRow.blocks) ? draftRow.blocks : [];
-      const { error } = await supabase
-        .from("sermons")
-        .update({ blocks: [...blocks, block] })
-        .eq("id", draftRow.id);
-      if (error) {
+    try {
+      const res = draftRow
+        ? await fetch(`/api/sermon/${draftRow.id}`, {
+            method: "PATCH",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              blocks: [
+                ...(Array.isArray(draftRow.blocks) ? draftRow.blocks : []),
+                block
+              ]
+            })
+          })
+        : // No draft yet, so this verse starts one. Named for the passage,
+          // which is a better answer than "Untitled".
+          await fetch("/api/sermon", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              title: block.reference,
+              passage_ref: block.reference,
+              blocks: [block]
+            })
+          });
+
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
         setSermonState("idle");
-        onToast(friendlyError(error.message));
+        onToast(friendlyError(j.error));
         return;
       }
-    } else {
-      // No draft yet, so this verse starts one. Named for the passage, which
-      // is a better answer than "Untitled".
-      const { error } = await supabase.from("sermons").insert({
-        user_id: userId,
-        title: block.reference,
-        passage_ref: block.reference,
-        blocks: [block],
-        status: "draft"
-      });
-      if (error) {
-        setSermonState("idle");
-        onToast(friendlyError(error.message));
-        return;
-      }
+    } catch (e: any) {
+      setSermonState("idle");
+      onToast(friendlyError(e?.message));
+      return;
     }
 
     setSermonState("added");

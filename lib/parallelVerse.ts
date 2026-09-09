@@ -68,8 +68,19 @@ export function useParallelRows(args: {
   end: number;
   /** The translations wanted right now — the first batch, then more. */
   visible: Translation[];
+  /**
+   * Called once when a batch has finished arriving, however it went.
+   *
+   * Only the Bench passes this, and only in Stack mode, where it advances
+   * the reveal counter. It exists because Translations is the first lens
+   * in the stack and had no way to say it was done — so the chain it was
+   * supposed to start never moved. See STACK_SEED in lib/bench.ts and
+   * ELITE_EXCELLENCE_AUDIT P1-A. CompareSheet passes nothing and behaves
+   * exactly as it did.
+   */
+  onSettled?: () => void;
 }): Map<string, ParallelRow> {
-  const { active, bookSlug, chapter, start, end, visible } = args;
+  const { active, bookSlug, chapter, start, end, visible, onSettled } = args;
   const [rows, setRows] = useState<Map<string, ParallelRow>>(new Map());
   const fetchedFor = useRef<string | null>(null);
 
@@ -84,6 +95,11 @@ export function useParallelRows(args: {
   }, [active, passageKey]);
 
   const ids = visible.map((t) => t.id).join(",");
+
+  // Read through a ref so a caller passing an inline closure — which the
+  // Bench does — cannot re-enter the effect on every render.
+  const settledRef = useRef(onSettled);
+  settledRef.current = onSettled;
 
   useEffect(() => {
     if (!active || !bookSlug) return;
@@ -102,8 +118,10 @@ export function useParallelRows(args: {
     let cancelled = false;
     const forPassage = passageKey;
 
-    for (const t of wanted) {
-      (async () => {
+    // Every line settles on its own; the batch has settled when the last
+    // of them has, whether it arrived or failed.
+    Promise.all(
+      wanted.map(async (t) => {
         const row = await fetchParallelVerse({
           bookSlug,
           chapter,
@@ -114,8 +132,11 @@ export function useParallelRows(args: {
         // Don't write into a list that has since moved to another verse.
         if (cancelled || fetchedFor.current !== forPassage) return;
         setRows((prev) => new Map(prev).set(t.id, row));
-      })();
-    }
+      })
+    ).finally(() => {
+      if (cancelled) return;
+      settledRef.current?.();
+    });
 
     return () => {
       cancelled = true;

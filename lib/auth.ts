@@ -62,6 +62,53 @@ export async function requirePastoral(): Promise<{ userId: string; profile: Prof
   return r;
 }
 
+/**
+ * The Elite gate for an API route: the profile when it carries the flag,
+ * null when it does not.
+ *
+ * requirePastoral() redirects, which is right for a page and wrong for a
+ * route handler — an XHR cannot follow a 307 to /today and read JSON out
+ * of it. app/api/pulse/care had its own copy of this check, and the copy
+ * had drifted: it discarded the profile lookup error, so a transient
+ * Supabase blip read as "no profile" and the caller was told their own
+ * care log did not exist.
+ *
+ * This keeps requireProfile's distinction, which is the whole reason that
+ * function throws rather than redirecting: "this account has no profile"
+ * and "the lookup failed" are different answers and must not be collapsed.
+ *
+ *   null   — not signed in, no profile row, or no flag. The caller turns
+ *            all three into the same 404: no route handler should tell
+ *            anyone which of the three it was.
+ *   throws — the lookup itself failed. The caller surfaces a 500, the same
+ *            way a page surfaces "Could not load your profile".
+ */
+export async function getPastoralUser(): Promise<{
+  userId: string;
+  profile: Profile;
+} | null> {
+  const supabase = createClient();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (error) {
+    // eslint-disable-next-line no-console
+    console.error("[deep-waters] profile lookup failed:", error.message);
+    throw new Error("Could not load your profile. Refresh to try again.");
+  }
+  if (!profile) return null;
+  if (!isPastoral(profile as Profile)) return null;
+  return { userId: user.id, profile: profile as Profile };
+}
+
 /** Require admin, else redirect to /today. */
 export async function requireAdmin(): Promise<{ userId: string; profile: Profile }> {
   const r = await requireProfile();

@@ -3,9 +3,21 @@ import Nav from "@/components/Nav";
 import NewSermonButton from "@/components/NewSermonButton";
 import { createClient } from "@/lib/supabase/server";
 import { requirePastoral } from "@/lib/auth";
-import { readBlocks } from "@/lib/sermons";
 
 export const metadata = { title: "Sermons · Deep Waters" };
+
+/** What the list actually renders. Note what is not here: `blocks`. */
+const LIST_COLUMNS = "id, title, passage_ref, status, updated_at, block_count";
+const LIST_COLUMNS_WITHOUT_COUNT = "id, title, passage_ref, status, updated_at";
+
+type Row = {
+  id: string;
+  title: string | null;
+  passage_ref: string | null;
+  status: string | null;
+  updated_at: string;
+  block_count?: number | null;
+};
 
 /**
  * The pastor's own sermons, newest first.
@@ -13,23 +25,43 @@ export const metadata = { title: "Sermons · Deep Waters" };
  * Gated the same way the admin pages are: someone without the flag is sent
  * to /today without being told there was anything here. RLS says the same
  * thing underneath — a sermon is readable only by the person who wrote it.
+ *
+ * The query names its columns. It used to be `select("*")`, which shipped
+ * every block of every sermon so the page could print `blocks.length` —
+ * a whole sermon's body per row, to render a number. `block_count` is a
+ * generated column (2026_09_15_sermon_block_count.sql) and the bodies stay
+ * in the database. ELITE_EXCELLENCE_AUDIT P1-B.
  */
 export default async function SermonsPage() {
   const { userId } = await requirePastoral();
   const supabase = createClient();
 
-  const { data, error } = await supabase
+  const withCount = await supabase
     .from("sermons")
-    .select("*")
+    .select(LIST_COLUMNS)
     .eq("user_id", userId)
     .order("updated_at", { ascending: false })
     .limit(200);
 
-  if (error) {
-    console.error("[deep-waters] sermons list:", error.message);
-  }
+  let sermons = (withCount.data ?? []) as Row[];
 
-  const sermons = data ?? [];
+  // Between a deploy and its migration the column is not there yet, and a
+  // named select for a column that does not exist is a 400 that would take
+  // the whole list down with it. Same reasoning as Nav's `*` on profiles.
+  // The list is worth more than the count.
+  if (withCount.error) {
+    console.error("[deep-waters] sermons list:", withCount.error.message);
+    const fallback = await supabase
+      .from("sermons")
+      .select(LIST_COLUMNS_WITHOUT_COUNT)
+      .eq("user_id", userId)
+      .order("updated_at", { ascending: false })
+      .limit(200);
+    if (fallback.error) {
+      console.error("[deep-waters] sermons list fallback:", fallback.error.message);
+    }
+    sermons = (fallback.data ?? []) as Row[];
+  }
 
   return (
     <>
@@ -45,7 +77,7 @@ export default async function SermonsPage() {
         </p>
 
         <div className="mt-8">
-          <NewSermonButton userId={userId} />
+          <NewSermonButton />
         </div>
 
         {sermons.length === 0 ? (
@@ -59,7 +91,8 @@ export default async function SermonsPage() {
         ) : (
           <ul className="mark-list mt-8">
             {sermons.map((s) => {
-              const blocks = readBlocks(s.blocks);
+              const count = typeof s.block_count === "number" ? s.block_count : null;
+              const date = new Date(s.updated_at).toLocaleDateString("en-GB");
               return (
                 <li key={s.id} className="mark-row">
                   <Link href={`/sermons/${s.id}`} className="block">
@@ -70,9 +103,9 @@ export default async function SermonsPage() {
                       {s.title?.trim() || "Untitled"}
                     </span>
                     <span className="kicker block mt-2">
-                      {`${s.status} · ${blocks.length} block${blocks.length === 1 ? "" : "s"} · ${new Date(
-                        s.updated_at
-                      ).toLocaleDateString("en-GB")}`}
+                      {count === null
+                        ? `${s.status} · ${date}`
+                        : `${s.status} · ${count} block${count === 1 ? "" : "s"} · ${date}`}
                     </span>
                   </Link>
                 </li>

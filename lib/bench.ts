@@ -76,6 +76,29 @@ export const LENSES: Lens[] = [
 
 export const LENS_BY_ID = new Map(LENSES.map((l) => [l.id, l]));
 
+/**
+ * Where Stack mode's reveal counter starts.
+ *
+ * Stack shows all seven lenses at once and lets them in one at a time, so
+ * a stacked Bench fills from the top instead of firing seven queries at
+ * the same moment. The counter advances when a visible lens finishes
+ * loading.
+ *
+ * It used to start at 0, and that was a deadlock: index 0 is Translations,
+ * which loads through useParallelRows rather than useStudyLens and had no
+ * way to report that it had settled. Nothing advanced the counter, so
+ * index 1 never became visible, and four lenses sat there telling the
+ * reader "no cross references for this verse" about a verse they had never
+ * been asked about. ELITE_EXCELLENCE_AUDIT P1-A.
+ *
+ * Two lenses are live from the first frame now, so the chain has two
+ * independent ways to take its first step. That matters because one lens
+ * in the middle of the list cannot always load at all: the Concordance
+ * needs a chosen word, and a verse the KJV numbers differently has none.
+ * With two starters the chain steps past it instead of stopping on it.
+ */
+export const STACK_SEED = 1;
+
 /** The word rail shows on these, and in Stack. */
 export const WORD_LENSES: LensId[] = LENSES.filter((l) => l.takesWord).map(
   (l) => l.id

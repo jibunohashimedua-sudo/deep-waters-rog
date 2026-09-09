@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getPastoralUser } from "@/lib/auth";
 import { CARE_NOTE_MAX, capText } from "@/lib/limits";
 import { todayForCurrentRequest } from "@/lib/serverToday";
 import type { CareEntry, PulsePerson } from "@/lib/pulse";
@@ -26,19 +27,31 @@ import type { CareEntry, PulsePerson } from "@/lib/pulse";
 
 const NOT_FOUND = NextResponse.json({ error: "Not found" }, { status: 404 });
 
-async function pastoralUser() {
-  const supabase = createClient();
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (profile?.is_pastoral !== true) return null;
-  return { supabase, userId: user.id };
+/**
+ * The gate, now shared with every other pastoral route rather than
+ * re-implemented here.
+ *
+ * The old copy destructured `{ data: profile }` and dropped the error,
+ * which meant a transient Supabase failure was indistinguishable from
+ * "this person has no profile" and both came back as a 404 — telling a
+ * pastor their own care log did not exist. ELITE_EXCELLENCE_AUDIT P2-K.
+ * getPastoralUser keeps requireProfile's distinction: null for the three
+ * states that must all look identical from outside, a throw for the one
+ * that must not be silent.
+ */
+async function gate() {
+  try {
+    const auth = await getPastoralUser();
+    if (!auth) return { error: NOT_FOUND };
+    return { auth, supabase: createClient() };
+  } catch (e) {
+    return {
+      error: NextResponse.json(
+        { error: e instanceof Error ? e.message : "Could not load your profile" },
+        { status: 500 }
+      )
+    };
+  }
 }
 
 /** The log for one subject, with the author names merged in. Two plain
@@ -78,9 +91,9 @@ async function readLog(
 }
 
 export async function GET(request: Request) {
-  const session = await pastoralUser();
-  if (!session) return NOT_FOUND;
-  const { supabase } = session;
+  const g = await gate();
+  if (g.error) return g.error;
+  const supabase = g.supabase!;
 
   const subjectId = new URL(request.url).searchParams.get("user");
   if (!subjectId) {
@@ -107,9 +120,10 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const session = await pastoralUser();
-  if (!session) return NOT_FOUND;
-  const { supabase, userId } = session;
+  const g = await gate();
+  if (g.error) return g.error;
+  const supabase = g.supabase!;
+  const userId = g.auth!.userId;
 
   const { subject_user_id, kind, body } = await request.json();
   if (!subject_user_id) {

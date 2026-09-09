@@ -43,11 +43,20 @@ type Props = {
   /** The Elite gate. False means the Sermons row does not exist — no
       locked row, no greyed row, nothing to notice. */
   isPastoral: boolean;
+  /** Passed straight down to the pastoral rows, which report whether the
+      current path is one of theirs. See PastoralNavHelpers. */
+  onPastoralMoreMatch?: (matches: boolean) => void;
 };
 
 type Me = { name: string; photoUrl: string | null; day: number; streak: number };
 
-export default function MoreSheet({ open, onClose, isAdmin, isPastoral }: Props) {
+export default function MoreSheet({
+  open,
+  onClose,
+  isAdmin,
+  isPastoral,
+  onPastoralMoreMatch
+}: Props) {
   const router = useRouter();
   const supabase = createClient();
   const [theme, setTheme] = useState<Choice>("system");
@@ -235,7 +244,13 @@ export default function MoreSheet({ open, onClose, isAdmin, isPastoral }: Props)
                 the pastor's own work rather than the church's, and they
                 only exist at all when the flag is on — in the bundle as
                 well as on the screen. See MoreSheetPastoralRows. */}
-            {isPastoral && <PastoralRows className={link} onClose={onClose} />}
+            {isPastoral && (
+              <PastoralRows
+                className={link}
+                onClose={onClose}
+                onMoreMatch={onPastoralMoreMatch}
+              />
+            )}
             <Link href="/prayer" onClick={onClose} className={link}>
               <Icon name="prayer" /> Prayer wall
             </Link>

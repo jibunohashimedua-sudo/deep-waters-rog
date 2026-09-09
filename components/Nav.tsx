@@ -25,6 +25,10 @@ export default function Nav() {
   // The Elite gate, read in the same breath as the role so there is one
   // place in the client that decides who is pastoral.
   const [isPastoral, setIsPastoral] = useState(false);
+  // Reported up by the pastoral rows in the More sheet, which are the only
+  // place that knows those routes' names. False for everyone else, because
+  // for everyone else the component that would set it never mounts.
+  const [pastoralMore, setPastoralMore] = useState(false);
   const [hasUser, setHasUser] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [me, setMe] = useState<{ name: string; photoUrl: string | null } | null>(null);
@@ -181,7 +185,7 @@ export default function Nav() {
               onClick={() => setMoreOpen(true)}
               aria-haspopup="dialog"
               aria-expanded={moreOpen}
-              className={`${linkCls(moreOpen || moreMatches(pathname))} inline-flex items-center gap-1.5`}
+              className={`${linkCls(moreOpen || moreMatches(pathname) || pastoralMore)} inline-flex items-center gap-1.5`}
             >
               <span className="[&>svg]:w-4 [&>svg]:h-4">{MORE_ICON}</span>
               More
@@ -239,7 +243,7 @@ export default function Nav() {
 
       <BottomNav
         isAdmin={isAdmin}
-        isPastoral={isPastoral}
+        pastoralMore={pastoralMore}
         hasUser={hasUser}
         moreOpen={moreOpen}
         onOpenMore={() => setMoreOpen(true)}
@@ -253,6 +257,7 @@ export default function Nav() {
         onClose={() => setMoreOpen(false)}
         isAdmin={isAdmin}
         isPastoral={isPastoral}
+        onPastoralMoreMatch={setPastoralMore}
       />
     </>
   );

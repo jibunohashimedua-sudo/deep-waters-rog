@@ -8,8 +8,15 @@ type Props = {
   /** Both come from Nav, which has already looked them up. Fetching them again
       here cost a second getUser + profiles round trip on every page load. */
   isAdmin: boolean;
-  /** The Elite gate, read once in Nav and handed down. */
-  isPastoral: boolean;
+  /**
+   * Whether the current path is one of More's pastoral rows.
+   *
+   * Reported up from MoreSheetPastoralRows rather than tested here,
+   * because testing it here would mean naming /pulse and /sermons in a
+   * component every member downloads. This replaces an `isPastoral` prop
+   * that was passed, destructured, and never read.
+   */
+  pastoralMore: boolean;
   hasUser: boolean;
   /** The More sheet is owned by Nav, because the wide-screen bar opens the
       same one. Two copies of it meant two queries and two z-50 layers. */
@@ -19,7 +26,7 @@ type Props = {
 
 export default function BottomNav({
   isAdmin,
-  isPastoral,
+  pastoralMore,
   hasUser,
   moreOpen,
   onOpenMore
@@ -47,7 +54,7 @@ export default function BottomNav({
 
   // Cohorts used to be listed here as well as under People, so it lit
   // both. It is a view inside People and nothing else now — see lib/nav.
-  const moreActive = moreOpen || moreMatches(pathname);
+  const moreActive = moreOpen || moreMatches(pathname) || pastoralMore;
 
   // No pill, no floating capsule, no frosted glass. The bar is ground: it
   // sits on the bottom edge with one hairline along its top, and the tab

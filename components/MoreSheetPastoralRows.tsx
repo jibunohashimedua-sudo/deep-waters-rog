@@ -1,12 +1,22 @@
 "use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 import Icon from "./Icons";
+import { matchesPastoralMoreRoute } from "./PastoralNavHelpers";
 
 type Props = {
   /** The sheet's own row class, passed in so these two rows are the same
       object as the six around them rather than a near-copy of them. */
   className: string;
   onClose: () => void;
+  /**
+   * Reports whether the current path is one of these rows' routes, so the
+   * bars can light the More tab without shared code ever naming a
+   * pastoral route. Non-pastoral readers never mount this component, so
+   * the pastoral half of that decision is simply never true for them.
+   */
+  onMoreMatch?: (matches: boolean) => void;
 };
 
 /**
@@ -29,7 +39,21 @@ type Props = {
  * about a passage. Neither is a bottom tab and neither is inside Admin —
  * admin is running the app.
  */
-export default function MoreSheetPastoralRows({ className, onClose }: Props) {
+export default function MoreSheetPastoralRows({
+  className,
+  onClose,
+  onMoreMatch
+}: Props) {
+  const pathname = usePathname();
+
+  useEffect(() => {
+    onMoreMatch?.(matchesPastoralMoreRoute(pathname ?? ""));
+  }, [pathname, onMoreMatch]);
+
+  // Nothing to undo on unmount beyond the claim itself: if these rows go
+  // away, the path they matched is no longer anybody's business.
+  useEffect(() => () => onMoreMatch?.(false), [onMoreMatch]);
+
   return (
     <>
       <Link href="/pulse" onClick={onClose} className={className}>
