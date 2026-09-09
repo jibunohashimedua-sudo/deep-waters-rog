@@ -75,7 +75,7 @@ export async function resolveMentions(
 ): Promise<string[]> {
   const names = extractMentionNames(text);
   if (names.length === 0) return [];
-  const { data } = await supabase.from("profiles").select("id, name").limit(1000);
+  const { data } = await supabase.from("profiles").select("id, name:display_name").limit(1000);
   if (!data) return [];
 
   // Group profiles by normalised first-name and normalised full-name so

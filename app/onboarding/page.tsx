@@ -3,10 +3,12 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
+import { checkNickname, NICKNAME_MAX } from "@/lib/nickname";
 import PhotoCropper from "@/components/PhotoCropper";
 
 function OnboardingPageInner() {
   const [name, setName] = useState("");
+  const [nickname, setNickname] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [startDate, setStartDate] = useState(() =>
@@ -93,13 +95,39 @@ function OnboardingPageInner() {
       photoUrl = data.publicUrl;
     }
 
-    const { error: insErr } = await supabase.from("profiles").upsert({
+    // The nickname is optional and checked the same way it is
+    // everywhere else. A refusal stops the submit and says why, rather
+    // than joining somebody up under a name they didn't choose.
+    const checkedNick = checkNickname(nickname);
+    if (!checkedNick.ok) {
+      setLoading(false);
+      setError(checkedNick.error);
+      return;
+    }
+
+    const row: Record<string, unknown> = {
       id: userId,
       name: name.trim(),
       photo_url: photoUrl,
       start_date: startDate,
       cohort_id: cohortId
-    });
+    };
+    if (checkedNick.value) row.nickname = checkedNick.value;
+    // They have just been offered a nickname on this very screen, so the
+    // one-time pointer at Preferences has nothing left to tell them. It
+    // is for the people who were already here before it existed.
+    row.prefs_intro_seen = true;
+
+    let { error: insErr } = await supabase.from("profiles").upsert(row);
+
+    // The nickname column arrives with a migration. If this deployment
+    // is ahead of it, join them up anyway — a name they can set later is
+    // not worth failing somebody's first minute in the app over.
+    if (insErr && /nickname|prefs_intro_seen|schema cache/i.test(insErr.message)) {
+      delete row.nickname;
+      delete row.prefs_intro_seen;
+      ({ error: insErr } = await supabase.from("profiles").upsert(row));
+    }
 
     if (insErr) {
       setLoading(false);
@@ -188,6 +216,29 @@ function OnboardingPageInner() {
               placeholder="How should we call you?"
               className="w-full rounded-full border border-rog-line bg-white px-6 py-3 focus:border-rog-purple focus:outline-none"
             />
+          </div>
+
+          {/* Offered once, here, and never asked again — it is on the
+              profile screen and in Preferences from now on. Optional in
+              the plainest way we have: the label says so and the
+              placeholder is the name they just typed. */}
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Name you go by <span className="text-rog-muted">(optional)</span>
+            </label>
+            <input
+              type="text"
+              autoComplete="nickname"
+              enterKeyHint="next"
+              maxLength={NICKNAME_MAX}
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              placeholder={name.trim() || "What people call you"}
+              className="w-full rounded-full border border-rog-line bg-white px-6 py-3 focus:border-rog-purple focus:outline-none"
+            />
+            <p className="mt-2 text-xs text-rog-muted">
+              What other members see. Leave it empty to go by your name.
+            </p>
           </div>
 
           <div>

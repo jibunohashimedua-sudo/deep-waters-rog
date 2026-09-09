@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import LoadingRule from "@/components/LoadingRule";
 import { useRouter } from "next/navigation";
@@ -27,6 +28,7 @@ const PhotoCropper = dynamic(() => import("@/components/PhotoCropper"), {
 import { createClient } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/errors";
 import { PROFILE_NAME_MAX, PROFILE_BIO_MAX } from "@/lib/limits";
+import { NICKNAME_MAX } from "@/lib/nickname";
 import {
   DEFAULT_BIBLE_ID,
   TRANSLATIONS,
@@ -39,6 +41,7 @@ export default function EditProfilePage() {
   const supabase = createClient();
   const [userId, setUserId] = useState<string | null>(null);
   const [name, setName] = useState("");
+  const [nickname, setNickname] = useState("");
   const [bio, setBio] = useState("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [newPhoto, setNewPhoto] = useState<File | null>(null);
@@ -72,6 +75,7 @@ export default function EditProfilePage() {
       }
       if (p) {
         setName(p.name);
+        setNickname(p.nickname ?? "");
         setBio(p.bio ?? "");
         setPhotoUrl(p.photo_url);
         setEmailReminders(p.email_reminders);
@@ -128,6 +132,7 @@ export default function EditProfilePage() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         name,
+        nickname,
         bio,
         photo_url: finalPhoto,
         email_reminders: emailReminders,
@@ -234,6 +239,33 @@ export default function EditProfilePage() {
             />
           </div>
 
+          {/* The name the church sees. It sits directly under the
+              account name because the pair only makes sense together:
+              one is who the records say you are, the other is what
+              people call you. Empty is allowed and means "use my
+              account name" — that is why the placeholder is it. */}
+          <div className="mt-6">
+            <label htmlFor="pf-nickname" className="block text-[13.5px] leading-5 font-medium text-rog-ink">
+              Name you go by
+            </label>
+            <input
+              id="pf-nickname"
+              type="text"
+              autoComplete="nickname"
+              enterKeyHint="next"
+              maxLength={NICKNAME_MAX}
+              value={nickname}
+              placeholder={name || "Optional"}
+              onChange={(e) => setNickname(e.target.value)}
+              className="mt-2 w-full min-h-[44px] border px-4 py-3 text-[13.5px]"
+            />
+            <p className="mt-2 text-[13px] leading-5 text-rog-muted">
+              What other members see. Leave it empty to go by your account
+              name. Your church still sees the account name in the admin
+              pages.
+            </p>
+          </div>
+
           <div className="mt-6">
             <label htmlFor="pf-bio" className="block text-[13.5px] leading-5 font-medium text-rog-ink">
               Bio
@@ -254,67 +286,22 @@ export default function EditProfilePage() {
           {/* Which translation scripture is shown in, everywhere: the daily
               plan, the Bible browser, all of it. Stored on the profile rather
               than in the browser so it follows you between devices. */}
+          {/* Translation and Reminders used to sit here. They are
+              settings about how the app behaves rather than facts about
+              who you are, so they live in Preferences with the rest of
+              them — one place to change a thing is the only way two
+              places don't drift. */}
           <section className="mt-10 border-t border-rog-line pt-6">
-            <h2 className="text-[13.5px] leading-5 font-medium text-rog-ink">Translation</h2>
-            <label className="block">
-              <span className="sr-only">Bible translation</span>
-              <SelectSheet
-                label="Bible translation"
-                value={bibleId}
-                onChange={setBibleId}
-                className="mt-3"
-                options={TRANSLATION_GROUPS.flatMap((g) =>
-                  TRANSLATIONS.filter((t) => t.group === g).map((t) => ({
-                    value: t.id,
-                    label: `${t.abbr} — ${t.name}`,
-                    group: g
-                  }))
-                )}
-              />
-            </label>
-            <p className="mt-3 text-[13.5px] leading-5 text-rog-muted">
-              {translationById(bibleId).note}
+            <h2 className="text-[13.5px] leading-5 font-medium text-rog-ink">
+              Everything else
+            </h2>
+            <p className="mt-2 text-[13px] leading-5 text-rog-muted">
+              Your translation, reminders, theme and how scripture is set
+              on the page are in Preferences.
             </p>
-            <p className="mt-2 text-[13.5px] leading-5 text-rog-muted">
-              Your 90 days stay exactly the same &mdash; same books, same
-              chapters, same days. Only the wording changes, and your
-              highlights and notes stay where you put them.
-            </p>
-          </section>
-
-          <section className="mt-10 border-t border-rog-line pt-6">
-            <h2 className="text-[13.5px] leading-5 font-medium text-rog-ink">Reminders</h2>
-
-            {/* Drawn, not native: accent-color hands the platform the
-                fill, and the platform's purple is not ours. 44px rows. */}
-            <div className="mt-3">
-              <Check
-                label="Email reminders"
-                checked={emailReminders}
-                onChange={(e) => setEmailReminders(e.target.checked)}
-              />
-            </div>
-            <div className="border-t border-rog-line">
-              <Check
-                label="Push notifications"
-                checked={pushReminders}
-                onChange={(e) => setPushReminders(e.target.checked)}
-              />
-            </div>
-
-            <label className="block border-t border-rog-line pt-4">
-              <span className="text-[13.5px] leading-5 text-rog-ink">Remind me at</span>
-              <SelectSheet
-                label="Remind me at"
-                value={String(reminderHour)}
-                onChange={(v) => setReminderHour(Number(v))}
-                className="mt-2 font-mono tabular-nums"
-                options={Array.from({ length: 24 }, (_, h) => ({
-                  value: String(h),
-                  label: `${h.toString().padStart(2, "0")}:00`
-                }))}
-              />
-            </label>
+            <Link href="/preferences" className="btn-secondary mt-4 inline-flex">
+              Open Preferences
+            </Link>
           </section>
 
           <button

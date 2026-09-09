@@ -10,6 +10,9 @@ import Mark from "./Mark";
 import EliteLockup from "./EliteLockup";
 import { backHrefFor, isReadingRoute } from "@/lib/routes";
 import { navTabsFor, MORE_ICON, moreMatches } from "@/lib/nav";
+import PreferencesApply from "./PreferencesApply";
+import PreferencesNudge from "./PreferencesNudge";
+import { readPreferences, type Preferences } from "@/lib/preferences";
 
 // The wide-screen bar and the phone's tab bar read the same list — see
 // lib/nav.tsx for why. There used to be a second list here naming
@@ -55,6 +58,13 @@ export default function Nav() {
   const [hasUser, setHasUser] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [me, setMe] = useState<{ name: string; photoUrl: string | null } | null>(null);
+  // The reader's own settings, applied to the document wherever they are
+  // signed in. Read off the profile query already going out below rather
+  // than costing a second one.
+  const [prefs, setPrefs] = useState<Preferences | null>(null);
+  // Members who were here before Preferences existed get one quiet
+  // pointer at it. `null` means we don't know yet and show nothing.
+  const [introSeen, setIntroSeen] = useState<boolean | null>(null);
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
@@ -93,6 +103,13 @@ export default function Nav() {
       setIsPrivate(cachedNav.isPrivate);
       setReady(true);
       if (p) setMe({ name: p.name, photoUrl: p.photo_url ?? null });
+      if (p) {
+        setPrefs(readPreferences(p as Record<string, unknown>));
+        // Absent column reads as "not seen" and the prompt shows once;
+        // dismissing it remembers in the browser too, so a deployment
+        // that is ahead of its migration still can't nag anybody twice.
+        setIntroSeen(p.prefs_intro_seen === true);
+      }
       const refresh = async () => {
         const { count } = await supabase
           .from("notifications")
@@ -269,6 +286,12 @@ export default function Nav() {
           </div>
         </div>
       </header>
+      )}
+
+      {prefs && <PreferencesApply prefs={prefs} />}
+
+      {hasUser && introSeen === false && (
+        <PreferencesNudge onDone={() => setIntroSeen(true)} />
       )}
 
       <BottomNav

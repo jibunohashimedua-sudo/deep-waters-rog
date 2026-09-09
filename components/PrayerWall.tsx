@@ -80,7 +80,7 @@ export default function PrayerWall() {
     const userIds = Array.from(new Set(list.map((p) => p.user_id)));
     const prayerIds = list.map((p) => p.id);
     const [{ data: profs }, { data: prayed }] = await Promise.all([
-      supabase.from("profiles").select("id, name, photo_url").in("id", userIds),
+      supabase.from("profiles").select("id, name:display_name, photo_url").in("id", userIds),
       supabase.from("prayer_prayed").select("prayer_id, user_id").in("prayer_id", prayerIds)
     ]);
     const profMap = new Map((profs ?? []).map((p) => [p.id, p]));
@@ -112,7 +112,7 @@ export default function PrayerWall() {
       setMe(data.user.id);
       const { data: p } = await supabase
         .from("profiles")
-        .select("role, name, photo_url")
+        .select("role, name:display_name, photo_url")
         .eq("id", data.user.id)
         .maybeSingle();
       if (!cancelled && p) {

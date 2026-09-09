@@ -7,6 +7,7 @@ import { fetchChapter, chapterErrorMessage } from "@/lib/bible";
 import { resolveTranslation } from "@/lib/translations";
 import { wrapVersesInHtml, countWordsInHtml } from "@/lib/verseParse";
 import { bookByName } from "@/lib/bibleBooks";
+import { readingAttrs } from "@/lib/readingAttrs";
 import Nav from "@/components/Nav";
 import ScriptureReader from "@/components/ScriptureReader";
 import ReadingHeader from "@/components/ReadingHeader";
@@ -97,7 +98,13 @@ export default async function ReadChapterPage({
   return (
     <>
       <Nav />
-      <main data-surface="reading" className="max-w-3xl mx-auto px-6 pt-0 pb-10">
+      <main
+        data-surface="reading"
+        className="max-w-3xl mx-auto px-6 pt-0 pb-10"
+        /* The reader's own size, face and spacing, set here so the
+           chapter paints right in the first frame. */
+        {...readingAttrs(profile as unknown as Record<string, unknown>)}
+      >
         <ReadingHeader
           backHref={`/day/${day}`}
           backLabel={`Back to day ${day}`}

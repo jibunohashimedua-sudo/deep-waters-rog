@@ -506,8 +506,10 @@ body {
 .bible-content {
   font-family: var(--font-serif), "Iowan Old Style", "Charter", Georgia, serif;
   font-weight: 400;
-  font-size: 18px;
-  line-height: 1.74;
+  /* The reader's own size and leading, defaulting to the shipped 18/1.74.
+     See READING PREFERENCES at the foot of this file. */
+  font-size: var(--reading-size, 18px);
+  line-height: var(--reading-leading, 1.74);
   color: var(--text);
   /* The column is the number's 3.25ch plus the text's 36ch. Setting it
      here as well as on .verse-text is what keeps a highlight band hugging
@@ -1315,7 +1317,11 @@ input::placeholder, textarea::placeholder {
    control in the app. */
 .segmented {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* Even columns, however many there are: two for a yes/no, four for the
+     text sizes. It was hardcoded to two, which crushed a third option
+     into a second row. */
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   background: var(--soft-bg);
   border: 1px solid var(--soft-border);
 }
@@ -1334,7 +1340,11 @@ input::placeholder, textarea::placeholder {
 .segmented-option:hover {
   color: var(--text);
 }
-.segmented-option[aria-selected="true"] {
+.segmented-option[aria-selected="true"],
+/* Buttons in a group report their state with aria-pressed, not
+   aria-selected — that one belongs to a tablist. Both are the same
+   control wearing the right role for where it is. */
+.segmented-option[aria-pressed="true"] {
   background: var(--accent);
   color: var(--on-accent);
 }
@@ -3181,4 +3191,264 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   margin-top: var(--sp-4);
   padding-top: var(--sp-4);
   border-top: 1px solid var(--text);
+}
+
+/* =========================================================
+   READING PREFERENCES
+   Four things a reader can change about scripture on the page: how big
+   it is, what it is set in, how far apart the lines are, and whether
+   the verse numbers show at all.
+
+   Driven by data-* attributes rather than inline styles, so the reading
+   pages can set them on the server — before the first paint — and the
+   Preferences screen can change them on the spot by writing one
+   attribute. Every value below is a ratio against the shipped design,
+   so the whole verse grid moves together and nothing has to be
+   re-measured.
+   ========================================================= */
+
+:root {
+  --reading-size: 18px;
+  --reading-leading: 1.74;
+}
+
+[data-text-size="small"]  { --reading-size: 16px; }
+[data-text-size="medium"] { --reading-size: 18px; }
+[data-text-size="large"]  { --reading-size: 20px; }
+[data-text-size="xlarge"] { --reading-size: 23px; }
+
+[data-line-spacing="tight"]   { --reading-leading: 1.55; }
+[data-line-spacing="normal"]  { --reading-leading: 1.74; }
+[data-line-spacing="relaxed"] { --reading-leading: 2.0; }
+
+/* The sans setting. Scripture is set in the serif by default because it
+   was drawn for reading at length, but a reader with dyslexia or low
+   vision often finds a humanist sans easier, and that is a better
+   reason than our preference. The measure and the grid are unchanged —
+   only the face. */
+[data-reading-font="sans"] .bible-content,
+[data-reading-font="sans"] .scripture-prose {
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  font-variant-numeric: normal;
+}
+
+/* Verse numbers off.
+   `visibility: hidden` rather than `display: none`: the number sits in
+   the first column of the verse grid, and removing it would collapse
+   the column and shift every line of the chapter left. This keeps the
+   hanging indent — the shape of the page is the same, the numbers are
+   simply not shown. They stay in the accessibility tree for anyone
+   navigating by verse. */
+[data-verse-numbers="off"] .bible-content .verse-num {
+  visibility: hidden;
+}
+
+/* =========================================================
+   PREFERENCES
+   Four groups of settings, each with a heading and a line saying what
+   the group is for. Hairlines between rows, no plates: this is a list
+   of decisions, not a stack of cards.
+   ========================================================= */
+
+.prefs-group {
+  /* 64px, not 96. Five groups at 96 put half a screen of nothing
+     between Community and Notifications on a phone; the heading and the
+     rule are already doing the separating. */
+  margin-top: var(--sp-6);
+  border-top: 1px solid var(--line);
+  padding-top: var(--sp-4);
+}
+.prefs-group-title {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  line-height: 1.3;
+}
+.prefs-group-blurb {
+  margin-top: 6px;
+  max-width: 34rem;
+  font-size: 13.5px;
+  line-height: 20px;
+  color: var(--muted);
+}
+.prefs-group-body {
+  margin-top: var(--sp-4);
+}
+
+/* A setting that needs its control under it — a segmented row, a field. */
+.prefs-block {
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+.prefs-group-body > .prefs-block:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+/* A setting whose control sits at the end of the row — a switch, a
+   dropdown. Wraps rather than crushing the label on a narrow phone. */
+.prefs-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  min-height: 56px;
+}
+.prefs-group-body > .prefs-row:first-child {
+  border-top: 0;
+}
+.prefs-row-tappable { cursor: pointer; }
+.prefs-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 12rem;
+  flex: 1 1 12rem;
+}
+
+.prefs-label {
+  display: block;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.35;
+}
+.prefs-hint {
+  display: block;
+  max-width: 34rem;
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--muted);
+}
+.prefs-error {
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--danger);
+}
+
+.prefs-control { flex: 0 0 auto; min-width: 7rem; }
+.prefs-control-wide { flex: 1 1 16rem; min-width: 0; }
+
+/* The switch. Square, like everything else that isn't a button — the
+   pill shape in this system means "press me", and a switch is a state,
+   not a press. Sonar when it is on, because that is the one thing
+   sonar is for. */
+.prefs-switch {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: 0 0 auto;
+  position: relative;
+  width: 48px;
+  height: 28px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.prefs-switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: var(--muted);
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+.prefs-switch:checked {
+  background: var(--sonar-soft, var(--soft-bg));
+  border-color: var(--sonar);
+}
+.prefs-switch:checked::after {
+  transform: translateX(20px);
+  background: var(--sonar);
+}
+.prefs-switch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* The sample verse. The real component, at the reader's own settings,
+   so what they are choosing is what they will get. Inset and quiet —
+   it is a demonstration, not a piece of the reading. */
+.prefs-sample {
+  margin-top: var(--sp-3);
+  padding: var(--sp-3) 0;
+  border-top: 1px dashed var(--line);
+  border-bottom: 1px dashed var(--line);
+  pointer-events: none;
+}
+.prefs-sample .dw-verse {
+  cursor: default;
+  min-height: 0;
+}
+
+/* =========================================================
+   THE PREFERENCES POINTER
+   One strip, once, for members who were here before the screen was.
+   Bottom edge, above the tab bar, full width — the same place the
+   verse toolbar and the toasts live, because that is where this app
+   puts a thing that is talking to you rather than being read.
+   ========================================================= */
+
+.prefs-nudge {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(env(safe-area-inset-bottom) + var(--bottom-nav-h));
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 20px;
+  background: var(--text);
+  color: var(--bg);
+}
+@media (min-width: 768px) {
+  /* No tab bar up here, so it sits on the edge itself. */
+  .prefs-nudge { bottom: 0; }
+}
+
+.prefs-nudge-text {
+  flex: 1 1 16rem;
+  min-width: 0;
+  font-size: 13.5px;
+  line-height: 19px;
+}
+
+.prefs-nudge-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.prefs-nudge-go,
+.prefs-nudge-dismiss {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--bg);
+  transition: opacity 0.15s ease;
+}
+.prefs-nudge-go { text-decoration: underline; text-underline-offset: 3px; }
+.prefs-nudge-dismiss { opacity: 0.7; }
+.prefs-nudge-go:hover,
+.prefs-nudge-dismiss:hover { opacity: 1; }
+
+/* A toast that is confirming rather than reporting a problem.
+   Sonar on the rule, and only on the rule: the message is the same
+   quiet strip either way, and "Saved" is state the app is reporting
+   back — which is the one job that colour has here. */
+.toast[data-tone="ok"] {
+  border-top-color: var(--sonar);
 }

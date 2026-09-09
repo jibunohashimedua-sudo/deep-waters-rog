@@ -60,7 +60,7 @@ export default function ReflectionCard({
   async function loadComments() {
     const { data } = await supabase
       .from("comments")
-      .select("id, body, created_at, user_id, profiles(name, photo_url)")
+      .select("id, body, created_at, user_id, profiles(name:display_name, photo_url)")
       .eq("completion_id", item.id)
       .order("created_at");
     setComments((data ?? []) as unknown as Comment[]);

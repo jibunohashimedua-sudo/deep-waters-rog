@@ -72,6 +72,17 @@ export default async function AdminUsersPage({
                     <span className="ml-2 text-[10px] uppercase tracking-wider text-warning">Pending</span>
                   )}
                 </p>
+                {/* The account name is the heading above; this is the
+                    name the church actually sees them by. Both, always,
+                    and in this order — a pastor following up on "Tobi"
+                    has to be able to find Oluwatobiloba, and a directory
+                    that quietly renamed everybody would be useless to
+                    them. Never shown instead of the account name. */}
+                {u.nickname && (
+                  <p className="text-xs text-rog-muted">
+                    Goes by <span className="text-rog-ink">{u.nickname}</span>
+                  </p>
+                )}
                 <p className="text-xs text-rog-muted">
                   Started {new Date(u.start_date).toLocaleDateString("en-GB")}
                 </p>

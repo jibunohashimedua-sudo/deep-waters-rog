@@ -6,6 +6,7 @@ import { planDayForChapter } from "@/lib/plan";
 import { fetchChapter, chapterErrorMessage } from "@/lib/bible";
 import { resolveTranslation } from "@/lib/translations";
 import { wrapVersesInHtml } from "@/lib/verseParse";
+import { readingAttrs } from "@/lib/readingAttrs";
 import ScriptureReader from "@/components/ScriptureReader";
 import ReadingHeader from "@/components/ReadingHeader";
 import ChapterPrefetch from "@/components/ChapterPrefetch";
@@ -52,7 +53,11 @@ export default async function ChapterView({ bookSlug, chapter, focus }: Props) {
 
   return (
     <>
-      <main data-surface="reading" className="max-w-3xl mx-auto px-6 pt-0 pb-10">
+      <main
+        data-surface="reading"
+        className="max-w-3xl mx-auto px-6 pt-0 pb-10"
+        {...readingAttrs(profile as unknown as Record<string, unknown>)}
+      >
         {/* The same header as the daily reading, so scripture looks and
             behaves identically wherever you meet it — including the
             translation switcher travelling down the chapter with you. */}

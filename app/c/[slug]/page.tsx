@@ -69,7 +69,7 @@ export default async function CohortLandingPage({
 
   const { data: members } = await supabase
     .from("cohort_members")
-    .select("user_id, profiles(name, photo_url)")
+    .select("user_id, profiles(name:display_name, photo_url)")
     .eq("cohort_id", cohort.id)
     .limit(12);
 

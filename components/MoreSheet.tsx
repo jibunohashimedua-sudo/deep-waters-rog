@@ -32,17 +32,6 @@ const PrivateRow = dynamic(() => import("./MoreSheetPrivateRow"), {
   ssr: false
 });
 
-type Choice = "light" | "dark" | "system";
-
-function applyTheme(choice: Choice) {
-  const prefersDark =
-    typeof window !== "undefined" &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const actual = choice === "system" ? (prefersDark ? "dark" : "light") : choice;
-  document.documentElement.dataset.theme = actual;
-  if (choice === "system") localStorage.removeItem("theme");
-  else localStorage.setItem("theme", choice);
-}
 
 type Props = {
   open: boolean;
@@ -73,7 +62,6 @@ export default function MoreSheet({
 }: Props) {
   const router = useRouter();
   const supabase = createClient();
-  const [theme, setTheme] = useState<Choice>("system");
   const [me, setMe] = useState<Me | null>(null);
   // Does this account own a private member? Asked of the database, which
   // answers for the caller and nobody else — my_private_members() returns
@@ -132,11 +120,6 @@ export default function MoreSheet({
     };
   }, [open, me, supabase]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = (localStorage.getItem("theme") as Choice) || "system";
-    setTheme(stored);
-  }, [open]);
 
   // Counted, so a sheet opened on top of another one doesn't leave the
   // body locked when the first of them closes. See lib/useLockBodyScroll.
@@ -159,10 +142,7 @@ export default function MoreSheet({
     router.push("/");
   }
 
-  function pickTheme(c: Choice) {
-    setTheme(c);
-    applyTheme(c);
-  }
+
 
   const link =
     "flex items-center gap-3 px-4 py-3  text-sm font-medium text-rog-ink hover:bg-black/5 dark:hover:bg-white/10 transition";
@@ -296,30 +276,14 @@ export default function MoreSheet({
           </div>
 
           <div className={group}>
-            <div className="px-4 py-3">
-              <p className="text-sm font-medium text-rog-ink mb-2">Theme</p>
-              <div className="flex gap-1 p-1 rounded-full glass-chip">
-                {(["light", "dark", "system"] as const).map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => pickTheme(c)}
-                    /* The sun, moon and half-moon that used to sit in
-                       these three went the same way as the rest of the
-                       sheet's emoji. The words are the label; a picture
-                       of the sun in front of the word "light" was saying
-                       it twice, in a typeface we don't control. */
-                    className={`flex-1 py-1.5 text-xs font-medium rounded-full transition capitalize ${
-                      theme === c
-                        ? "bg-rog-purple text-white"
-                        : "text-rog-muted hover:text-rog-ink"
-                    }`}
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {/* Theme used to sit here as a row of three chips, and the
+                translation and the reminders sat on the profile screen.
+                All of them are settings about how the app behaves for one
+                person, and they now live in one place — two places to
+                change one setting is how the two drift apart. */}
+            <Link href="/preferences" onClick={onClose} className={link}>
+              Preferences
+            </Link>
 
             <button type="button" onClick={signOut} className={`${link} w-full text-left`}>
               Sign out

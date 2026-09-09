@@ -38,12 +38,18 @@ import {
  * split into testament tabs and then into sections — Law, History,
  * Poetry, Major Prophets — which asks the reader to know which drawer
  * Habakkuk is in before they can look for him. Someone who does know can
- * have the sections back: lib/bookLayout keeps both, and a preferences
- * screen will offer the choice;
+ * have the sections back from the preferences screen (lib/bookLayout);
  * for everyone else, the answer to "where is Nahum" is "scroll", and
  * failing that, type three letters into the box at the top.
  */
-export default function BookPicker() {
+export default function BookPicker({
+  initialLayout
+}: {
+  /** From the reader's profile, so the right list paints immediately.
+      Omitted on any surface that doesn't have it — the stored browser
+      copy answers then. */
+  initialLayout?: BookLayout;
+}) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [testament, setTestament] = useState<Testament>("ot");
@@ -53,10 +59,15 @@ export default function BookPicker() {
   // and reading it inline would render one layout on the server and the
   // other on the client. Everyone gets the single list for a frame; only
   // someone who chose the grouped view sees it change, and only once.
-  const [layout, setLayout] = useState<BookLayout>(DEFAULT_BOOK_LAYOUT);
+  const [layout, setLayout] = useState<BookLayout>(
+    initialLayout ?? DEFAULT_BOOK_LAYOUT
+  );
   useEffect(() => {
+    // Only when the server didn't say. When it did, it is the profile
+    // talking and the browser copy is the stale one.
+    if (initialLayout) return;
     setLayout(readBookLayout());
-  }, []);
+  }, [initialLayout]);
   const grouped = layout === "grouped";
 
   const searching = query.trim().length > 0;

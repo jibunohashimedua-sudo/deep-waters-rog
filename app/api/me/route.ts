@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { PROFILE_NAME_MAX, PROFILE_BIO_MAX, capText } from "@/lib/limits";
+import { checkNickname } from "@/lib/nickname";
 
 /**
  * Update the current user's own profile.
@@ -39,6 +40,21 @@ export async function PATCH(request: Request) {
   // Only the fields /me/edit knows about. Anything else in the request body
   // is ignored — no accidental role escalation via curl.
   const update: Record<string, unknown> = { name, bio };
+
+  // The nickname goes through the same rules as the Preferences screen —
+  // one place decides what a name may be, and it refuses rather than
+  // quietly rewriting. `undefined` means the caller didn't mention it.
+  if (body.nickname !== undefined) {
+    const checked = checkNickname(body.nickname);
+    if (!checked.ok) {
+      return NextResponse.json(
+        { error: checked.error, field: "nickname" },
+        { status: 400 }
+      );
+    }
+    update.nickname = checked.value;
+  }
+
   if (typeof body.photo_url === "string" || body.photo_url === null) {
     update.photo_url = body.photo_url;
   }
@@ -59,7 +75,18 @@ export async function PATCH(request: Request) {
     .from("profiles")
     .update(update)
     .eq("id", user.id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    // The nickname column arrives with 2026_09_18. Until it is applied,
+    // say so plainly rather than showing a Postgres message.
+    if (/column .*nickname|schema cache/i.test(error.message)) {
+      console.error("[deep-waters] nickname column missing:", error.message);
+      return NextResponse.json(
+        { error: "Names aren't available on this deployment yet.", field: "nickname" },
+        { status: 503 }
+      );
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true });
 }
