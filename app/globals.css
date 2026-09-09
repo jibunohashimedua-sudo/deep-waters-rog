@@ -971,8 +971,7 @@ button:focus-visible, a:focus-visible {
 [data-theme="dark"] .border-rog-line\/70   { border-color: rgba(255, 255, 255, 0.10); }
 [data-theme="dark"] .bg-rog-line\/70       { background-color: rgba(255, 255, 255, 0.10); }
 [data-theme="dark"] .bg-rog-purple\/30     { background-color: rgba(183, 159, 232, 0.30); }
-[data-theme="dark"] .ring-rog-purple\/20   { --tw-ring-color: rgba(183, 159, 232, 0.25); }
-[data-theme="dark"] .ring-rog-purple\/30   { --tw-ring-color: rgba(183, 159, 232, 0.35); }
+[data-theme="dark"] .outline-rog-purple\/30 { outline-color: rgba(183, 159, 232, 0.35); }
 
 /* Avatar rings on the cohort page hardcode white. */
 [data-theme="dark"] .border-white { border-color: rgba(255, 255, 255, 0.16); }

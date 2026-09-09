@@ -180,7 +180,7 @@ export default function LeaderboardView() {
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center font-bold tabular-nums ${
                   rank === 1
-                    ? "bg-rog-purple text-white ring-2 ring-rog-purple/30 ring-offset-2 ring-offset-transparent"
+                    ? "bg-rog-purple text-white outline outline-2 outline-offset-2 outline-rog-purple/30"
                     : rank <= 3
                     ? "bg-rog-purple text-white"
                     : "bg-rog-cream text-rog-purple"
