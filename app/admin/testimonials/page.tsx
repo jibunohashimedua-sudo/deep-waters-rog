@@ -23,9 +23,8 @@ export default async function AdminTestimonialsPage() {
 
         <div className="mt-6 space-y-3">
           {(items ?? []).length === 0 ? (
-            <div className="empty-state">
-              <p className="empty-body">No testimonies to review yet.</p>
-              <p className="empty-hint">They will appear here when people submit them.</p>
+            <div className="empty">
+              <p>No testimonies to review yet.</p>
             </div>
           ) : (
             (items ?? []).map((t: any) => (

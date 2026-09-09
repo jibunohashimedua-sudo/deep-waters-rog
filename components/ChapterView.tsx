@@ -90,12 +90,8 @@ export default async function ChapterView({ bookSlug, chapter, focus }: Props) {
             ]}
           />
         ) : (
-          <div className="mt-16 empty-state">
-            <p className="empty-body">{chapterErrorMessage(outcome.kind)}</p>
-            <p className="empty-hint">
-              Nothing you&rsquo;ve saved is affected — your highlights, notes and
-              progress are all still here.
-            </p>
+          <div className="mt-16 empty">
+            <p>{chapterErrorMessage(outcome.kind)}</p>
             <Link href={`/bible/${book.slug}`} className="btn-secondary mt-2">
               Pick another chapter
             </Link>

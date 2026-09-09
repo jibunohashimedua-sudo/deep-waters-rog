@@ -116,9 +116,8 @@ export default async function AdminReportsPage() {
 
         <div className="mt-6 space-y-3">
           {enriched.length === 0 ? (
-            <div className="empty-state">
-              <p className="empty-body">No reports.</p>
-              <p className="empty-hint">Anything the community flags will land here.</p>
+            <div className="empty">
+              <p>No reports.</p>
             </div>
           ) : (
             enriched.map((r) => (

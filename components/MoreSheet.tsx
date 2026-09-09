@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import LoadingRule from "@/components/LoadingRule";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
@@ -170,7 +171,7 @@ export default function MoreSheet({
         aria-label="More"
         /* On a wide screen it stops at a readable measure and centres,
            rather than running a list of six rows across a whole iPad. */
-        className={`bottom-glass absolute left-0 right-0 bottom-0 md:mx-auto md:max-w-md rounded-t-[28px] max-h-[85vh] overflow-y-auto transition-transform duration-300 ${
+        className={`sheet md:mx-auto md:max-w-md ${
           open ? "translate-y-0" : "translate-y-full"
         }`}
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}
@@ -212,12 +213,8 @@ export default function MoreSheet({
                a person with no name — above two blank lines. A question
                mark where your own face goes is a strange thing to show
                someone, and it was answering a question nobody asked. */
-            <div className="person-row px-4 !border-t-0" aria-hidden>
-              <div className="skeleton w-12 h-12 shrink-0" />
-              <div className="min-w-0 flex-1">
-                <div className="skeleton h-4 w-32" />
-                <div className="skeleton h-2.5 w-24 mt-2" />
-              </div>
+            <div className="px-4">
+              <LoadingRule label="Loading your profile" />
             </div>
           )}
 

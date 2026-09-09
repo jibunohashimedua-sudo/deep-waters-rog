@@ -1060,19 +1060,15 @@ export default function ScriptureReader({
         saving={sheetSaving}
       />
 
+      {/* A strip on the bottom edge, full width, above the tab bar — not
+          a floating pill in the middle of the screen. It clears the verse
+          toolbar when the toolbar is up. */}
       {toast && (
         <div
           role="status"
           aria-live="polite"
-          className="fixed left-1/2 z-[80] -translate-x-1/2 px-4 py-2 text-[13px] font-medium pointer-events-none"
-          style={{
-            // Sits clear of the verse toolbar when the toolbar is up, and
-            // on the bottom edge when it isn't. Square: it is a message,
-            // not something to press.
-            bottom: selected.length > 0 ? 120 : 32,
-            background: "var(--text)",
-            color: "var(--bg)"
-          }}
+          className="toast"
+          style={{ bottom: selected.length > 0 ? 96 : 0 }}
         >
           {toast}
         </div>

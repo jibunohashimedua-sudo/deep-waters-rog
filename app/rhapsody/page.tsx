@@ -72,20 +72,14 @@ export default async function RhapsodyPage() {
         <p className="mt-2 text-sm text-rog-muted">{longDate(date)}</p>
 
         {!entry && !problem && (
-          <div className="mt-16 card empty-state">
-            <p className="empty-body">No Rhapsody article has been set for today yet.</p>
-            <p className="empty-hint">
-              Your Old and New Testament readings are waiting on the Today page.
-            </p>
+          <div className="mt-16 card empty">
+            <p>No Rhapsody article has been set for today yet.</p>
           </div>
         )}
 
         {problem && (
-          <div className="mt-16 card empty-state">
-            <p className="empty-body">Today&rsquo;s Rhapsody couldn&rsquo;t be opened.</p>
-            <p className="empty-hint">
-              Try again in a moment. If it keeps happening, tell an admin.
-            </p>
+          <div className="mt-16 card empty">
+            <p>Today&rsquo;s Rhapsody couldn&rsquo;t be opened.</p>
           </div>
         )}
 
@@ -123,9 +117,8 @@ export default async function RhapsodyPage() {
         {/* Nothing to read means the text hasn't been pulled in yet — the PDF
             is still there, so send them to it rather than to an empty page. */}
         {entry && paragraphs.length === 0 && pdfHref && (
-          <div className="mt-10 card empty-state">
-            <p className="empty-body">Today&rsquo;s article hasn&rsquo;t been typed up yet.</p>
-            <p className="empty-hint">You can still read it in the original booklet below.</p>
+          <div className="mt-10 card empty">
+            <p>Today&rsquo;s article hasn&rsquo;t been typed up yet.</p>
           </div>
         )}
 

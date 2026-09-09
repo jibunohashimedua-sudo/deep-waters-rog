@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import LoadingRule from "@/components/LoadingRule";
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import { createClient } from "@/lib/supabase/client";
@@ -85,20 +86,10 @@ export default function NotificationsPage() {
 
         <div className="mt-6 space-y-2">
           {loading ? (
-            <div className="space-y-3" aria-busy="true" aria-live="polite">
-              <span className="sr-only">Loading notifications</span>
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="card">
-                  <div className="skeleton h-2 w-16" />
-                  <div className="skeleton mt-2 h-3 w-3/5" />
-                  <div className="skeleton mt-2 h-3 w-2/5" />
-                </div>
-              ))}
-            </div>
+            <LoadingRule label="Loading notifications" />
           ) : items.length === 0 ? (
-            <div className="empty-state">
-              <p className="empty-body">Nothing yet.</p>
-              <p className="empty-hint">Amens, comments and mentions will land here.</p>
+            <div className="empty">
+              <p>Nothing yet.</p>
             </div>
           ) : (
             items.map((n) => {

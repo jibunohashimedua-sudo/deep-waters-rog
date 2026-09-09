@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import SelectSheet from "@/components/SelectSheet";
 import { friendlyError } from "@/lib/errors";
 import {
   SERMON_TITLE_MAX,
@@ -260,16 +261,17 @@ export default function SermonEditor({
           <label htmlFor="sermon-status" className="meta block">
             Status
           </label>
-          <select
-            id="sermon-status"
+          <SelectSheet
+            label="Status"
             value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="mt-2 border border-rog-line bg-transparent px-4 py-2.5 text-sm"
-          >
-            <option value="draft">Draft</option>
-            <option value="preached">Preached</option>
-            <option value="archived">Archived</option>
-          </select>
+            onChange={setStatus}
+            className="mt-2"
+            options={[
+              { value: "draft", label: "Draft" },
+              { value: "preached", label: "Preached" },
+              { value: "archived", label: "Archived" }
+            ]}
+          />
         </div>
         <div>
           <label htmlFor="sermon-date" className="meta block">

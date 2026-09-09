@@ -144,12 +144,8 @@ export default function BookPicker() {
       )}
 
       {nothingFound && (
-        <div className="empty-state mt-10">
-          <p className="empty-body">No book by that name.</p>
-          <p className="empty-hint">
-            Try the start of the name, an abbreviation like “rev” or “2 tim”, or
-            a whole reference like “jn 3:16”.
-          </p>
+        <div className="empty mt-10">
+          <p>No book by that name.</p>
         </div>
       )}
 

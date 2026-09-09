@@ -58,6 +58,7 @@
   --soft-border: #CFD4DC;
 
   --accent: #3B23B8;    /* violet · 8.6:1 on ground */
+  --violet: var(--accent);
   --accent-strong: #2A1B8C;
   --accent-soft: rgba(59, 35, 184, 0.09);
   /* --pink is retired. The name survives because a dozen call sites still
@@ -148,6 +149,7 @@
   --soft-border: #262239;
 
   --accent: #A78BFF;    /* 7.3:1 */
+  --violet: var(--accent);
   --accent-strong: #C0AAFF;
   --accent-soft: rgba(167, 139, 255, 0.14);
   --pink: #A78BFF;
@@ -386,31 +388,6 @@ body {
 .tile-pink:hover { border-color: var(--pink); }
 .group:hover .group-accent-pink { color: var(--pink); }
 
-/* Empty states — hold the moment. A small mark, a serif line, a
-   sans hint. Used on the prayer wall, finishers, leaderboard, etc. */
-.empty-state {
-  padding: 40px 32px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  text-align: center;
-}
-.empty-state .empty-body {
-  font-family: var(--font-serif), Georgia, serif;
-  font-size: 17px;
-  line-height: 1.5;
-  color: var(--text);
-  max-width: 34ch;
-  margin: 0;
-}
-.empty-state .empty-hint {
-  font-size: 13px;
-  line-height: 1.55;
-  color: var(--ink-quiet);
-  max-width: 42ch;
-  margin: 0;
-}
 
 /* Done-today affirmation chip. Small, muted-accent, quiet — a nod,
    not a trophy. Shows only when today is saved. */
@@ -465,8 +442,10 @@ body {
 }
 
 /* Backdrop behind the More sheet. Dim, not blurred. */
+/* Plain ink at 60%. Never blurred: a blur is an elevation idea, and
+   there is no elevation here — the sheet is simply in front. */
 .sheet-backdrop {
-  background: rgba(6, 5, 12, 0.55);
+  background: rgba(6, 5, 12, 0.6);
 }
 
 .glass-chip {
@@ -697,7 +676,11 @@ body {
   display: inline-block;
   width: 6px;
   height: 6px;
-  background-color: var(--sonar);
+  /* Violet, not sonar. Sonar is "now" and "you are here" — the verse
+     under your thumb, the tab you are on, the plumb bob at your depth.
+     A saved note is something you already did, and the past tense in
+     this system is the accent. */
+  background-color: var(--violet);
   opacity: 0.9;
   margin-left: 6px;
   vertical-align: 0.35em;
@@ -848,24 +831,20 @@ select {
 input:focus, textarea:focus, select:focus {
   background: var(--input-bg-focus) !important;
   border-color: var(--accent) !important;
-  outline: var(--rule-hairline) solid var(--accent);
-  outline-offset: calc(var(--rule-hairline) * -1);
-  outline: none;
 }
 input::placeholder, textarea::placeholder {
   color: var(--ink-quiet);
   opacity: 0.7;
 }
 
-/* Keyboard focus outline for interactive elements that aren't form
-   controls. Only shows on keyboard nav (not mouse click). */
+/* One focus ring, and it is sonar: a keyboard user's caret is exactly
+   the "you are here" sonar is for. Square, because nothing in this
+   system rounds except the things you press with a thumb, and the ring
+   is not the thing — it is a report about it. */
 :focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-  border-radius: 4px;
-}
-button:focus-visible, a:focus-visible {
-  outline-offset: 3px;
+  outline: 2px solid var(--sonar);
+  outline-offset: 2px;
+  border-radius: 0;
 }
 
 /* =========================================================
@@ -924,32 +903,6 @@ button:focus-visible, a:focus-visible {
 }
 .btn-danger:hover { background: var(--danger); color: var(--bg); }
 
-/* =========================================================
-   LOADING SKELETONS
-   Reserve the shape of what's coming so nothing jumps when it
-   arrives. Replaces bare "Loading..." text.
-   ========================================================= */
-
-.skeleton {
-  border-radius: 0;
-  background: linear-gradient(
-    90deg,
-    var(--soft-bg) 25%,
-    color-mix(in oklab, var(--soft-bg) 55%, var(--ink-quiet) 45%) 37%,
-    var(--soft-bg) 63%
-  );
-  background-size: 400% 100%;
-  animation: skeleton-sweep 1.4s ease-in-out infinite;
-}
-@keyframes skeleton-sweep {
-  0%   { background-position: 100% 50%; }
-  100% { background-position: 0 50%; }
-}
-/* A moving gradient is exactly the kind of motion that triggers
-   vestibular discomfort — hold it still when asked. */
-@media (prefers-reduced-motion: reduce) {
-  .skeleton { animation: none; }
-}
 
 /* =========================================================
    DARK-MODE GAPS
@@ -1006,19 +959,10 @@ button:focus-visible, a:focus-visible {
    Turning off -webkit-tap-highlight-color for the app feel removes the
    only affordance some users had, so keyboard focus has to be obvious.
    :focus-visible means pointer users never see a ring they didn't ask for.
-   ========================================================= */
 
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-/* Inputs already draw their own focus ring via the form rules above. */
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible {
-  outline: none;
-}
+   The ring is declared once, above. Nothing opts out of it — a field
+   that drew its own was a second focus language for no reason.
+   ========================================================= */
 
 /* Small icon-only controls still need a 44px touch area. The visual size
    is unchanged — the target is grown with a transparent pseudo-element so
@@ -1312,29 +1256,29 @@ select:focus-visible {
 .chapter-tick-box {
   appearance: none;
   -webkit-appearance: none;
-  width: 22px;
-  height: 22px;
-  border: 1px solid var(--input-border);
-  background: var(--input-bg);
+  width: 16px;
+  height: 16px;
+  border: var(--rule-hairline) solid var(--line);
+  background: transparent;
   cursor: pointer;
   position: relative;
   flex-shrink: 0;
   transition: background 0.12s ease, border-color 0.12s ease;
 }
 .chapter-tick-box:checked {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--violet);
+  border-color: var(--violet);
 }
+/* A square, the same mark Check draws. The rotated chevron this used to
+   set was a second checkbox language in the same app. */
 .chapter-tick-box:checked::after {
   content: "";
   position: absolute;
-  left: 6px;
-  top: 2px;
-  width: 8px;
-  height: 13px;
-  border-right: 2px solid var(--on-accent);
-  border-bottom: 2px solid var(--on-accent);
-  transform: rotate(45deg);
+  left: 4px;
+  top: 4px;
+  width: 6px;
+  height: 6px;
+  background: var(--on-accent);
 }
 .chapter-tick-box:disabled {
   opacity: 0.4;
@@ -1427,6 +1371,8 @@ select:focus-visible {
   gap: 7px;
   color: var(--ink-data);
   transition: color 0.15s ease;
+  /* 44px minimum, set at the bottom of this file with the rest of the
+     tap-target repairs. */
 }
 .act:hover { color: var(--text); }
 .act svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.7; }
@@ -2891,4 +2837,230 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
 
 @media (max-width: 379.98px) {
   .plumb-marker { width: 2px; }
+}
+
+/* =========================================================
+   THE STATES
+   Loading, empty, error, selection, toasts, sheets, scrollbars and the
+   controls the platform would otherwise draw for us. These are the
+   screens nobody screenshots, which is exactly why they are where a
+   design system goes quietly inconsistent.
+   ========================================================= */
+
+/* The one curve. Things enter from the edge they belong to and settle. */
+:root {
+  --sink: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ---- 26. LOADING ------------------------------------------------
+   No spinner, no shimmer, no pulsing block. A 1px sonar rule draws
+   left to right across the top of whatever is loading, and then it is
+   gone. Sonar because loading is the definition of "now".
+
+   A region that resolves in under 200ms shows nothing at all: the rule
+   is delayed, so a fast load never flashes a state at anybody. */
+.loading-rule {
+  position: relative;
+  display: block;
+  height: 1px;
+  width: 100%;
+  background: transparent;
+  overflow: hidden;
+}
+.loading-rule::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 100%;
+  background: var(--sonar);
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: dw-draw 900ms var(--sink) 200ms infinite;
+}
+@keyframes dw-draw {
+  0%   { transform: scaleX(0); }
+  70%  { transform: scaleX(1); }
+  100% { transform: scaleX(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading-rule::after { animation: none; transform: scaleX(1); opacity: 0.5; }
+}
+
+/* ---- 27. EMPTY --------------------------------------------------
+   One line of prose and one control. No illustration, no centred mark,
+   no exclamation mark, no encouragement. An empty screen is an
+   invitation to act, so the line says what to do — not how the screen
+   feels about it. */
+.empty {
+  padding: 24px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  text-align: left;
+}
+.empty p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink-quiet);
+  max-width: 42ch;
+}
+
+/* ---- 30. SELECTION ---------------------------------------------- */
+::selection {
+  background: rgba(6, 122, 90, 0.18);
+}
+[data-theme="dark"] ::selection {
+  background: rgba(70, 224, 168, 0.18);
+}
+
+/* ---- 31. TOASTS -------------------------------------------------
+   A strip on the bottom edge, the full width of the screen, sitting
+   above the tab bar. Square, opaque, one rule along its top. Text left
+   aligned like everything else that is read rather than pressed. */
+.toast {
+  position: fixed;
+  left: 0;
+  right: 0;
+  /* Under a sheet, over the tab bar. A message is transient; a sheet is
+     something you opened and are looking at. */
+  z-index: 60;
+  padding: 18px 24px;
+  background: var(--bg);
+  border-top: var(--rule-hairline) solid var(--line);
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.4;
+  text-align: left;
+  pointer-events: none;
+  animation: dw-rise 240ms var(--sink) both;
+}
+@keyframes dw-rise {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast { animation: none; }
+}
+
+/* ---- 32. SHEETS -------------------------------------------------
+   Square. The 28px top corners were the last radius in the app that
+   wasn't a thing you press. */
+.sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: var(--bg);
+  border-top: var(--rule-hairline) solid var(--line);
+  border-radius: 0;
+  transition: transform 300ms var(--sink);
+}
+
+/* ---- 33. SCROLLBARS --------------------------------------------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: var(--line); border-radius: 0; }
+/* Nothing at the edge of the page you are reading. */
+[data-surface="reading"] { scrollbar-width: none; }
+[data-surface="reading"]::-webkit-scrollbar { display: none; }
+
+/* ---- 34. NATIVE CONTROLS ---------------------------------------
+   The native ones bring the platform's radius and the platform's accent
+   colour in through the back door, and neither matches anything here.
+   The real input stays for the accessibility tree and the keyboard; it
+   is visually hidden and drives the square drawn beside it. */
+.control-native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  margin: 0;
+  pointer-events: none;
+}
+.control-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  cursor: pointer;
+}
+.control-box {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border: var(--rule-hairline) solid var(--line);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+.control-native:checked + .control-box {
+  background: var(--violet);
+  border-color: var(--violet);
+}
+/* The tick is a square, and so is the radio's centre. Nothing round. */
+.control-box::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  background: var(--on-accent);
+  transform: scale(0);
+}
+.control-native:checked + .control-box::after { transform: scale(1); }
+.control-native:focus-visible + .control-box {
+  outline: 2px solid var(--sonar);
+  outline-offset: 2px;
+}
+
+/* The select's trigger, and the rows in the sheet it opens. */
+.select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  background: var(--input-bg);
+  border: var(--rule-hairline) solid var(--input-border);
+  color: var(--text);
+  font-size: 14px;
+  text-align: left;
+}
+.option-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 24px;
+  border-top: var(--rule-hairline) solid var(--line);
+  background: transparent;
+  color: var(--text);
+  font-size: 15px;
+  text-align: left;
+}
+.option-row:first-child { border-top: 0; }
+.option-row[aria-selected="true"] {
+  background-image: linear-gradient(
+    to right,
+    var(--violet) 0 var(--rule-section),
+    transparent var(--rule-section)
+  );
+}
+
+/* ---- 35. TAP TARGETS --------------------------------------------
+   A text control looks smaller than a drawn one and quietly loses its
+   target. Amen and Reply were 14px tall. */
+.act {
+  min-height: 44px;
+  padding-right: 6px;
 }

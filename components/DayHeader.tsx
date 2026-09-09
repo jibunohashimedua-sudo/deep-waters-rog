@@ -34,7 +34,7 @@ export default function DayHeader({ day, currentDay, doneDays }: Props) {
           {prev !== null ? (
             <Link
               href={`/day/${prev}`}
-              className="tap-target inline-flex items-center justify-center w-10 h-10 text-rog-ink hover:opacity-70 transition"
+              className="tap-target inline-flex items-center justify-center w-11 h-11 text-rog-ink hover:opacity-70 transition"
               aria-label={`Go to day ${prev}`}
             >
               <span className="text-[15px] leading-none" aria-hidden>
@@ -42,7 +42,7 @@ export default function DayHeader({ day, currentDay, doneDays }: Props) {
               </span>
             </Link>
           ) : (
-            <span className="w-10 h-10" aria-hidden />
+            <span className="w-11 h-11" aria-hidden />
           )}
           <button
             type="button"
@@ -59,7 +59,7 @@ export default function DayHeader({ day, currentDay, doneDays }: Props) {
           {next !== null ? (
             <Link
               href={`/day/${next}`}
-              className="tap-target inline-flex items-center justify-center w-10 h-10 text-rog-ink hover:opacity-70 transition"
+              className="tap-target inline-flex items-center justify-center w-11 h-11 text-rog-ink hover:opacity-70 transition"
               aria-label={`Go to day ${next}`}
             >
               <span className="text-[15px] leading-none" aria-hidden>
@@ -67,7 +67,7 @@ export default function DayHeader({ day, currentDay, doneDays }: Props) {
               </span>
             </Link>
           ) : (
-            <span className="w-10 h-10" aria-hidden />
+            <span className="w-11 h-11" aria-hidden />
           )}
         </div>
 

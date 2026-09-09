@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import LoadingRule from "@/components/LoadingRule";
+import Check from "@/components/Check";
 import Avatar from "@/components/Avatar";
 import MentionText from "@/components/MentionText";
 import ReportButton from "@/components/ReportButton";
@@ -260,15 +262,13 @@ export default function PrayerWall() {
           placeholder="What can we pray about with you? Use @name to mention someone."
           className="w-full border border-rog-line bg-white px-5 py-3 focus:border-rog-purple focus:outline-none"
         />
-        <label className="mt-3 flex items-center gap-2.5 text-sm text-rog-ink">
-          <input
-            type="checkbox"
+        <div className="mt-3">
+          <Check
+            label="Ask a pastor to see this"
             checked={needsPastor}
             onChange={(e) => setNeedsPastor(e.target.checked)}
-            className="w-4 h-4 accent-rog-purple"
           />
-          Ask a pastor to see this
-        </label>
+        </div>
         <button type="submit" disabled={posting || !draft.trim()} className="btn-primary w-full mt-3 disabled:opacity-50">
           {posting ? "Posting..." : "Post prayer request"}
         </button>
@@ -286,28 +286,11 @@ export default function PrayerWall() {
 
       <div className="mt-4 space-y-3">
         {loading ? (
-          <div className="space-y-3" aria-busy="true" aria-live="polite">
-            <span className="sr-only">Loading the prayer wall</span>
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="card">
-                <div className="flex items-center gap-3">
-                  <div className="skeleton w-9 h-9 !rounded-full" />
-                  <div className="skeleton h-3 w-32" />
-                </div>
-                <div className="skeleton mt-4 h-3 w-full" />
-                <div className="skeleton mt-2 h-3 w-3/4" />
-              </div>
-            ))}
-          </div>
+          <LoadingRule label="Loading the prayer wall" />
         ) : shown.length === 0 ? (
-          <div className="empty-state">
-            <p className="empty-body">
+          <div className="empty">
+            <p>
               {tab === "open" ? "The wall is quiet." : "No answered prayers here yet."}
-            </p>
-            <p className="empty-hint">
-              {tab === "open"
-                ? "When someone shares a request, it will show here."
-                : "When someone marks a prayer answered, it moves here."}
             </p>
           </div>
         ) : (

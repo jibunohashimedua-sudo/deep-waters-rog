@@ -163,13 +163,8 @@ export default async function ReadPage({
         )}
 
         {failure && (
-          <div className="mt-10 empty-state">
-            <p className="empty-body">{chapterErrorMessage(failure)}</p>
-            <p className="empty-hint">
-              {loaded.length > 0
-                ? "Some of today’s reading is below. The rest will load once it clears."
-                : "Nothing you’ve saved is affected — your highlights, notes and progress are all still here."}
-            </p>
+          <div className="mt-10 empty">
+            <p>{chapterErrorMessage(failure)}</p>
           </div>
         )}
 

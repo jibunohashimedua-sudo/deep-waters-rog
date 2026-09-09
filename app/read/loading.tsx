@@ -7,8 +7,6 @@ export default function ReadLoading() {
       <Nav />
       <ReadingSkeleton
         label="Loading today’s reading"
-        metaWidth="10rem"
-        titleWidth="16rem"
       />
     </>
   );

@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import SelectSheet from "@/components/SelectSheet";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   HIGHLIGHT_COLOURS,
@@ -157,22 +158,16 @@ export default function HighlightsView({ rows, textError }: Props) {
       </div>
 
       <div className="mt-3 flex gap-2 flex-wrap">
-        <label htmlFor="hl-book" className="sr-only">
-          Book
-        </label>
-        <select
-          id="hl-book"
+        <SelectSheet
+          label="Book"
           value={book}
-          onChange={(e) => setBook(e.target.value)}
-          className="chip !min-h-[44px] appearance-none px-4 max-w-[180px] truncate"
-        >
-          <option value="all">All books</option>
-          {books.map((b) => (
-            <option key={b} value={b}>
-              {b}
-            </option>
-          ))}
-        </select>
+          onChange={setBook}
+          className="max-w-[180px]"
+          options={[
+            { value: "all", label: "All books" },
+            ...books.map((b) => ({ value: b, label: b }))
+          ]}
+        />
 
         <label htmlFor="hl-search" className="sr-only">
           Search your highlights

@@ -1,5 +1,8 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
+import LoadingRule from "@/components/LoadingRule";
+import SelectSheet from "@/components/SelectSheet";
 import ReflectionCard from "@/components/ReflectionCard";
 import { createClient } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/errors";
@@ -137,14 +140,16 @@ export default function CommunityFeed() {
           </button>
         )}
         {cohorts.length > 0 && (
-          <select
+          <SelectSheet
+            label="Cohort"
             value={filter === "all" || filter === "mine" ? "" : filter}
-            onChange={(e) => setFilter(e.target.value || "all")}
-            className="chip !bg-transparent"
-          >
-            <option value="">Pick a cohort...</option>
-            {cohorts.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
+            onChange={(v) => setFilter(v || "all")}
+            className="max-w-[220px]"
+            options={[
+              { value: "", label: "Every cohort" },
+              ...cohorts.map((c) => ({ value: c.id, label: c.name }))
+            ]}
+          />
         )}
       </div>
 
@@ -152,27 +157,13 @@ export default function CommunityFeed() {
 
       <div className="card-list mt-6">
         {loading ? (
-          <div className="space-y-3" aria-busy="true" aria-live="polite">
-            <span className="sr-only">Loading the feed</span>
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="card">
-                <div className="flex items-center gap-3">
-                  <div className="skeleton w-10 h-10 !rounded-full" />
-                  <div className="flex-1">
-                    <div className="skeleton h-3 w-28" />
-                    <div className="skeleton mt-2 h-3 w-20" />
-                  </div>
-                </div>
-                <div className="skeleton mt-4 h-3 w-40" />
-                <div className="skeleton mt-2 h-3 w-full" />
-                <div className="skeleton mt-2 h-3 w-4/5" />
-              </div>
-            ))}
-          </div>
+          <LoadingRule label="Loading the feed" />
         ) : filtered.length === 0 ? (
-          <div className="empty-state">
-            <p className="empty-body">Nothing shared yet.</p>
-            <p className="empty-hint">Post the verse that stood out to you today and start the feed.</p>
+          <div className="empty">
+            <p>Nothing shared yet.</p>
+            <Link href="/today" className="btn-primary">
+              Write one
+            </Link>
           </div>
         ) : (
           filtered.map((it) => <ReflectionCard key={it.id} item={it} currentUserId={me} isAdmin={isAdmin} />)

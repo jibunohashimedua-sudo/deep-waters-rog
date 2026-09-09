@@ -1,5 +1,6 @@
 import Avatar from "@/components/Avatar";
 import Link from "next/link";
+import Check from "@/components/Check";
 import { createClient } from "@/lib/supabase/server";
 import CohortShareBox from "@/components/CohortShareBox";
 import BackButton from "@/components/BackButton";
@@ -122,10 +123,12 @@ export default async function CohortLandingPage({
             </p>
             <form action="/api/cohort/join" method="POST" className="mt-6 space-y-3">
               <input type="hidden" name="cohort_id" value={cohort.id} />
-              <label className="flex items-center justify-center gap-2 text-sm">
-                <input type="checkbox" name="align_start" value="1" defaultChecked className="accent-rog-purple" />
-                Set my start date to {fmtDate}
-              </label>
+              <Check
+                name="align_start"
+                value="1"
+                defaultChecked
+                label={`Set my start date to ${fmtDate}`}
+              />
               <button className="btn-primary w-full">Join this cohort</button>
             </form>
           </div>

@@ -30,11 +30,8 @@ export default function PulseCurve({ points }: { points: PulseCurvePoint[] }) {
   if (usable.length < CURVE_MIN_DAYS) {
     const reached = usable.length;
     return (
-      <div className="empty-state">
-        <p className="empty-body">Not enough of the plan has happened yet.</p>
-        <p className="empty-hint">
-          {`The plan is ${reached} day${reached === 1 ? "" : "s"} old. It needs at least ${CURVE_MIN_DAYS} before the shape of it means anything, so it will appear here on its own.`}
-        </p>
+      <div className="empty">
+        <p>Not enough of the plan has happened yet.</p>
       </div>
     );
   }

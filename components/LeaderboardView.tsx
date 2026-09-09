@@ -1,5 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import LoadingRule from "@/components/LoadingRule";
+import SelectSheet from "@/components/SelectSheet";
 import Avatar from "@/components/Avatar";
 import { createClient } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/errors";
@@ -133,18 +135,16 @@ export default function LeaderboardView() {
           </button>
         )}
         {cohorts.length > 0 && (
-          <select
+          <SelectSheet
+            label="Cohort"
             value={filter === "all" || filter === "mine" ? "" : filter}
-            onChange={(e) => setFilter(e.target.value || "all")}
-            className="chip !min-h-[44px] appearance-none px-4 max-w-[220px] truncate"
-          >
-            <option value="">All cohorts…</option>
-            {cohorts.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => setFilter(v || "all")}
+            className="max-w-[220px]"
+            options={[
+              { value: "", label: "All cohorts" },
+              ...cohorts.map((c) => ({ value: c.id, label: c.name }))
+            ]}
+          />
         )}
       </div>
 
@@ -154,25 +154,10 @@ export default function LeaderboardView() {
 
       <div className="mt-6 space-y-2">
         {loading ? (
-          <div className="space-y-2" aria-busy="true" aria-live="polite">
-            <span className="sr-only">Loading the leaderboard</span>
-            {[0, 1, 2, 3, 4].map((i) => (
-              <div key={i} className="card flex items-center gap-4">
-                <div className="skeleton w-10 h-10" />
-                <div className="skeleton w-12 h-12" />
-                <div className="flex-1">
-                  <div className="skeleton h-3 w-32" />
-                  <div className="skeleton mt-2 h-3 w-24" />
-                </div>
-              </div>
-            ))}
-          </div>
+          <LoadingRule label="Loading the leaderboard" />
         ) : ranked.length === 0 ? (
-          <div className="empty-state">
-            <p className="empty-body">The board is still empty.</p>
-            <p className="empty-hint">
-              It will fill as people save their first day.
-            </p>
+          <div className="empty">
+            <p>The board is still empty.</p>
           </div>
         ) : (
           ranked.map(({ row, rank }) => (

@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import LoadingRule from "@/components/LoadingRule";
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/errors";
@@ -48,18 +49,13 @@ export default function CohortsView() {
 
       <div className="mt-6 space-y-3">
         {loading ? (
-          <>
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="card">
-                <div className="skeleton h-4 w-40" />
-                <div className="skeleton mt-2 h-3 w-32" />
-              </div>
-            ))}
-          </>
+          <LoadingRule label="Loading your cohorts" />
         ) : cohorts.length === 0 ? (
-          <div className="empty-state">
-            <p className="empty-body">No cohorts yet.</p>
-            <p className="empty-hint">Anyone can start one.</p>
+          <div className="empty">
+            <p>No cohorts yet.</p>
+            <Link href="/cohorts/new" className="btn-primary">
+              Start one
+            </Link>
           </div>
         ) : (
           cohorts.map((c) => {

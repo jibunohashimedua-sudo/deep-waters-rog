@@ -75,7 +75,7 @@ export default function VerseNoteSheet({
         role="dialog"
         aria-modal="true"
         aria-label={`Note on ${reference}`}
-        className={`bottom-glass absolute left-0 right-0 bottom-0 rounded-t-[28px] max-h-[85vh] overflow-y-auto transition-transform duration-300 ${
+        className={`sheet ${
           open ? "translate-y-0" : "translate-y-full"
         }`}
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}

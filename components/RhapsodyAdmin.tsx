@@ -402,9 +402,8 @@ export default function RhapsodyAdmin({
       <section className="card">
         <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Editions</h2>
         {editions.length === 0 ? (
-          <div className="empty-state">
-            <p className="empty-body">No editions yet.</p>
-            <p className="empty-hint">Upload this month&rsquo;s PDF above to begin.</p>
+          <div className="empty">
+            <p>No editions yet.</p>
           </div>
         ) : (
           <ul className="mt-4 space-y-2">
@@ -463,9 +462,8 @@ export default function RhapsodyAdmin({
         </div>
 
         {!edition ? (
-          <div className="empty-state">
-            <p className="empty-body">No PDF for {monthLabel(month)} yet.</p>
-            <p className="empty-hint">Upload it above, then come back to map the dates.</p>
+          <div className="empty">
+            <p>No PDF for {monthLabel(month)} yet.</p>
           </div>
         ) : (
           <>

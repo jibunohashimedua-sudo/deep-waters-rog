@@ -80,12 +80,8 @@ export default async function SermonsPage() {
         </div>
 
         {sermons.length === 0 ? (
-          <div className="mt-10 empty-state">
-            <p className="empty-body">Nothing written yet.</p>
-            <p className="empty-hint">
-              Start one here, or send a verse over from the Bench and it will
-              start one for you.
-            </p>
+          <div className="mt-10 empty">
+            <p>Nothing written yet.</p>
           </div>
         ) : (
           <ul className="mark-list mt-8">

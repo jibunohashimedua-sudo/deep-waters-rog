@@ -1,5 +1,6 @@
 "use client";
 import { Suspense, useCallback } from "react";
+import LoadingRule from "@/components/LoadingRule";
 import { useRouter, useSearchParams } from "next/navigation";
 import Nav from "@/components/Nav";
 import CommunityFeed from "@/components/CommunityFeed";
@@ -128,9 +129,7 @@ export default function CommunityPage() {
       <Suspense
         fallback={
           <main className="max-w-3xl mx-auto px-6 py-10">
-            <div className="skeleton mt-3 h-9 w-48" />
-            <div className="skeleton mt-6 h-[52px] w-full max-w-md !rounded-full" />
-            <div className="skeleton mt-6 h-40 w-full" />
+            <LoadingRule label="Loading the community" />
           </main>
         }
       >

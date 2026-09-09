@@ -144,11 +144,8 @@ export default async function PulsePage() {
           </p>
 
           {cohorts.length === 0 ? (
-            <div className="empty-state">
-              <p className="empty-body">No cohorts yet.</p>
-              <p className="empty-hint">
-                When a cohort is created it will appear here with its leader.
-              </p>
+            <div className="empty">
+              <p>No cohorts yet.</p>
             </div>
           ) : (
             <div className="mt-4">
@@ -209,11 +206,8 @@ export default async function PulsePage() {
           </p>
 
           {prayers.length === 0 ? (
-            <div className="empty-state">
-              <p className="empty-body">Nothing is waiting.</p>
-              <p className="empty-hint">
-                Every open prayer on the wall has had someone pray it.
-              </p>
+            <div className="empty">
+              <p>Nothing is waiting.</p>
             </div>
           ) : (
             <div className="mt-4">

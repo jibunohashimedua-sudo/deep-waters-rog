@@ -1,6 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
+import LoadingRule from "@/components/LoadingRule";
 import { useRouter } from "next/navigation";
+import SelectSheet from "@/components/SelectSheet";
+import Check from "@/components/Check";
 import Image from "next/image";
 import Nav from "@/components/Nav";
 import dynamic from "next/dynamic";
@@ -17,7 +20,7 @@ const PhotoCropper = dynamic(() => import("@/components/PhotoCropper"), {
       role="status"
       aria-label="Opening the photo editor"
     >
-      <div className="skeleton h-64 w-64" />
+      <LoadingRule label="Opening the photo editor" />
     </div>
   )
 });
@@ -150,11 +153,7 @@ export default function EditProfilePage() {
       <>
         <Nav />
         <main className="max-w-lg mx-auto px-6 py-10">
-          <div className="skeleton h-4 w-24" />
-          <div className="skeleton mt-3 h-9 w-64" />
-          <div className="skeleton mt-8 h-32 w-32" />
-          <div className="skeleton mt-6 h-12 w-full" />
-          <div className="skeleton mt-4 h-24 w-full" />
+          <LoadingRule label="Loading your profile" />
         </main>
       </>
     );
@@ -259,21 +258,19 @@ export default function EditProfilePage() {
             <h2 className="text-[13.5px] leading-5 font-medium text-rog-ink">Translation</h2>
             <label className="block">
               <span className="sr-only">Bible translation</span>
-              <select
+              <SelectSheet
+                label="Bible translation"
                 value={bibleId}
-                onChange={(e) => setBibleId(e.target.value)}
-                className="mt-3 w-full min-h-[44px] border px-4 py-2 text-[13.5px]"
-              >
-                {TRANSLATION_GROUPS.map((g) => (
-                  <optgroup key={g} label={g}>
-                    {TRANSLATIONS.filter((t) => t.group === g).map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.abbr} &mdash; {t.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
+                onChange={setBibleId}
+                className="mt-3"
+                options={TRANSLATION_GROUPS.flatMap((g) =>
+                  TRANSLATIONS.filter((t) => t.group === g).map((t) => ({
+                    value: t.id,
+                    label: `${t.abbr} — ${t.name}`,
+                    group: g
+                  }))
+                )}
+              />
             </label>
             <p className="mt-3 text-[13.5px] leading-5 text-rog-muted">
               {translationById(bibleId).note}
@@ -288,40 +285,35 @@ export default function EditProfilePage() {
           <section className="mt-10 border-t border-rog-line pt-6">
             <h2 className="text-[13.5px] leading-5 font-medium text-rog-ink">Reminders</h2>
 
-            {/* 44px rows. A 20px checkbox with no row height around it is a
-                20px target, whatever the label next to it suggests. */}
-            <label className="mt-3 flex min-h-[44px] items-center justify-between gap-4">
-              <span className="text-[13.5px] leading-5 text-rog-ink">Email reminders</span>
-              <input
-                type="checkbox"
+            {/* Drawn, not native: accent-color hands the platform the
+                fill, and the platform's purple is not ours. 44px rows. */}
+            <div className="mt-3">
+              <Check
+                label="Email reminders"
                 checked={emailReminders}
                 onChange={(e) => setEmailReminders(e.target.checked)}
-                className="w-5 h-5 accent-rog-purple shrink-0"
               />
-            </label>
-            <label className="flex min-h-[44px] items-center justify-between gap-4 border-t border-rog-line">
-              <span className="text-[13.5px] leading-5 text-rog-ink">Push notifications</span>
-              <input
-                type="checkbox"
+            </div>
+            <div className="border-t border-rog-line">
+              <Check
+                label="Push notifications"
                 checked={pushReminders}
                 onChange={(e) => setPushReminders(e.target.checked)}
-                className="w-5 h-5 accent-rog-purple shrink-0"
               />
-            </label>
+            </div>
 
             <label className="block border-t border-rog-line pt-4">
               <span className="text-[13.5px] leading-5 text-rog-ink">Remind me at</span>
-              <select
-                value={reminderHour}
-                onChange={(e) => setReminderHour(Number(e.target.value))}
-                className="mt-2 w-full min-h-[44px] border px-4 py-2 text-[13.5px] font-mono tabular-nums"
-              >
-                {Array.from({ length: 24 }, (_, h) => (
-                  <option key={h} value={h}>
-                    {h.toString().padStart(2, "0")}:00
-                  </option>
-                ))}
-              </select>
+              <SelectSheet
+                label="Remind me at"
+                value={String(reminderHour)}
+                onChange={(v) => setReminderHour(Number(v))}
+                className="mt-2 font-mono tabular-nums"
+                options={Array.from({ length: 24 }, (_, h) => ({
+                  value: String(h),
+                  label: `${h.toString().padStart(2, "0")}:00`
+                }))}
+              />
             </label>
           </section>
 

@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import LoadingRule from "@/components/LoadingRule";
 import Avatar from "@/components/Avatar";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { friendlyError } from "@/lib/errors";
@@ -30,12 +31,8 @@ export default function PulseCheckOn({ rows }: { rows: CheckOnRow[] }) {
 
   if (rows.length === 0) {
     return (
-      <div className="empty-state">
-        <p className="empty-body">Nobody has gone quiet.</p>
-        <p className="empty-hint">
-          When someone has not been seen for a few days, their name will be
-          here with the reason beside it.
-        </p>
+      <div className="empty">
+        <p>Nobody has gone quiet.</p>
       </div>
     );
   }
@@ -170,7 +167,7 @@ function PersonSheet({ row, onClose }: { row: CheckOnRow | null; onClose: () => 
         role="dialog"
         aria-modal="true"
         aria-label={row ? `Care for ${row.name}` : "Care"}
-        className={`bottom-glass absolute left-0 right-0 bottom-0 md:mx-auto md:max-w-md rounded-t-[28px] max-h-[85vh] overflow-y-auto transition-transform duration-300 ${
+        className={`sheet md:mx-auto md:max-w-md ${
           open ? "translate-y-0" : "translate-y-full"
         }`}
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}
@@ -276,10 +273,7 @@ function PersonSheet({ row, onClose }: { row: CheckOnRow | null; onClose: () => 
 
             <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Care log</h2>
             {loading ? (
-              <div className="mt-3" aria-busy="true">
-                <div className="skeleton h-3 w-40" />
-                <div className="skeleton h-3 w-56 mt-2" />
-              </div>
+              <LoadingRule label="Loading" />
             ) : log.length === 0 ? (
               <p className="mt-2 text-sm text-rog-muted">
                 Nothing yet. The first person to reach out writes the first line.

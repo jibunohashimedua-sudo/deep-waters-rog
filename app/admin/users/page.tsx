@@ -52,9 +52,8 @@ export default async function AdminUsersPage({
 
         <div className="mt-6 space-y-2">
           {(users ?? []).length === 0 && (
-            <div className="empty-state">
-              <p className="empty-body">No one matches that search.</p>
-              <p className="empty-hint">Try part of a name, or clear the box to see everyone.</p>
+            <div className="empty">
+              <p>No one matches that search.</p>
             </div>
           )}
           {(users ?? []).map((u) => (

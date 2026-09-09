@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import LoadingRule from "@/components/LoadingRule";
 import Avatar from "@/components/Avatar";
 import { createClient } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/errors";
@@ -46,18 +47,10 @@ export default function FinishersView() {
       {error && <p className="mt-4 text-sm text-danger">{error}</p>}
 
       {loading ? (
-        <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="card text-center">
-              <div className="skeleton w-20 h-20 mx-auto" />
-              <div className="skeleton h-3 w-24 mt-3 mx-auto" />
-            </div>
-          ))}
-        </div>
+        <div className="mt-10"><LoadingRule label="Loading the finishers" /></div>
       ) : finishers.length === 0 ? (
-        <div className="mt-10 empty-state">
-          <p className="empty-body">Nobody has crossed day 90 yet.</p>
-          <p className="empty-hint">The wall is here for when they do.</p>
+        <div className="mt-10 empty">
+          <p>Nobody has crossed day 90 yet.</p>
         </div>
       ) : (
         <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4">

@@ -34,9 +34,8 @@ export default async function AnnouncementsPage() {
 
         <div className="mt-6 space-y-3">
           {(items ?? []).length === 0 ? (
-            <div className="empty-state">
-              <p className="empty-body">Nothing to announce right now.</p>
-              <p className="empty-hint">Notes from the team will collect here.</p>
+            <div className="empty">
+              <p>Nothing to announce right now.</p>
             </div>
           ) : (
             (items ?? []).map((a: any) => (
