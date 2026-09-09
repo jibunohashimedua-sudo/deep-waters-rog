@@ -951,7 +951,7 @@ input::placeholder, textarea::placeholder {
   border-radius: 0;
   color: var(--text);
 }
-.votd-body   { color: var(--text); font-family: var(--font-serif), Georgia, serif; }
+.votd-body   { color: var(--text); }
 .votd-meta   { color: var(--ink-data); }
 
 /* =========================================================
@@ -1752,7 +1752,6 @@ input::placeholder, textarea::placeholder {
    scripture wherever it appears. Clamped to three lines until tapped,
    because a list of a hundred full verses is not a list you can scan. */
 .mark-text {
-  font-family: var(--font-serif), Georgia, serif;
   font-size: 16px;
   line-height: 1.62;
   color: var(--text);
@@ -2678,7 +2677,6 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
    ragged right, and old-style figures so a number inside the verse sits
    in the line rather than standing up out of it. */
 .scripture-prose {
-  font-family: var(--font-serif), "Iowan Old Style", Georgia, serif;
   max-inline-size: 36ch;
   text-wrap: pretty;
   hyphens: none;
@@ -3064,3 +3062,58 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   min-height: 44px;
   padding-right: 6px;
 }
+
+/* =========================================================
+   THE SOUNDING PROFILE
+   One person's ninety days, in the same bar language as the church
+   pulse and a different palette: violet and sonar against the pulse's
+   ink and amber. Two instruments of the same make.
+   ========================================================= */
+
+.sounding { width: 100%; height: auto; display: block; }
+.sounding-base { fill: var(--line); }
+.sounding-day { fill: var(--violet); }
+.sounding-today { fill: var(--sonar); }
+
+
+/* =========================================================
+   THE SCRIPTURE VOICE
+   One rule, and it is the grammar of every screen with other people's
+   writing on it:
+
+     Scripture sets in Literata. Everything a person writes sets in
+     Plex Sans.
+
+   So a reflection with a verse in it shows both — the verse in the
+   reading face at the size of the words around it, the person's own
+   sentence unchanged — and you can see at a glance across the feed who
+   is quoting and who is talking.
+
+   Every selector below renders the *structured* quote field that exists
+   when somebody shares a verse: completions.verse_text, verse_notes,
+   rhapsody_days, and a sermon block whose kind is "verse". Nothing here
+   guesses. A reflection with no structured quote is Plex Sans all the
+   way through even if the writer typed a verse out by hand, because the
+   alternative is regex-detecting scripture inside somebody's own words
+   and getting it wrong in front of them.
+   ========================================================= */
+
+.scripture-prose,
+.mark-text,
+.votd-body,
+.sermon-verse {
+  font-family: var(--font-serif), "Iowan Old Style", Georgia, serif;
+}
+
+/* The depths. Not .mark-row — that carries a coloured rule down its left
+   edge for highlights, and a depth is not a highlight. A name, a number,
+   a hairline between them, and nothing else. */
+.depth-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 12px 0;
+  border-top: var(--rule-hairline) solid var(--line);
+}
+.depth-row:first-child { border-top: 0; }

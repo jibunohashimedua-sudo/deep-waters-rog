@@ -92,7 +92,7 @@ export default function VerseNoteSheet({
           </h2>
 
           {verseText && (
-            <blockquote className="mt-4 font-serif text-[15px] leading-relaxed text-rog-muted border-l-2 border-rog-line pl-4 max-h-40 overflow-y-auto selectable">
+            <blockquote className="mt-4 scripture-prose text-[15px] leading-relaxed text-rog-muted border-l-2 border-rog-line pl-4 max-h-40 overflow-y-auto selectable">
               &ldquo;{verseText}&rdquo;
             </blockquote>
           )}

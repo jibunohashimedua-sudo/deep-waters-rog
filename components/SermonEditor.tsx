@@ -312,7 +312,7 @@ export default function SermonEditor({
               }
               rows={b.kind === "verse" ? 3 : 5}
               className={`mt-2 w-full border border-rog-line bg-transparent px-4 py-3 text-[15px] leading-relaxed focus:border-rog-purple focus:outline-none ${
-                b.kind === "verse" ? "font-serif" : ""
+                b.kind === "verse" ? "sermon-verse" : ""
               }`}
             />
             <div className="mt-2 flex gap-4 text-xs">
