@@ -1,3 +1,4 @@
+import { normaliseKind, type SermonBlockKind } from "@/lib/sermons";
 /**
  * One place where every user-input length cap lives.
  *
@@ -78,7 +79,7 @@ export function capText(
  */
 export type CappedBlock = {
   id: string;
-  kind: "verse" | "text";
+  kind: SermonBlockKind;
   reference?: string;
   text: string;
 };
@@ -107,7 +108,10 @@ export function capBlocks(
         typeof row.id === "string" && row.id.length > 0
           ? row.id.slice(0, 64)
           : `b-${out.length}-${Date.now().toString(36)}`,
-      kind: row.kind === "verse" ? "verse" : "text",
+      // heading | scripture | note, with the pre-2026_09_20 names still
+      // accepted — lib/sermons.ts owns that mapping and this mirrors it
+      // rather than inventing a second opinion.
+      kind: normaliseKind(row.kind),
       ...(reference ? { reference } : {}),
       text
     });

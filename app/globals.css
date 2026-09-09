@@ -3669,3 +3669,405 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   min-height: 40px;
   font-size: 13px;
 }
+
+/* =========================================================
+   SERMONS — THE READ VIEW
+   The page a sermon is preached from: standing up, at arm's length,
+   by somebody who is talking while they read it.
+
+   Set larger than anything else in the app, because everything else in
+   the app is read at reading distance and this is not. It scales with
+   --reading-size, so a preacher who has already told Preferences he
+   wants scripture bigger does not have to say it twice.
+   ========================================================= */
+
+.sermon-read-page {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: calc(env(safe-area-inset-top) + var(--sp-4)) var(--sp-4) var(--sp-7);
+}
+
+.sermon-read-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--line);
+}
+.sermon-read-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent);
+}
+.sermon-read-wordmark {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.sermon-read-menu {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.sermon-read-back {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 12px 8px;
+}
+.sermon-read-back:hover { color: var(--text); }
+.sermon-read-dots {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: var(--muted);
+}
+.sermon-read-dots:hover { color: var(--text); }
+
+/* The scrim closes the menu on a tap anywhere else. Transparent: this is
+   a menu, not a sheet, and dimming the sermon behind it to show three
+   items would be the interface making an occasion of itself. */
+.sermon-menu-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  cursor: default;
+}
+.sermon-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 41;
+  min-width: 13rem;
+  background: var(--bg);
+  border: 1px solid var(--line);
+}
+.sermon-menu-item {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: 13px 18px;
+  text-align: left;
+  font-size: 14.5px;
+  color: var(--text);
+}
+.sermon-menu-item:hover { background: var(--soft-bg); }
+.sermon-menu-danger { border-top: 1px solid var(--line); }
+.sermon-menu-item-danger { color: var(--danger); }
+
+.sermon-read-title {
+  margin-top: var(--sp-5);
+  font-family: var(--font-serif), Georgia, serif;
+  font-weight: 400;
+  font-size: calc(var(--reading-size, 18px) * 2);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  text-wrap: balance;
+}
+.sermon-read-meta {
+  margin-top: var(--sp-3);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.sermon-read-body {
+  margin-top: var(--sp-6);
+  max-width: 36ch;
+  font-family: var(--font-serif), Georgia, serif;
+  /* A quarter up on the reading screen, and a longer leading with it.
+     The reading screen is held; this one is put down and glanced at. */
+  font-size: calc(var(--reading-size, 18px) * 1.25);
+  line-height: 1.62;
+  color: var(--text);
+  text-wrap: pretty;
+}
+@media (min-width: 768px) {
+  .sermon-read-body {
+    font-size: calc(var(--reading-size, 18px) * 1.45);
+    max-width: 34ch;
+  }
+}
+
+/* A heading breaks the flow, hard. Sans against the serif body, so it
+   reads as the preacher's own scaffolding rather than as part of what
+   is being said. */
+.sermon-read-heading {
+  margin-top: var(--sp-6);
+  margin-bottom: var(--sp-3);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: calc(var(--reading-size, 18px) * 0.95);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sermon-read-heading:first-child { margin-top: 0; }
+
+.sermon-read-note {
+  margin-top: var(--sp-4);
+  white-space: pre-wrap;
+}
+
+/* Scripture. The one thing on this page the eye has to find without
+   hunting, mid-sentence, while talking — so it is the one thing with a
+   rule down its edge and a reference over it. Nothing else in the body
+   is marked at all, which is what makes this mark work. */
+.sermon-read-scripture {
+  margin-top: var(--sp-5);
+  padding-left: var(--sp-4);
+  border-left: 2px solid var(--accent);
+}
+.sermon-read-ref {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.sermon-read-verse {
+  white-space: pre-wrap;
+  font-style: italic;
+}
+
+/* =========================================================
+   SERMONS — PRINT
+   "Share as PDF" is the browser's own print. No library, no server
+   render, no second copy of the sermon to keep in step — and it comes
+   out right on any paper size the preacher's printer has.
+
+   What prints: the mark, the title, the passage, the date, the body.
+   What does not: every control, the menu, the app's chrome.
+   ========================================================= */
+
+@media print {
+  /* Ink on paper. The dark theme would cost a cartridge and read worse. */
+  :root, :root[data-theme="dark"], :root:not([data-theme="light"]) {
+    --bg: #ffffff;
+    --text: #000000;
+    --muted: #444444;
+    --line: #bbbbbb;
+    --accent: #000000;
+    --soft-bg: #ffffff;
+  }
+
+  body { background: #fff; }
+
+  /* Interface furniture, all of it. */
+  .no-print,
+  #bottom-nav,
+  .glass-nav,
+  .reading-bar,
+  .prefs-nudge,
+  .toast,
+  .sermon-read-menu,
+  .sermon-menu,
+  .sermon-menu-scrim {
+    display: none !important;
+  }
+
+  .sermon-read-page {
+    max-width: none;
+    padding: 0;
+  }
+  .sermon-read-head {
+    border-bottom: 1px solid #bbb;
+    padding-bottom: 8pt;
+  }
+  .sermon-read-title {
+    margin-top: 16pt;
+    font-size: 24pt;
+  }
+  .sermon-read-meta { font-size: 8pt; }
+  .sermon-read-body {
+    margin-top: 18pt;
+    /* Wider on paper than on a phone: a printed page is read at
+       reading distance again, and 36ch of 13pt on A4 would be a
+       column down the middle of a lot of white. */
+    max-width: none;
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+  .sermon-read-heading { font-size: 10pt; margin-top: 16pt; }
+  .sermon-read-scripture {
+    border-left: 2pt solid #000;
+    padding-left: 10pt;
+    margin-top: 12pt;
+  }
+  .sermon-read-ref { font-size: 8pt; }
+
+  /* Nothing splits across a page break mid-verse. */
+  .sermon-read-scripture,
+  .sermon-read-note { break-inside: avoid; }
+  .sermon-read-heading { break-after: avoid; }
+}
+
+/* =========================================================
+   SERMONS — THE EDITOR AND THE PICKER
+   ========================================================= */
+
+.sermon-blocks-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.sermon-blocks { border-top: 1px solid var(--line); }
+.sermon-block {
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--line);
+}
+.sermon-block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sermon-block-tools {
+  display: inline-flex;
+  gap: 2px;
+}
+.sermon-block-tools button {
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.sermon-block-tools button:disabled { opacity: 0.3; }
+.sermon-block-tools button:not(:disabled):hover { color: var(--text); }
+
+.sermon-block-ref,
+.sermon-block-text {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px 14px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+.sermon-block-ref {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+.sermon-block-text {
+  font-size: 15px;
+  line-height: 1.6;
+}
+/* A scripture block reads as scripture even while it is being edited. */
+.sermon-block[data-kind="scripture"] .sermon-block-text {
+  font-family: var(--font-serif), Georgia, serif;
+  font-style: italic;
+}
+.sermon-block[data-kind="heading"] .sermon-block-text {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.sermon-add { display: flex; flex-direction: column; gap: 12px; }
+.sermon-add-scripture {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.sermon-add-scripture input {
+  flex: 1 1 12rem;
+  min-width: 0;
+  min-height: 44px;
+}
+.sermon-add-note {
+  flex: 1 0 100%;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.sermon-add-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.sermon-new-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.sermon-new-row input {
+  flex: 1 1 14rem;
+  min-width: 0;
+  min-height: 44px;
+}
+
+/* The Bench's picker. A sheet on the bottom edge, like every other
+   sheet in the app. */
+.sermon-pick-layer { position: fixed; inset: 0; z-index: 70; }
+.sermon-pick {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 70vh;
+  overflow-y: auto;
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
+}
+@media (min-width: 640px) {
+  .sermon-pick {
+    left: auto;
+    right: 24px;
+    bottom: 24px;
+    width: 22rem;
+    border: 1px solid var(--line);
+  }
+}
+.sermon-pick-head {
+  padding: 16px 20px 8px;
+}
+.sermon-pick-empty {
+  padding: 8px 20px 16px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.sermon-pick-list { border-top: 1px solid var(--line); }
+.sermon-pick-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 13px 20px;
+  text-align: left;
+}
+.sermon-pick-item:hover { background: var(--soft-bg); }
+.sermon-pick-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14.5px;
+  color: var(--text);
+}
+.sermon-pick-status { flex: 0 0 auto; }
+.sermon-pick-foot { border-top: 1px solid var(--line); padding: 4px 20px 8px; }
+.sermon-pick-new {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  text-align: left;
+  font-size: 14.5px;
+  color: var(--accent);
+}

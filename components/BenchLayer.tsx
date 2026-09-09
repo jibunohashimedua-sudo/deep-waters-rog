@@ -30,6 +30,7 @@ import {
   type StrongsEntry, type TaggedWord, type WordStudyEntry
 } from "@/lib/studyData";
 import { useStudyLens } from "@/lib/useStudyLens";
+import { newBlockId } from "@/lib/sermons";
 import { scrollPaneTo } from "@/lib/scrollPane";
 import BenchPinned from "./BenchPinned";
 import BenchWordRail from "./BenchWordRail";
@@ -37,6 +38,7 @@ import BenchLensBody, { type LensData } from "./BenchLensBody";
 import BenchPaneBoundary from "./BenchPaneBoundary";
 import BenchNotepad from "./BenchNotepad";
 import type { HouseRow } from "./BenchHouse";
+import BenchSermonPicker from "./BenchSermonPicker";
 
 export type BenchPhase = "closed" | "open" | "collapsed";
 
@@ -152,6 +154,8 @@ export default function BenchLayer(props: Props) {
   // top of the pane.
   const [wordScrollSignal, setWordScrollSignal] = useState(0);
   const [shown, setShown] = useState(FIRST_BATCH);
+  /** The sermon a verse just went into, for the inline confirmation. */
+  const [sermonAdded, setSermonAdded] = useState<string | null>(null);
   const [sermonState, setSermonState] = useState<"idle" | "saving" | "added">(
     "idle"
   );
@@ -518,79 +522,74 @@ export default function BenchLayer(props: Props) {
   );
 
   // ------------------------------------------------------------- sermons
-  const toSermon = useCallback(async () => {
-    setSermonState("saving");
-    const block = {
-      id:
-        typeof crypto !== "undefined" && "randomUUID" in crypto
-          ? crypto.randomUUID()
-          : `b-${Date.now()}`,
-      kind: "verse" as const,
-      reference: formatVerseReference(book, chapter, spanStart, spanEnd),
-      text
-    };
+  //
+  // "To sermon" opens a picker rather than guessing. See
+  // components/BenchSermonPicker for why.
+  const [pickerOpen, setPickerOpen] = useState(false);
 
-    // The read stays here — it is a plain own-rows select and RLS is the
-    // whole guard on it. Both writes go through /api/sermon so the caps in
-    // lib/limits.ts are enforced server-side, the way every other write
-    // path in this app has been since the hardening pass.
-    const { data: draftRow, error: readErr } = await supabase
-      .from("sermons")
-      .select("id, blocks")
-      .eq("user_id", userId)
-      .eq("status", "draft")
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+  const addToSermon = useCallback(
+    async (sermon: { id: string; title: string }) => {
+      setPickerOpen(false);
+      setSermonState("saving");
 
-    if (readErr) {
-      setSermonState("idle");
-      onToast(friendlyError(readErr.message));
-      return;
-    }
+      const block = {
+        id: newBlockId(),
+        kind: "scripture" as const,
+        reference: formatVerseReference(book, chapter, spanStart, spanEnd),
+        text
+      };
 
-    try {
-      const res = draftRow
-        ? await fetch(`/api/sermon/${draftRow.id}`, {
-            method: "PATCH",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({
-              blocks: [
-                ...(Array.isArray(draftRow.blocks) ? draftRow.blocks : []),
-                block
-              ]
-            })
-          })
-        : // No draft yet, so this verse starts one. Named for the passage,
-          // which is a better answer than "Untitled".
-          await fetch("/api/sermon", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({
-              title: block.reference,
-              passage_ref: block.reference,
-              blocks: [block]
-            })
-          });
+      // Read the sermon's blocks so the verse lands at the end of them.
+      // A plain own-rows select; RLS is the whole guard. The write goes
+      // through /api/sermon so the caps in lib/limits.ts are enforced
+      // server-side, the way every other write path in this app is.
+      const { data: row, error: readErr } = await supabase
+        .from("sermons")
+        .select("blocks")
+        .eq("id", sermon.id)
+        .eq("user_id", userId)
+        .maybeSingle();
 
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
+      if (readErr) {
         setSermonState("idle");
-        onToast(friendlyError(j.error));
+        onToast(friendlyError(readErr.message));
         return;
       }
-    } catch (e: any) {
-      setSermonState("idle");
-      onToast(friendlyError(e?.message));
-      return;
-    }
 
-    setSermonState("added");
-  }, [book, chapter, spanStart, spanEnd, text, supabase, userId, onToast]);
+      try {
+        const res = await fetch(`/api/sermon/${sermon.id}`, {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            blocks: [...(Array.isArray(row?.blocks) ? row!.blocks : []), block]
+          })
+        });
+        if (!res.ok) {
+          const j = await res.json().catch(() => ({}));
+          setSermonState("idle");
+          onToast(friendlyError(j.error));
+          return;
+        }
+      } catch (e: any) {
+        setSermonState("idle");
+        onToast(friendlyError(e?.message));
+        return;
+      }
+
+      // Named, so the preacher knows where it went without leaving the
+      // verse to go and look.
+      setSermonAdded(sermon.title);
+      setSermonState("added");
+    },
+    [book, chapter, spanStart, spanEnd, text, supabase, userId, onToast]
+  );
 
   useEffect(() => {
     if (sermonState !== "added") return;
-    const t = window.setTimeout(() => setSermonState("idle"), ADDED_MS);
+    const t = window.setTimeout(() => {
+      setSermonState("idle");
+      setSermonAdded(null);
+    }, ADDED_MS);
     return () => window.clearTimeout(t);
   }, [sermonState]);
 
@@ -954,16 +953,24 @@ export default function BenchLayer(props: Props) {
             className="bench-action"
             data-on={sermonState === "added" ? "true" : undefined}
             disabled={sermonState === "saving"}
-            onClick={toSermon}
+            onClick={() => setPickerOpen(true)}
           >
-            {sermonState === "added"
-              ? "Added to your draft"
+            {sermonState === "added" && sermonAdded
+              ? `Added to ${sermonAdded}`
               : sermonState === "saving"
                 ? "Adding…"
                 : "To sermon"}
           </button>
         </div>
       </div>
+
+      {pickerOpen && (
+        <BenchSermonPicker
+          userId={userId}
+          onPick={addToSermon}
+          onClose={() => setPickerOpen(false)}
+        />
+      )}
     </div>
   );
 }

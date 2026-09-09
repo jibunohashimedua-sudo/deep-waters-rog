@@ -3,6 +3,8 @@ import Nav from "@/components/Nav";
 import NewSermonButton from "@/components/NewSermonButton";
 import { createClient } from "@/lib/supabase/server";
 import { requirePastoral } from "@/lib/auth";
+import { sermonTitle } from "@/lib/sermons";
+import { humanDate } from "@/lib/dates";
 
 export const metadata = { title: "Sermons · Deep Waters" };
 
@@ -71,8 +73,8 @@ export default async function SermonsPage() {
           Sermons
         </h1>
         <p className="mt-3 text-[13.5px] leading-5 text-rog-muted max-w-[34rem]">
-          A title, a passage, and the blocks you have put under it. Verses sent
-          here from the Bench land in your most recent draft.
+          A title, and the scriptures, headings and notes you have gathered
+          under it. Tap one to preach from it.
         </p>
 
         <div className="mt-8">
@@ -87,20 +89,28 @@ export default async function SermonsPage() {
           <ul className="mark-list mt-8">
             {sermons.map((s) => {
               const count = typeof s.block_count === "number" ? s.block_count : null;
-              const date = new Date(s.updated_at).toLocaleDateString("en-GB");
+              const date = humanDate(s.updated_at);
               return (
                 <li key={s.id} className="mark-row">
                   <Link href={`/sermons/${s.id}`} className="block">
-                    <span className="meta meta-strong block">
-                      {(s.passage_ref || "No passage yet").toUpperCase()}
-                    </span>
-                    <span className="mark-note selectable block mt-2">
-                      {s.title?.trim() || "Untitled"}
+                    {/* The title leads. It used to be the passage, in
+                        caps, above the title — which put the one thing
+                        that might not be there above the one thing that
+                        always is. */}
+                    <span className="mark-note selectable block">
+                      {sermonTitle(s.title)}
                     </span>
                     <span className="meta block mt-2">
-                      {count === null
-                        ? date
-                        : `${count} block${count === 1 ? "" : "s"}, ${date}`}
+                      {[
+                        s.passage_ref,
+                        s.status === "preached" ? "Preached" : null,
+                        count === null
+                          ? null
+                          : `${count} block${count === 1 ? "" : "s"}`,
+                        date
+                      ]
+                        .filter(Boolean)
+                        .join("  ·  ")}
                     </span>
                   </Link>
                 </li>

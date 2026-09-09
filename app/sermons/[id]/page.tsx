@@ -1,14 +1,25 @@
 import { notFound } from "next/navigation";
-import Nav from "@/components/Nav";
-import SermonEditor from "@/components/SermonEditor";
+import SermonReader from "@/components/SermonReader";
 import { createClient } from "@/lib/supabase/server";
 import { requirePastoral } from "@/lib/auth";
-import { readBlocks } from "@/lib/sermons";
+import { readBlocks, type SermonStatus } from "@/lib/sermons";
 
 export const metadata = { title: "Sermon · Deep Waters" };
 
-/** One sermon, open for editing. RLS means a row that isn't yours simply
-    isn't there, which is the same answer as a sermon that never existed. */
+/**
+ * One sermon, open to be preached from.
+ *
+ * Tapping a sermon used to open the editor, which is the wrong door: a
+ * sermon is written a few times and read once, standing up, and the
+ * writing tools were in the way of the reading. The editor is one tap
+ * further in, behind the three dots.
+ *
+ * No Nav. This page is the whole screen — an app bar over a sermon being
+ * preached is furniture, and the way back is in the header.
+ *
+ * RLS means a row that isn't yours simply isn't there, which is the same
+ * answer as a sermon that never existed.
+ */
 export default async function SermonPage({ params }: { params: { id: string } }) {
   const { userId } = await requirePastoral();
   const supabase = createClient();
@@ -26,18 +37,15 @@ export default async function SermonPage({ params }: { params: { id: string } })
   if (!data) notFound();
 
   return (
-    <>
-      <Nav />
-      <main className="max-w-3xl mx-auto px-6 py-10">
-        <SermonEditor
-          id={data.id}
-          initialTitle={data.title ?? ""}
-          initialPassage={data.passage_ref ?? ""}
-          initialBlocks={readBlocks(data.blocks)}
-          initialStatus={data.status ?? "draft"}
-          initialPreachedOn={data.preached_on ?? ""}
-        />
-      </main>
-    </>
+    <main className="sermon-read-page">
+      <SermonReader
+        id={data.id}
+        title={data.title ?? ""}
+        passage={data.passage_ref ?? null}
+        status={(data.status ?? "draft") as SermonStatus}
+        preachedOn={data.preached_on ?? null}
+        blocks={readBlocks(data.blocks)}
+      />
+    </main>
   );
 }

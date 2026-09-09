@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import SelectSheet from "@/components/SelectSheet";
@@ -8,7 +9,8 @@ import {
   SERMON_PASSAGE_MAX,
   SERMON_BLOCK_TEXT_MAX
 } from "@/lib/limits";
-import type { SermonBlock } from "@/lib/sermons";
+import SermonScriptureInput from "@/components/SermonScriptureInput";
+import { newBlockId, type SermonBlock, type SermonBlockKind } from "@/lib/sermons";
 
 type Props = {
   id: string;
@@ -17,6 +19,9 @@ type Props = {
   initialBlocks: SermonBlock[];
   initialStatus: string;
   initialPreachedOn: string;
+  /** The pastor's own translation, so a scripture added by reference
+      arrives in the edition they read in. */
+  translationId?: string | null;
 };
 
 /** How long a delete stays armed. Same promise the Bench's notes make. */
@@ -50,7 +55,8 @@ export default function SermonEditor({
   initialPassage,
   initialBlocks,
   initialStatus,
-  initialPreachedOn
+  initialPreachedOn,
+  translationId
 }: Props) {
   const router = useRouter();
 
@@ -63,7 +69,6 @@ export default function SermonEditor({
   const [state, setState] = useState<"idle" | "saving" | "saved">("idle");
   const [err, setErr] = useState<string | null>(null);
   const [armed, setArmed] = useState<string | null>(null);
-  const [armedSermon, setArmedSermon] = useState(false);
 
   /** True from the first edit until a save lands. Drives both the autosave
       and the leave-the-page warning; nothing else reads it. */
@@ -84,11 +89,6 @@ export default function SermonEditor({
     return () => window.clearTimeout(t);
   }, [armed]);
 
-  useEffect(() => {
-    if (!armedSermon) return;
-    const t = window.setTimeout(() => setArmedSermon(false), ARM_MS);
-    return () => window.clearTimeout(t);
-  }, [armedSermon]);
 
   useEffect(
     () => () => {
@@ -197,21 +197,15 @@ export default function SermonEditor({
     setScrollToBlock(null);
   }, [scrollToBlock]);
 
-  async function deleteSermon() {
-    setErr(null);
-    try {
-      const res = await fetch(`/api/sermon/${id}`, { method: "DELETE" });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        setErr(friendlyError(j.error));
-        return;
-      }
-      // Nothing left to lose, so the guard must not fire on the way out.
-      setDirty(false);
-      router.push("/sermons");
-    } catch (e: any) {
-      setErr(friendlyError(e?.message));
-    }
+
+
+  function addBlock(kind: SermonBlockKind, text = "", reference?: string) {
+    const blockId = newBlockId();
+    setBlocks((prev) => [
+      ...prev,
+      { id: blockId, kind, text, ...(reference ? { reference } : {}) }
+    ]);
+    setScrollToBlock(blockId);
   }
 
   function move(i: number, to: number) {
@@ -287,84 +281,128 @@ export default function SermonEditor({
         </div>
       </div>
 
-      <p className="meta mt-10">
-        {blocks.length} {blocks.length === 1 ? "block" : "blocks"}
-      </p>
+      <div className="sermon-blocks-head mt-10">
+        <p className="meta">
+          {blocks.length} {blocks.length === 1 ? "block" : "blocks"}
+        </p>
+      </div>
 
-      <ul className="mark-list mt-4" ref={listRef}>
+      <ul className="sermon-blocks mt-4" ref={listRef}>
         {blocks.map((b, i) => (
-          <li key={b.id} className="mark-row" data-block-id={b.id}>
-            {b.reference && (
-              <span className="meta meta-strong block">{b.reference}</span>
+          <li key={b.id} className="sermon-block" data-kind={b.kind} data-block-id={b.id}>
+            <div className="sermon-block-head">
+              <span className="meta meta-strong">
+                {b.kind === "scripture"
+                  ? b.reference || "Scripture"
+                  : b.kind === "heading"
+                    ? "Heading"
+                    : "Note"}
+              </span>
+              <div className="sermon-block-tools">
+                <button
+                  type="button"
+                  aria-label="Move up"
+                  disabled={i === 0}
+                  onClick={() => move(i, i - 1)}
+                >
+                  &uarr;
+                </button>
+                <button
+                  type="button"
+                  aria-label="Move down"
+                  disabled={i === blocks.length - 1}
+                  onClick={() => move(i, i + 1)}
+                >
+                  &darr;
+                </button>
+                <button
+                  type="button"
+                  className={armed === b.id ? "text-danger" : undefined}
+                  onClick={() => {
+                    if (armed === b.id) {
+                      setBlocks((prev) => prev.filter((x) => x.id !== b.id));
+                      setArmed(null);
+                    } else {
+                      setArmed(b.id);
+                    }
+                  }}
+                >
+                  {armed === b.id ? "Tap again" : "Remove"}
+                </button>
+              </div>
+            </div>
+
+            {/* A scripture's reference is editable too — the words may
+                have been sent from the Bench with a range the preacher
+                wants to widen, and retyping the whole verse to fix a
+                colon would be absurd. */}
+            {b.kind === "scripture" && (
+              <>
+                <label htmlFor={`ref-${b.id}`} className="sr-only">
+                  Reference
+                </label>
+                <input
+                  id={`ref-${b.id}`}
+                  type="text"
+                  autoComplete="off"
+                  maxLength={SERMON_PASSAGE_MAX}
+                  value={b.reference ?? ""}
+                  placeholder="Reference"
+                  onChange={(e) =>
+                    setBlocks((prev) =>
+                      prev.map((x) =>
+                        x.id === b.id ? { ...x, reference: e.target.value } : x
+                      )
+                    )
+                  }
+                  className="sermon-block-ref"
+                />
+              </>
             )}
+
             <label htmlFor={`block-${b.id}`} className="sr-only">
-              Block text
+              {b.kind === "heading" ? "Heading" : "Text"}
             </label>
             <textarea
               id={`block-${b.id}`}
-              enterKeyHint="done"
+              enterKeyHint={b.kind === "heading" ? "done" : undefined}
               maxLength={SERMON_BLOCK_TEXT_MAX}
               value={b.text}
+              placeholder={
+                b.kind === "heading"
+                  ? "A line to break the flow"
+                  : b.kind === "scripture"
+                    ? "The words"
+                    : "What you want to say"
+              }
               onChange={(e) =>
                 setBlocks((prev) =>
                   prev.map((x) => (x.id === b.id ? { ...x, text: e.target.value } : x))
                 )
               }
-              rows={b.kind === "verse" ? 3 : 5}
-              className={`mt-2 w-full border border-rog-line bg-transparent px-4 py-3 text-[15px] leading-relaxed focus:border-rog-purple focus:outline-none ${
-                b.kind === "verse" ? "sermon-verse" : ""
-              }`}
+              rows={b.kind === "heading" ? 1 : b.kind === "scripture" ? 3 : 5}
+              className="sermon-block-text"
             />
-            <div className="mt-2 flex gap-4 text-xs">
-              <button
-                type="button"
-                className="text-rog-muted"
-                disabled={i === 0}
-                onClick={() => move(i, i - 1)}
-              >
-                Move up
-              </button>
-              <button
-                type="button"
-                className="text-rog-muted"
-                disabled={i === blocks.length - 1}
-                onClick={() => move(i, i + 1)}
-              >
-                Move down
-              </button>
-              <button
-                type="button"
-                className={armed === b.id ? "text-danger font-semibold" : "text-rog-muted"}
-                onClick={() => {
-                  if (armed === b.id) {
-                    setBlocks((prev) => prev.filter((x) => x.id !== b.id));
-                    setArmed(null);
-                  } else {
-                    setArmed(b.id);
-                  }
-                }}
-              >
-                {armed === b.id ? "Tap again to delete" : "Delete"}
-              </button>
-            </div>
           </li>
         ))}
       </ul>
 
-      <button
-        type="button"
-        className="btn-secondary mt-6"
-        onClick={() => {
-          const blockId =
-            typeof crypto !== "undefined" && "randomUUID" in crypto
-              ? crypto.randomUUID()
-              : `b-${Date.now()}`;
-          setBlocks((prev) => [...prev, { id: blockId, kind: "text", text: "" }]);
-          setScrollToBlock(blockId);
-        }}
-      >
-        Add a block
-      </button>
+      {/* Adding. A scripture takes a reference and fetches its words; the
+          other two are empty and waiting. */}
+      <div className="sermon-add mt-6">
+        <SermonScriptureInput
+          translationId={translationId}
+          onAdd={(reference, verseText) => addBlock("scripture", verseText, reference)}
+        />
+        <div className="sermon-add-row">
+          <button type="button" className="btn-secondary" onClick={() => addBlock("heading")}>
+            Add heading
+          </button>
+          <button type="button" className="btn-secondary" onClick={() => addBlock("note")}>
+            Add note
+          </button>
+        </div>
+      </div>
 
       <div className="mt-10 flex gap-3">
         <button
@@ -389,18 +427,16 @@ export default function SermonEditor({
 
       {err && <p className="mt-3 text-xs text-danger">{err}</p>}
 
+      {/* Delete is not here. It belongs to the read view's menu, which
+          is the page a sermon is opened from — two places to delete one
+          sermon is one place too many, and the riskier of the two is the
+          screen you are typing in. */}
       <div className="mt-8 flex justify-center">
-        <button
-          type="button"
-          className={armedSermon ? "text-xs text-danger font-semibold" : "text-xs text-rog-muted"}
-          onClick={() => {
-            if (armedSermon) deleteSermon();
-            else setArmedSermon(true);
-          }}
-        >
-          {armedSermon ? "Tap again to delete this sermon" : "Delete this sermon"}
-        </button>
+        <Link href={`/sermons/${id}`} className="meta">
+          Done editing
+        </Link>
       </div>
+
     </>
   );
 }
