@@ -2853,7 +2853,7 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
 }
 
 /* ---- 26. LOADING ------------------------------------------------
-   No spinner, no shimmer, no pulsing block. A 1px sonar rule draws
+   Nothing spins, nothing pulses, nothing stands in. A 1px sonar rule draws
    left to right across the top of whatever is loading, and then it is
    gone. Sonar because loading is the definition of "now".
 

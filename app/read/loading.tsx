@@ -1,11 +1,11 @@
 import Nav from "@/components/Nav";
-import ReadingSkeleton from "@/components/ReadingSkeleton";
+import ReadingLoading from "@/components/ReadingLoading";
 
 export default function ReadLoading() {
   return (
     <>
       <Nav />
-      <ReadingSkeleton
+      <ReadingLoading
         label="Loading today’s reading"
       />
     </>

@@ -1,5 +1,5 @@
 import Nav from "@/components/Nav";
-import ReadingSkeleton from "@/components/ReadingSkeleton";
+import ReadingLoading from "@/components/ReadingLoading";
 
 /**
  * A chapter takes a network round trip to API.Bible the first time anyone
@@ -9,7 +9,7 @@ export default function ChapterLoading() {
   return (
     <>
       <Nav />
-      <ReadingSkeleton
+      <ReadingLoading
         label="Loading the chapter"
       />
     </>

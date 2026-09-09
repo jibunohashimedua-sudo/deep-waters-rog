@@ -11,7 +11,7 @@ import LoadingRule from "@/components/LoadingRule";
  *
  * A rule across the top instead, and silence.
  */
-export default function ReadingSkeleton({ label }: { label: string }) {
+export default function ReadingLoading({ label }: { label: string }) {
   return (
     <main data-surface="reading" className="max-w-3xl mx-auto px-6 py-10">
       <LoadingRule label={label} />
