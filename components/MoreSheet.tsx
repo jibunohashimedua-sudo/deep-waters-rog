@@ -287,6 +287,13 @@ export default function MoreSheet({
               Preferences
             </Link>
 
+            {/* Public, and not gated on the Elite flag: the study data is
+                credited whether or not this reader can see the lenses that
+                use it. That is what the CC BY licences ask for. */}
+            <Link href="/sources" onClick={onClose} className={link}>
+              Sources
+            </Link>
+
             <button type="button" onClick={signOut} className={`${link} w-full text-left`}>
               Sign out
             </button>

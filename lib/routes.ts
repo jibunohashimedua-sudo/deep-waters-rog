@@ -77,6 +77,7 @@ export function backHrefFor(pathname: string): string | null {
     // notification, a shared link, a home-screen shortcut — because
     // anybody with history behind them gets that popped instead. See
     // components/BackControl.
+    case "sources":
     case "announcements":
     case "testimonials":
     case "prayer":

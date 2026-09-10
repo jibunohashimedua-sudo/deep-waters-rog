@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { LENS_BY_ID, type LensId } from "@/lib/bench";
 import type { Translation } from "@/lib/translations";
 import type { ParallelRow } from "@/lib/parallelVerse";
@@ -179,7 +180,19 @@ export default function BenchLensBody({
         </>
       )}
 
-      {meta && <p className="bench-source">Source: {meta.source}</p>}
+      {meta && (
+        <>
+          <p className="bench-source">Source: {meta.source}</p>
+          {/* Every lens foot carries the way to the full list. The CC BY
+              datasets have to be credited somewhere a reader can reach,
+              and the foot of the thing they are reading is that place. */}
+          <p className="bench-source">
+            <Link href="/sources" className="bench-source-link">
+              All sources and licences
+            </Link>
+          </p>
+        </>
+      )}
     </div>
   );
 }

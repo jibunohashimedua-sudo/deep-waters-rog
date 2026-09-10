@@ -21,7 +21,10 @@ const PUBLIC_PATHS = [
   "/reset-password",
   "/auth",
   "/api/og",
-  "/c"
+  "/c",
+  // Attribution for the CC BY datasets behind the Bench. A licence
+  // condition met behind a login is not met.
+  "/sources"
 ];
 
 function isPublicPath(pathname: string): boolean {

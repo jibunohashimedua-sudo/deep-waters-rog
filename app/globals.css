@@ -4421,3 +4421,13 @@ html[data-bench="beside"] main.parallel-single {
   line-height: 1.6;
   color: var(--accent);
 }
+
+/* The link to the full source list, at the foot of every Bench lens.
+   Same mono as the source note above it; underlined so it reads as a way
+   out rather than as more of the same sentence. */
+.bench-source-link {
+  color: var(--ink-data);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.bench-source-link:hover { color: var(--accent); }
