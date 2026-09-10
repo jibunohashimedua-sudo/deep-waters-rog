@@ -4,7 +4,6 @@ import { createClient } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/errors";
 import { formatVerseReference, type VerseNote } from "@/lib/highlights";
 import { planDayForChapter } from "@/lib/plan";
-import { bookByName } from "@/lib/bibleBooks";
 import {
   TRANSLATIONS,
   translationById,
@@ -39,6 +38,12 @@ import BenchPaneBoundary from "./BenchPaneBoundary";
 import BenchNotepad from "./BenchNotepad";
 import type { HouseRow } from "./BenchHouse";
 import BenchSermonPicker from "./BenchSermonPicker";
+import BenchSecondText, {
+  SECOND_TEXT_MAX_VERSES, type SecondPassage
+} from "./BenchSecondText";
+import ReferencePicker from "./ReferencePicker";
+import { bookByName, bookBySlug } from "@/lib/bibleBooks";
+import { fetchParallelVerse, type ParallelRow } from "@/lib/parallelVerse";
 
 export type BenchPhase = "closed" | "open" | "collapsed";
 
@@ -60,7 +65,17 @@ type Props = {
   translationId: string;
   /** Every note the reader has on the chapters on screen. */
   notes: VerseNote[];
-  onCreateNote: (body: string, verseText: string) => Promise<boolean>;
+  /** The second window's passage, owned by ScriptureReader so it outlives
+      a re-pin. See the note there. */
+  second: SecondPassage | null;
+  onSecondChange: (next: SecondPassage | null) => void;
+  secondCapped: string | null;
+  onSecondCappedChange: (message: string | null) => void;
+  onCreateNote: (
+    body: string,
+    verseText: string,
+    at?: { book: string; chapter: number; verseStart: number; verseEnd: number }
+  ) => Promise<boolean>;
   onUpdateNote: (id: string, body: string) => Promise<boolean>;
   onDeleteNote: (id: string) => Promise<boolean>;
   /** One tap on the handle: back to the verse toolbar, selection kept. */
@@ -118,6 +133,10 @@ export default function BenchLayer(props: Props) {
     testament,
     translationId,
     notes,
+    second,
+    onSecondChange,
+    secondCapped,
+    onSecondCappedChange,
     onCreateNote,
     onUpdateNote,
     onDeleteNote,
@@ -156,6 +175,21 @@ export default function BenchLayer(props: Props) {
   const [shown, setShown] = useState(FIRST_BATCH);
   /** The sermon a verse just went into, for the inline confirmation. */
   const [sermonAdded, setSermonAdded] = useState<string | null>(null);
+
+  // ------------------------------------------------- the second window
+  // The passage itself is owned by ScriptureReader, one level up. This
+  // panel only mounts while a verse is pinned, and moving the pin empties
+  // the selection for a moment — so state kept here would be thrown away
+  // by the very gesture the window exists to survive.
+  const [secondVerseCount, setSecondVerseCount] = useState<number | null>(null);
+  const [secondPickerOpen, setSecondPickerOpen] = useState(false);
+
+  /** Set while the composer is writing about the second window rather than
+      the pinned verse. Null means the note belongs to the pinned verse. */
+  const [noteTarget, setNoteTarget] = useState<{
+    book: string; chapter: number; verseStart: number; verseEnd: number;
+    reference: string; text: string;
+  } | null>(null);
   const [sermonState, setSermonState] = useState<"idle" | "saving" | "added">(
     "idle"
   );
@@ -265,6 +299,84 @@ export default function BenchLayer(props: Props) {
     onSettled: stack ? advanceStack : undefined,
     load: () => fetchExposition(book, chapter, spanStart)
   });
+
+  // The passage itself, through the same fetcher Compare and the
+  // Translations lens use. Keyed on the passage and the edition, so
+  // changing either reloads and coming back to the tab does not.
+  const secondKey = second
+    ? `${second.bookSlug}|${second.chapter}|${second.start}|${second.end}|${second.bibleId}`
+    : "none";
+  const secondText = useStudyLens<ParallelRow>({
+    active: lensVisible("secondtext") && second !== null,
+    key: secondKey,
+    onError: onToast,
+    onSettled: stack ? advanceStack : undefined,
+    load: () =>
+      fetchParallelVerse({
+        bookSlug: second!.bookSlug,
+        chapter: second!.chapter,
+        start: second!.start,
+        end: second!.end,
+        bibleId: second!.bibleId
+      })
+  });
+
+  /**
+   * Put a passage in the second window.
+   *
+   * The one place the four-verse ceiling is enforced, so it holds however
+   * the passage arrived — the picker, the range control, or a tap on a
+   * cross reference, which is where over-long ranges actually come from.
+   * A range that is cut says so rather than quietly showing less than was
+   * asked for.
+   */
+  const openSecond = useCallback(
+    (ref: {
+      bookSlug: string; book: string; chapter: number;
+      start: number; end?: number; bibleId?: string;
+    }) => {
+      const wanted = Math.max(ref.end ?? ref.start, ref.start);
+      const capped = Math.min(wanted, ref.start + SECOND_TEXT_MAX_VERSES - 1);
+      onSecondCappedChange(
+        wanted > capped
+          ? `That range is ${wanted - ref.start + 1} verses. This window holds ${SECOND_TEXT_MAX_VERSES}, so it is showing ${ref.book} ${ref.chapter}:${ref.start}–${capped}.`
+          : null
+      );
+      onSecondChange({
+        bookSlug: ref.bookSlug,
+        book: ref.book,
+        chapter: ref.chapter,
+        start: ref.start,
+        end: capped,
+        // The edition he last chose for this window stays chosen. It is
+        // his window, and it does not follow the reader's translation.
+        bibleId: ref.bibleId ?? second?.bibleId ?? translationId
+      });
+    },
+    [second, onSecondChange, onSecondCappedChange, translationId]
+  );
+
+  // How many verses the chapter has, for the range control. Asked once per
+  // chapter, and only once there is a passage to ask about.
+  const secondBookSlug = second?.bookSlug ?? null;
+  const secondChapter = second?.chapter ?? null;
+  useEffect(() => {
+    if (!secondBookSlug || !secondChapter) { setSecondVerseCount(null); return; }
+    let cancelled = false;
+    setSecondVerseCount(null);
+    (async () => {
+      try {
+        const res = await fetch(
+          `/api/bible/verse-count?book=${encodeURIComponent(secondBookSlug)}&chapter=${secondChapter}`
+        );
+        const j = await res.json();
+        if (!cancelled && Number.isFinite(j?.count)) setSecondVerseCount(j.count);
+      } catch {
+        /* The control simply offers the four it can always offer. */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [secondBookSlug, secondChapter]);
 
   const commentary = useStudyLens<CommentaryEntry[]>({
     active: lensVisible("commentary"),
@@ -499,14 +611,25 @@ export default function BenchLayer(props: Props) {
     const body = draft.trim();
     if (!body) return;
     setSaving(true);
+    // noteTarget set means the composer was opened from the second window,
+    // and the note is filed against that passage. Unset means the pinned
+    // verse, which is every other way into the composer.
     const ok = editingId
       ? await onUpdateNote(editingId, body)
-      : await onCreateNote(body, text);
+      : noteTarget
+        ? await onCreateNote(body, noteTarget.text, {
+            book: noteTarget.book,
+            chapter: noteTarget.chapter,
+            verseStart: noteTarget.verseStart,
+            verseEnd: noteTarget.verseEnd
+          })
+        : await onCreateNote(body, text);
     setSaving(false);
     if (!ok) return;
     setDraft("");
     setEditingId(null);
-  }, [draft, editingId, onCreateNote, onUpdateNote, text]);
+    setNoteTarget(null);
+  }, [draft, editingId, noteTarget, onCreateNote, onUpdateNote, text]);
 
   const removeNote = useCallback(
     async (id: string) => {
@@ -525,18 +648,26 @@ export default function BenchLayer(props: Props) {
   //
   // "To sermon" opens a picker rather than guessing. See
   // components/BenchSermonPicker for why.
-  const [pickerOpen, setPickerOpen] = useState(false);
+  // Which passage the picker was opened for. Not a boolean: the dock's
+  // To sermon means the pinned verse and the second window's means the
+  // passage in that window, and carrying the answer here — rather than
+  // reading it off whatever is pinned when the picker closes — is what
+  // keeps the two references from crossing.
+  const [sermonTarget, setSermonTarget] =
+    useState<{ reference: string; text: string } | null>(null);
 
   const addToSermon = useCallback(
     async (sermon: { id: string; title: string }) => {
-      setPickerOpen(false);
+      const target = sermonTarget;
+      setSermonTarget(null);
+      if (!target) return;
       setSermonState("saving");
 
       const block = {
         id: newBlockId(),
         kind: "scripture" as const,
-        reference: formatVerseReference(book, chapter, spanStart, spanEnd),
-        text
+        reference: target.reference,
+        text: target.text
       };
 
       // Read the sermon's blocks so the verse lands at the end of them.
@@ -581,7 +712,7 @@ export default function BenchLayer(props: Props) {
       setSermonAdded(sermon.title);
       setSermonState("added");
     },
-    [book, chapter, spanStart, spanEnd, text, supabase, userId, onToast]
+    [sermonTarget, supabase, userId, onToast]
   );
 
   useEffect(() => {
@@ -592,6 +723,43 @@ export default function BenchLayer(props: Props) {
     }, ADDED_MS);
     return () => window.clearTimeout(t);
   }, [sermonState]);
+
+  // ------------------------------------------- the second window's actions
+  //
+  // Each one names the second passage explicitly. None of them reads the
+  // pinned verse, which is the whole discipline of this window.
+  const secondReference = second
+    ? formatVerseReference(second.book, second.chapter, second.start, second.end)
+    : "";
+  const secondBody =
+    secondText.data?.status === "ready" ? secondText.data.text : "";
+
+  const copySecond = useCallback(async () => {
+    if (!secondBody) return;
+    try {
+      await navigator.clipboard.writeText(`“${secondBody}” — ${secondReference}`);
+      onToast("Copied.");
+    } catch {
+      onToast("Couldn’t copy. Try again.");
+    }
+  }, [secondBody, secondReference, onToast]);
+
+  const noteOnSecond = useCallback(() => {
+    if (!second) return;
+    // The composer is the Bench's own, but what it writes is filed against
+    // this window's passage, not the pinned verse.
+    setNoteTarget({
+      book: second.book,
+      chapter: second.chapter,
+      verseStart: second.start,
+      verseEnd: second.end,
+      reference: secondReference,
+      text: secondBody
+    });
+    setNotesTab(true);
+    setStack(false);
+    setFocusSignal((n) => n + 1);
+  }, [second, secondReference, secondBody]);
 
   // -------------------------------------------------------------- render
   if (phase === "closed") return null;
@@ -629,6 +797,47 @@ export default function BenchLayer(props: Props) {
     commentary: commentary.data,
     commentaryLoading: commentary.loading,
     verse: spanStart,
+    userId,
+    second,
+    secondRow: secondText.data,
+    secondVerseCount,
+    secondCapped,
+    secondSermonState: sermonState,
+    secondSermonAdded: sermonAdded,
+    onOpenSecondPicker: () => setSecondPickerOpen(true),
+    onSecondTranslation: (bibleId: string) =>
+      onSecondChange(second ? { ...second, bibleId } : second),
+    onSecondEnd: (end: number) =>
+      onSecondChange(second ? { ...second, end: Math.max(end, second.start) } : second),
+    onClearSecond: () => {
+      onSecondChange(null);
+      onSecondCappedChange(null);
+    },
+    onCopySecond: copySecond,
+    onNoteSecond: noteOnSecond,
+    onSecondToSermon: () => {
+      if (!second || !secondBody) return;
+      setSermonTarget({ reference: secondReference, text: secondBody });
+    },
+    // A cross reference is a passage he can sit with rather than a line of
+    // text: tapping one opens it here, and never moves the pinned verse.
+    onOpenCrossRef: (r: CrossRef) => {
+      const bk = bookByName(r.target_book);
+      if (!bk) return;
+      openSecond({
+        bookSlug: bk.slug,
+        book: r.target_book,
+        chapter: r.target_chapter,
+        start: r.target_verse_start,
+        end: r.target_verse_end
+      });
+      if (rack) {
+        setPanels((prev) => (prev.includes("secondtext") ? prev : [...prev, "secondtext"]));
+      } else {
+        setActiveLens("secondtext");
+        setNotesTab(false);
+      }
+    },
     onPickWord: (w: TaggedWord) => {
       setActiveWordKey(`${w.verse}|${w.wordIndex}`);
       setWordScrollSignal((n) => n + 1);
@@ -648,6 +857,7 @@ export default function BenchLayer(props: Props) {
       onDraftChange={setDraft}
       editingId={editingId}
       onEdit={(n) => {
+        setNoteTarget(null);
         setEditingId(n.id);
         setDraft(n.body);
         setNotesTab(true);
@@ -656,7 +866,10 @@ export default function BenchLayer(props: Props) {
       onCancelEdit={() => {
         setEditingId(null);
         setDraft("");
+        setNoteTarget(null);
       }}
+      writingAbout={noteTarget?.reference ?? null}
+      onWriteAboutPinned={() => setNoteTarget(null)}
       onSave={saveNote}
       onDelete={removeNote}
       saving={saving}
@@ -955,6 +1168,7 @@ export default function BenchLayer(props: Props) {
               // a panel scrolled is a keyboard nobody asked for.
               if (mode === "split") setNotesTab(true);
               setStack(false);
+              setNoteTarget(null);
               setFocusSignal((n) => n + 1);
             }}
           >
@@ -965,7 +1179,12 @@ export default function BenchLayer(props: Props) {
             className="bench-action"
             data-on={sermonState === "added" ? "true" : undefined}
             disabled={sermonState === "saving"}
-            onClick={() => setPickerOpen(true)}
+            onClick={() =>
+              setSermonTarget({
+                reference: formatVerseReference(book, chapter, spanStart, spanEnd),
+                text
+              })
+            }
           >
             {sermonState === "added" && sermonAdded
               ? `Added to ${sermonAdded}`
@@ -976,13 +1195,34 @@ export default function BenchLayer(props: Props) {
         </div>
       </div>
 
-      {pickerOpen && (
+      {sermonTarget && (
         <BenchSermonPicker
           userId={userId}
           onPick={addToSermon}
-          onClose={() => setPickerOpen(false)}
+          onClose={() => setSermonTarget(null)}
         />
       )}
+
+      {/* The app's own picker, taking the choice rather than navigating to
+          it. It sits above the Bench, and the counted body-scroll lock
+          handles the two sheets being open at once. */}
+      <ReferencePicker
+        open={secondPickerOpen}
+        onClose={() => setSecondPickerOpen(false)}
+        bookSlug={second?.bookSlug ?? null}
+        chapter={second?.chapter ?? null}
+        onPick={(ref) => {
+          const bk = bookBySlug(ref.bookSlug);
+          if (!bk) return;
+          openSecond({
+            bookSlug: ref.bookSlug,
+            book: bk.name,
+            chapter: ref.chapter,
+            start: ref.verse ?? 1
+          });
+          setSecondPickerOpen(false);
+        }}
+      />
     </div>
   );
 }

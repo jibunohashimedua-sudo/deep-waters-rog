@@ -4344,3 +4344,80 @@ html[data-bench="beside"] main.parallel-split,
 html[data-bench="beside"] main.parallel-single {
   width: 100%;
 }
+
+/* ---- The second text ------------------------------------------------
+   A passage the reader chose, sitting beside the one he is studying. It
+   is the only lens not aimed at the pinned verse, so it carries its own
+   reference and its own translation control at the top. */
+.bench-second { display: flex; flex-direction: column; gap: 10px; }
+
+.bench-second-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* The reference is the picker, the same way the reading header's title is.
+   Someone looking at a passage and wanting a different one should be able
+   to say so by pressing the words in front of them. */
+.bench-second-ref {
+  min-height: 44px;
+  padding: 0 2px;
+  background: transparent;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.bench-second-ref:hover { color: var(--accent); }
+
+.bench-second-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.bench-second-range .meta { text-transform: uppercase; letter-spacing: 0.13em; }
+.bench-second-select {
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 12px;
+}
+
+/* A range that arrived longer than the window holds. Said in the accent
+   rather than in red: nothing has gone wrong, it is just shorter than
+   what was asked for. */
+.bench-capped {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--accent);
+}
+
+/* A cross reference as a control: the whole row presses. */
+.bench-crossref {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  min-height: 44px;
+  padding: 2px 0;
+  text-align: left;
+  background: transparent;
+}
+.bench-crossref:hover .meta-strong { color: var(--accent); }
+
+/* Which passage a note is about, when it is not the pinned verse. */
+.bench-note-target {
+  margin-top: 6px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--accent);
+}

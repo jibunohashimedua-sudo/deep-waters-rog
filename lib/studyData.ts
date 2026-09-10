@@ -37,6 +37,12 @@ export type CrossRef = {
   target_ref: string;
   votes: number;
   text: string | null;
+  /** The same reference in parts, so a tap can open it in the second
+      window without parsing the display string back apart. */
+  target_book: string;
+  target_chapter: number;
+  target_verse_start: number;
+  target_verse_end: number;
 };
 
 export type ExpositionEntry = {
@@ -178,7 +184,11 @@ export async function fetchCrossRefs(
   return rows.map((r) => ({
     target_ref: r.target_ref,
     votes: r.votes,
-    text: texts.get(`${r.target_book}|${r.target_chapter}|${r.target_verse_start}`) ?? null
+    text: texts.get(`${r.target_book}|${r.target_chapter}|${r.target_verse_start}`) ?? null,
+    target_book: r.target_book,
+    target_chapter: r.target_chapter,
+    target_verse_start: r.target_verse_start,
+    target_verse_end: r.target_verse_end
   }));
 }
 

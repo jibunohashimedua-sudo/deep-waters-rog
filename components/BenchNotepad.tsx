@@ -18,6 +18,11 @@ type Props = {
   saving: boolean;
   /** Set by the Bench's Note action, to bring the composer into view. */
   focusSignal: number;
+  /** The reference this note will be filed against, when it is not the
+      pinned verse — a note started from the second window. Null means the
+      pinned verse, and the composer says nothing extra. */
+  writingAbout: string | null;
+  onWriteAboutPinned: () => void;
 };
 
 /** How long a delete stays armed before it disarms itself. */
@@ -45,7 +50,9 @@ export default function BenchNotepad({
   onSave,
   onDelete,
   saving,
-  focusSignal
+  focusSignal,
+  writingAbout,
+  onWriteAboutPinned
 }: Props) {
   const [armed, setArmed] = useState<string | null>(null);
   const composer = useRef<HTMLDivElement>(null);
@@ -125,6 +132,19 @@ export default function BenchNotepad({
         <label htmlFor="bench-note" className="meta">
           {editingId ? "Editing your note" : "Your note"}
         </label>
+
+        {/* Which passage this is about, said out loud. The Bench aims
+            everything at the pinned verse except the second window, so a
+            note begun there has to name what it will be filed against —
+            otherwise the two references are one slip apart. */}
+        {!editingId && writingAbout && (
+          <p className="bench-note-target">
+            On {writingAbout}, not the pinned verse.{" "}
+            <button type="button" className="bench-act" onClick={onWriteAboutPinned}>
+              Write about the pinned verse instead
+            </button>
+          </p>
+        )}
         <textarea
           id="bench-note"
           value={draft}

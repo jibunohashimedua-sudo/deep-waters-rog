@@ -14,7 +14,8 @@ export type LensId =
   | "concordance"
   | "crossrefs"
   | "commentary"
-  | "house";
+  | "house"
+  | "secondtext";
 
 export type Lens = {
   id: LensId;
@@ -71,6 +72,12 @@ export const LENSES: Lens[] = [
     id: "house",
     label: "The house",
     source: "Reflections your church shared to the community feed"
+  },
+  {
+    id: "secondtext",
+    label: "Second text",
+    source:
+      "Whatever passage you put here, in whatever translation you chose — API.Bible, the same editions as Compare"
   }
 ];
 

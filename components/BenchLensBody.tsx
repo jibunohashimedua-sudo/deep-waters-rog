@@ -13,6 +13,7 @@ import BenchConcordance from "./BenchConcordance";
 import BenchCrossRefs from "./BenchCrossRefs";
 import BenchCommentary from "./BenchCommentary";
 import BenchExposition from "./BenchExposition";
+import BenchSecondText, { type SecondPassage } from "./BenchSecondText";
 
 export type LensData = {
   visibleTranslations: Translation[];
@@ -42,6 +43,21 @@ export type LensData = {
   commentaryLoading: boolean;
   verse: number;
   onPickWord: (word: TaggedWord) => void;
+  userId: string;
+  second: SecondPassage | null;
+  secondRow: ParallelRow | null;
+  secondVerseCount: number | null;
+  secondCapped: string | null;
+  secondSermonState: "idle" | "saving" | "added";
+  secondSermonAdded: string | null;
+  onOpenSecondPicker: () => void;
+  onSecondTranslation: (bibleId: string) => void;
+  onSecondEnd: (end: number) => void;
+  onClearSecond: () => void;
+  onCopySecond: () => void;
+  onNoteSecond: () => void;
+  onSecondToSermon: () => void;
+  onOpenCrossRef: (ref: CrossRef) => void;
 };
 
 /**
@@ -97,7 +113,30 @@ export default function BenchLensBody({
       )}
 
       {lens === "crossrefs" && (
-        <BenchCrossRefs refs={data.crossRefs} loading={data.crossRefsLoading} />
+        <BenchCrossRefs
+          refs={data.crossRefs}
+          loading={data.crossRefsLoading}
+          onOpen={data.onOpenCrossRef}
+        />
+      )}
+
+      {lens === "secondtext" && (
+        <BenchSecondText
+          userId={data.userId}
+          passage={data.second}
+          row={data.secondRow}
+          verseCount={data.secondVerseCount}
+          capped={data.secondCapped}
+          onOpenPicker={data.onOpenSecondPicker}
+          onChangeTranslation={data.onSecondTranslation}
+          onChangeEnd={data.onSecondEnd}
+          onClear={data.onClearSecond}
+          onCopy={data.onCopySecond}
+          onNote={data.onNoteSecond}
+          onToSermon={data.onSecondToSermon}
+          sermonState={data.secondSermonState}
+          sermonAdded={data.secondSermonAdded}
+        />
       )}
 
       {lens === "exposition" && (

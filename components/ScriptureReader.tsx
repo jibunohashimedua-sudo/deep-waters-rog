@@ -12,6 +12,7 @@ import {
   type VerseNote
 } from "@/lib/highlights";
 import { bookByName } from "@/lib/bibleBooks";
+import { planDayForChapter } from "@/lib/plan";
 import { loadVerseMarks, useSharedVerseMarks } from "@/lib/verseMarks";
 import { verseFragments, verseTextOnPage } from "@/lib/verseFragments";
 import PlumbLine from "@/components/PlumbLine";
@@ -19,6 +20,8 @@ import VerseToolbar from "./VerseToolbar";
 import VerseNoteSheet from "./VerseNoteSheet";
 import CompareSheet from "./CompareSheet";
 import type { BenchPhase } from "./BenchLayer";
+// Type-only, so it is erased at compile time and pulls the panel in with it.
+import type { SecondPassage } from "./BenchSecondText";
 import { DEFAULT_BIBLE_ID } from "@/lib/translations";
 
 /**
@@ -41,6 +44,14 @@ import { DEFAULT_BIBLE_ID } from "@/lib/translations";
  * is client state; there was never a server render of it to keep.
  */
 const BenchLayer = dynamic(() => import("./BenchLayer"), { ssr: false });
+
+/** Where a note is to be filed, when it is not the pinned verse. */
+export type NoteRef = {
+  book: string;
+  chapter: number;
+  verseStart: number;
+  verseEnd: number;
+};
 
 type ChapterInput = {
   /** Book name, e.g. "Isaiah". */
@@ -157,6 +168,18 @@ export default function ScriptureReader({
   // with the verse still selected; the toolbar's own handle is what closes
   // the rest of the way.
   const [benchPhase, setBenchPhase] = useState<BenchPhase>("closed");
+
+  // The Bench's second window, held here rather than inside the Bench.
+  //
+  // BenchLayer only mounts while a verse is pinned, and moving the pin —
+  // tapping the held verse off, then tapping another on — empties the
+  // selection for a moment. State inside the Bench does not survive that,
+  // so the passage the reader had chosen vanished exactly when he did the
+  // one thing the window exists to survive. Up here it outlives the
+  // re-pin, and is let go of only when he clears it or closes the Bench
+  // outright.
+  const [second, setSecond] = useState<SecondPassage | null>(null);
+  const [secondCapped, setSecondCapped] = useState<string | null>(null);
   const [sheetSaving, setSheetSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [atCap, setAtCap] = useState(false);
@@ -635,6 +658,20 @@ export default function ScriptureReader({
   }
 
   /**
+   * Put the whole thing away.
+   *
+   * The toolbar's grab handle, and nothing else. Letting go of the verse
+   * is not the same as being finished with the Bench: tapping a verse off
+   * on the way to tapping another one is how a reader moves the pin, and
+   * the second window has to still be there when he lands.
+   */
+  function closeBench() {
+    clearSelection();
+    setSecond(null);
+    setSecondCapped(null);
+  }
+
+  /**
    * Highlighting a non-contiguous selection writes one row per run, so
    * "3,7" becomes two highlights rather than one row claiming 3–7. The
    * rows are what Depth lists later, and a row has to be true on its own.
@@ -757,18 +794,36 @@ export default function ScriptureReader({
    * it stuck, so a caller can decide what to clear.
    */
   const createNote = useCallback(
-    async (body: string, verseText: string): Promise<boolean> => {
-      if (!anchor) return false;
+    async (body: string, verseText: string, at?: NoteRef): Promise<boolean> => {
+      // `at` is the whole reason this takes an argument. Everything on the
+      // Bench is aimed at the pinned verse except the second-text window,
+      // which holds a passage the reader chose for himself — and a note
+      // written there must be filed against *that* passage. Left to the
+      // anchor it would land on the verse in the reader, which is the one
+      // place these two references could get crossed.
+      if (!anchor && !at) return false;
+      const book = at?.book ?? anchor!.book;
+      const chapter = at?.chapter ?? anchor!.chapter;
+      const verseStart = at?.verseStart ?? spanStart;
+      const verseEnd = at?.verseEnd ?? spanEnd;
+      // A note is filed under a plan day. For a passage in another book
+      // that is that passage's day, not the day the reader happens to be
+      // on — falling back to this screen's day when the plan never passes
+      // through it.
+      const placed = at ? planDayForChapter(book, chapter) : null;
+      const day = placed?.day ?? dayNumber;
+      const test = placed?.testament ?? testament;
+
       const prev = notes;
       const optimistic: VerseNote = {
         id: `optimistic-${Date.now()}`,
         user_id: userId,
-        day_number: dayNumber,
-        testament,
-        book: anchor.book,
-        chapter: anchor.chapter,
-        verse_start: spanStart,
-        verse_end: spanEnd,
+        day_number: day,
+        testament: test,
+        book,
+        chapter,
+        verse_start: verseStart,
+        verse_end: verseEnd,
         verse_text: verseText,
         body,
         created_at: new Date().toISOString(),
@@ -779,12 +834,12 @@ export default function ScriptureReader({
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          day_number: dayNumber,
-          testament,
-          book: anchor.book,
-          chapter: anchor.chapter,
-          verse_start: spanStart,
-          verse_end: spanEnd,
+          day_number: day,
+          testament: test,
+          book,
+          chapter,
+          verse_start: verseStart,
+          verse_end: verseEnd,
           verse_text: verseText,
           body
         })
@@ -1082,7 +1137,7 @@ export default function ScriptureReader({
         showBench={showBench}
         onBench={() => setBenchPhase("open")}
         benchCollapsed={benchPhase === "collapsed"}
-        onCloseAll={clearSelection}
+        onCloseAll={closeBench}
         onCopy={copy}
         onShare={share}
         onShareImage={shareImage}
@@ -1111,6 +1166,10 @@ export default function ScriptureReader({
         <BenchLayer
           phase={benchPhase}
           userId={userId}
+          second={second}
+          onSecondChange={setSecond}
+          secondCapped={secondCapped}
+          onSecondCappedChange={setSecondCapped}
           book={anchor.book}
           chapter={anchor.chapter}
           spanStart={spanStart}

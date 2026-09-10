@@ -198,9 +198,15 @@ export default function TranslationSwitcher({
             <h2 className="mt-2 font-serif text-2xl font-medium text-rog-ink leading-tight">
               Translation
             </h2>
+            {/* The sentence follows `persist`, because it used to claim the
+                choice was saved everywhere even when the caller had asked
+                for a switcher that saves nothing — a window with its own
+                translation, for instance. Every caller that persists reads
+                exactly as it did. */}
             <p className="mt-2 text-sm text-rog-muted">
-              Your choice is saved to your account and follows you everywhere
-              you read. It never touches your highlights or notes.
+              {persist
+                ? "Your choice is saved to your account and follows you everywhere you read. It never touches your highlights or notes."
+                : "This sets the translation for this window only. It doesn’t change what you’re reading in, and it never touches your highlights or notes."}
             </p>
 
             {error && <p className="mt-4 text-sm text-danger">{error}</p>}
