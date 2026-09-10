@@ -182,9 +182,7 @@ export async function fetchCrossRefs(
   }));
 }
 
-/** The exposition of the passage containing this verse.
-    The table is still called word_study_entries: it is the store's name,
-    not the lens's, and the two importers that fill it write there. */
+/** The exposition of the passage containing this verse. */
 export async function fetchExposition(
   book: string,
   chapter: number,
@@ -192,7 +190,7 @@ export async function fetchExposition(
 ): Promise<ExpositionEntry[]> {
   const supabase = createClient();
   const { data, error } = await supabase
-    .from("word_study_entries")
+    .from("exposition_entries")
     .select("source, verse_start, verse_end, strongs_id, body")
     .eq("book", book)
     .eq("chapter", chapter)

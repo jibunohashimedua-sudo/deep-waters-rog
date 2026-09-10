@@ -1,4 +1,4 @@
-// word_study_entries — A. T. Robertson, Word Pictures in the New Testament.
+// exposition_entries — A. T. Robertson, Word Pictures in the New Testament.
 //
 // LICENCE.
 //
@@ -25,7 +25,7 @@
 // takes money, they have to come out. There is no schema change needed to
 // do it — they are exactly the books in COPYRIGHTED_BOOKS below:
 //
-//   delete from word_study_entries
+//   delete from exposition_entries
 //   where source = 'robertson'
 //     and book in ('John','Hebrews','James','1 Peter','2 Peter',
 //                  '1 John','2 John','3 John','Jude','Revelation');
@@ -158,7 +158,7 @@ for (let i = 0; i < slots.length; i++) {
 }
 
 const chars = rows.reduce((n, r) => n + r.body.length, 0);
-console.log(`word_study_entries (${SOURCE}): ${rows.length} notes, ${(chars / 1e6).toFixed(1)} MB of text`);
+console.log(`exposition_entries (${SOURCE}): ${rows.length} notes, ${(chars / 1e6).toFixed(1)} MB of text`);
 console.log(`  ${rows.length - underPermission} notes from volumes 1-4 (public domain)`);
 console.log(`  ${underPermission} notes from volumes 5-6 (in copyright; free non-commercial distribution)`);
 const sample = rows.find((r) => r.book === "Romans" && r.chapter === 8 && r.verse_start === 28);
@@ -166,7 +166,7 @@ if (sample) console.log(`  Romans 8:28: ${sample.body.slice(0, 100)}…`);
 
 if (!DRY) {
   const client = db();
-  await upsertBatched(client, "word_study_entries", rows,
+  await upsertBatched(client, "exposition_entries", rows,
     "source,book,chapter,verse_start,verse_end", 500);
 }
 console.log("done");

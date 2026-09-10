@@ -1,4 +1,4 @@
-// word_study_entries — Keil and Delitzsch on the Old Testament.
+// exposition_entries — Keil and Delitzsch on the Old Testament.
 //
 // Source: the CrossWire Sword module "KD", whose own config states
 // DistributionLicense=Public Domain, built from the text at
@@ -10,7 +10,7 @@
 // but no machine-readable edition of it exists under a licence that allows
 // redistribution: CCEL requires permission to republish, CrossWire does not
 // carry it, and the only alternative is OCR of the 1890 scans, whose Greek
-// is destroyed (δοῦλος comes out as "KovKot"). A word-study lens built on
+// is destroyed (δοῦλος comes out as "KovKot"). An exposition built on
 // that would be worse than no lens. See the report.
 //
 // The module is a zCom4 file: a block index (.bzs), a verse index (.bzv),
@@ -21,7 +21,7 @@
 // lands on the wrong verse, so it is checked against the module's own
 // reference labels before anything is written.
 //
-//   node scripts/import-word-study.mjs [--dry-run]
+//   node scripts/import-keil-delitzsch.mjs [--dry-run]
 import { readFileSync } from "node:fs";
 import { inflateSync } from "node:zlib";
 import { join } from "node:path";
@@ -157,7 +157,7 @@ if (rate > 0.01) {
 }
 
 const chars = rows.reduce((n, r) => n + r.body.length, 0);
-console.log(`word_study_entries: ${rows.length} passages, ${(chars / 1e6).toFixed(1)} MB of text`);
+console.log(`exposition_entries: ${rows.length} passages, ${(chars / 1e6).toFixed(1)} MB of text`);
 for (const ref of [["Isaiah", 43], ["Obadiah", 1]]) {
   const r = rows.find((x) => x.book === ref[0] && x.chapter === ref[1]);
   if (r) console.log(`  ${r.book} ${r.chapter}:${r.verse_start}-${r.verse_end}: ${r.body.slice(0, 90)}…`);
@@ -165,7 +165,7 @@ for (const ref of [["Isaiah", 43], ["Obadiah", 1]]) {
 
 if (!DRY) {
   const client = db();
-  await upsertBatched(client, "word_study_entries", rows,
+  await upsertBatched(client, "exposition_entries", rows,
     "source,book,chapter,verse_start,verse_end", 200);
 }
 console.log("done");

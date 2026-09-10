@@ -16,7 +16,8 @@ service role can write them, which is why these run from a shell and not
 from the app.
 
 Run `supabase/migrations/2026_09_12_study_datasets.sql`, then
-`supabase/migrations/2026_09_13_word_study.sql`, before importing.
+`supabase/migrations/2026_09_13_word_study.sql`, then
+`supabase/migrations/2026_09_21_exposition_entries.sql`, before importing.
 
 ## Sources and licences
 

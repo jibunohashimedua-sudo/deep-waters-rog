@@ -12,8 +12,8 @@ const steps = [
   ["kjv_verses + verse_words", "./import-verse-words.mjs"],
   ["cross_refs", "./import-cross-refs.mjs"],
   ["commentary_entries", "./import-commentary.mjs"],
-  ["word_study_entries (Keil and Delitzsch)", "./import-word-study.mjs"],
-  ["word_study_entries (Robertson)", "./import-robertson.mjs"]
+  ["exposition_entries (Keil and Delitzsch)", "./import-keil-delitzsch.mjs"],
+  ["exposition_entries (Robertson)", "./import-robertson.mjs"]
 ];
 
 for (const [label, mod] of steps) {
@@ -24,7 +24,7 @@ for (const [label, mod] of steps) {
 if (!DRY) {
   const client = db();
   console.log("\n── row counts ───────────────────────────");
-  for (const t of ["strongs_entries", "kjv_verses", "verse_words", "cross_refs", "commentary_entries", "word_study_entries"]) {
+  for (const t of ["strongs_entries", "kjv_verses", "verse_words", "cross_refs", "commentary_entries", "exposition_entries"]) {
     console.log(`  ${t.padEnd(20)} ${await countRows(client, t)}`);
   }
 }
