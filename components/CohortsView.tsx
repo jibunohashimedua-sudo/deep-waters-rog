@@ -23,7 +23,14 @@ export default function CohortsView() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data, error: err } = await supabase.from("cohort_summary").select("*");
+      // The last list surface without a cap. Every other one carries a
+      // safety limit — CommunityFeed 100, LeaderboardView 200, PrayerWall,
+      // FinishersView 500 — and this one was the odd one out. Invisible at
+      // two cohorts; it stops being invisible at two hundred.
+      const { data, error: err } = await supabase
+        .from("cohort_summary")
+        .select("*")
+        .limit(200);
       if (cancelled) return;
       if (err) setError(friendlyError(err.message));
       else setCohorts((data ?? []) as CohortSummary[]);
