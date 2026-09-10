@@ -3684,7 +3684,17 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
 .sermon-read-page {
   max-width: 44rem;
   margin: 0 auto;
-  padding: calc(env(safe-area-inset-top) + var(--sp-4)) var(--sp-4) var(--sp-7);
+  /* No safe-area inset here. `body` already carries
+     padding-top: env(safe-area-inset-top), and this page has no sticky
+     bar pulling back through it, so adding the inset again put it in
+     twice — 154px of nothing above the mark on a Dynamic Island phone,
+     measured, which is most of a screenshot before the sermon starts.
+     12px is what the app bar's own row uses (py-3), so the mark lands
+     at the same height here as the logo does on every other screen —
+     8px rather than 12, because the row centres a 26px mark against a
+     44px button and picks up 9px of its own. Measured: 76px against the
+     app bar's 74. */
+  padding: var(--sp-2) var(--sp-4) var(--sp-7);
 }
 
 .sermon-read-head {
@@ -3701,12 +3711,17 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   gap: 8px;
   color: var(--accent);
 }
+/* Lifted. At 10px muted it read as a caption stuck above somebody
+   else's document; the page has to be one composition from the mark
+   down. Bigger, in ink rather than grey, medium weight — and still
+   mono at 11px, so it is a signature and not a headline. */
 .sermon-read-wordmark {
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 10px;
-  letter-spacing: 0.16em;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--text);
 }
 
 .sermon-read-menu {
@@ -3766,7 +3781,9 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
 .sermon-menu-item-danger { color: var(--danger); }
 
 .sermon-read-title {
-  margin-top: var(--sp-5);
+  /* 24, not 40. The rule under the mark and the title belong to each
+     other; 40 made them two separate things on the page. */
+  margin-top: var(--sp-4);
   font-family: var(--font-serif), Georgia, serif;
   font-weight: 400;
   font-size: calc(var(--reading-size, 18px) * 2);
@@ -3775,6 +3792,24 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   color: var(--text);
   text-wrap: balance;
 }
+/* A sermon with no name yet. Said once, quietly, with the way to fix
+   it — not a title invented out of the passage, which is the thing we
+   just took out of the app. */
+.sermon-read-untitled {
+  color: var(--muted);
+  font-style: italic;
+}
+.sermon-read-nudge {
+  margin-top: var(--sp-3);
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.sermon-read-nudge a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .sermon-read-meta {
   margin-top: var(--sp-3);
   font-family: var(--font-mono), ui-monospace, monospace;
@@ -3785,7 +3820,8 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
 }
 
 .sermon-read-body {
-  margin-top: var(--sp-6);
+  /* 40, not 64. Generous, but still attached to the title above it. */
+  margin-top: var(--sp-5);
   max-width: 36ch;
   font-family: var(--font-serif), Georgia, serif;
   /* A quarter up on the reading screen, and a longer leading with it.
@@ -3839,8 +3875,13 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   color: var(--accent);
   margin-bottom: 6px;
 }
+/* No pre-wrap. Scripture arrives from API.Bible with the line breaks of
+   whatever edition it came out of, and honouring them mid-sermon wraps a
+   sentence at the width of somebody else's column. The text is collapsed
+   on the way in as well (lib/sermons, scriptureText) — this is the other
+   half of the same decision. Notes keep their breaks; a preacher's
+   paragraphing is his own. */
 .sermon-read-verse {
-  white-space: pre-wrap;
   font-style: italic;
 }
 

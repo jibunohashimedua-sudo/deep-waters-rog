@@ -122,3 +122,20 @@ export function comparePickOrder(
   if (ra !== rb) return ra - rb;
   return b.updated_at.localeCompare(a.updated_at);
 }
+
+/**
+ * Scripture, wrapped to our measure rather than someone else's.
+ *
+ * Verse text arrives from API.Bible carrying the line breaks of whatever
+ * edition it was set in. Rendered as-is, a sentence breaks at the width
+ * of a column that is not on this screen — which on the read view means
+ * a preacher's eye falling off the end of a line mid-clause, at arm's
+ * length, while talking.
+ *
+ * So every run of whitespace becomes one space and the text wraps to the
+ * measure. Only scripture: a note's paragraphing is the preacher's own
+ * and is kept exactly as typed.
+ */
+export function scriptureText(text: string): string {
+  return text.replace(/\s+/g, " ").trim();
+}

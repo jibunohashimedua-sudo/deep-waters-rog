@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import Mark from "@/components/Mark";
 import { friendlyError } from "@/lib/errors";
 import { humanDate } from "@/lib/dates";
-import { sermonTitle, type SermonBlock, type SermonStatus } from "@/lib/sermons";
+import {
+  scriptureText,
+  sermonTitle,
+  type SermonBlock,
+  type SermonStatus
+} from "@/lib/sermons";
 
 type Props = {
   id: string;
@@ -188,6 +193,7 @@ export default function SermonReader({
   }
 
   const dateLine = preachedOn ? humanDate(preachedOn) : null;
+  const named = Boolean(title?.trim());
 
   return (
     <article className="sermon-read">
@@ -196,7 +202,7 @@ export default function SermonReader({
           than being assembled by the page around them. */}
       <header className="sermon-read-head">
         <div className="sermon-read-brand">
-          <Mark size={20} />
+          <Mark size={26} />
           <span className="sermon-read-wordmark">Deep Waters</span>
         </div>
 
@@ -292,10 +298,21 @@ export default function SermonReader({
         </div>
       </header>
 
-      <h1 className="sermon-read-title">{sermonTitle(title)}</h1>
+      {/* A sermon with no name yet is said once, quietly, with the way
+          to fix it beside it. Not a title invented out of the passage —
+          that is the rule this rework took out. */}
+      <h1 className={`sermon-read-title${named ? "" : " sermon-read-untitled"}`}>
+        {sermonTitle(title)}
+      </h1>
       {(passage || dateLine) && (
         <p className="sermon-read-meta">
           {[passage, dateLine].filter(Boolean).join("  ·  ")}
+        </p>
+      )}
+      {!named && (
+        <p className="sermon-read-nudge no-print">
+          This one hasn&rsquo;t got a name yet.{" "}
+          <Link href={`/sermons/${id}/edit`}>Give it one</Link>.
         </p>
       )}
 
@@ -324,7 +341,7 @@ export default function SermonReader({
                   {b.reference && (
                     <p className="sermon-read-ref">{b.reference}</p>
                   )}
-                  <p className="sermon-read-verse">{b.text}</p>
+                  <p className="sermon-read-verse">{scriptureText(b.text)}</p>
                 </div>
               );
             }

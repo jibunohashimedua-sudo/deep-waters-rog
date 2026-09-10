@@ -234,6 +234,12 @@ export default function SermonEditor({
         placeholder="Untitled"
         className="mt-3 w-full border border-rog-line bg-transparent px-4 py-3 font-serif text-[22px] text-rog-ink focus:border-rog-purple focus:outline-none"
       />
+      {/* Asked for, not assumed. A sermon with no name is findable by
+          nobody, including the person who wrote it — and the answer is
+          never to name it after its first verse. */}
+      {!title.trim() && (
+        <p className="meta mt-2">Give it a name so you can find it later.</p>
+      )}
 
       <label htmlFor="sermon-passage" className="meta mt-6 block">
         Passage
