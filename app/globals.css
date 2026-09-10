@@ -1002,6 +1002,38 @@ input::placeholder, textarea::placeholder {
    that drew its own was a second focus language for no reason.
    ========================================================= */
 
+/* The 300ms that made a tap feel like it had not landed.
+ *
+ * iOS Safari keeps double-tap-to-zoom available on every page — it has
+ * ignored `maximum-scale=1` since iOS 10, deliberately, so that a reader
+ * can always zoom. The cost is that it waits ~300ms after a tap on an
+ * element it might have to zoom, in case a second tap is coming. For that
+ * 300ms the app has done nothing visible, which reads exactly as "it
+ * didn't register" — and the reader taps again.
+ *
+ * `touch-action: manipulation` says: pan and pinch as normal, but do not
+ * wait for a double tap here. Panning and pinch-zoom are untouched; only
+ * double-tap-to-zoom on these elements goes.
+ *
+ * Measured before this rule: every one of the 125 interactive elements on
+ * /day/[n] computed `touch-action: auto`.
+ *
+ * The Bench divider sets `touch-action: none` on itself and, being a
+ * class, wins over this element list — a drag handle must not pan. */
+a[href],
+button,
+input,
+select,
+textarea,
+summary,
+label[for],
+[role="button"],
+[role="tab"],
+[role="switch"],
+[tabindex]:not([tabindex="-1"]) {
+  touch-action: manipulation;
+}
+
 /* Small icon-only controls still need a 44px touch area. The visual size
    is unchanged — the target is grown with a transparent pseudo-element so
    nothing shifts in the layout. */
@@ -1282,7 +1314,13 @@ input::placeholder, textarea::placeholder {
    thing you're reading, not on the filter you left switched on.
    ========================================================= */
 
+/* The pill stays 34px because that is the shape; the target does not.
+   A chip is a filter — Feed / Prayer / Leaderboard, Everyone / My cohorts —
+   and they sit in a row where a near miss lands on the neighbour. The
+   transparent ::after below takes the touch area to 44px tall without
+   moving a pixel of the pill, the same repair .tap-target makes. */
 .chip {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1295,6 +1333,15 @@ input::placeholder, textarea::placeholder {
   font-size: 13px;
   font-weight: 500;
   transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+.chip::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 44px;
+  transform: translateY(-50%);
 }
 .chip:hover { color: var(--text); border-color: var(--text); }
 .chip[data-on="true"] {
