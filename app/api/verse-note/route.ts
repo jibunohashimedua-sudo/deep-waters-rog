@@ -54,9 +54,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "empty body" }, { status: 400 });
   }
 
+  // An optional client-chosen id, which is what makes this safe to send
+  // twice. A note written with no signal is held in a queue on the phone
+  // and replayed when signal returns; if the reply to that replay is lost
+  // on the way back — a tunnel, a lift, a dropped connection at exactly the
+  // wrong moment — the queue tries again, and without this the reader would
+  // find the same note saved twice. With their own id on it, the second
+  // attempt collides with the primary key, and a collision here means the
+  // note is already saved, which is success. Same reasoning as the 23505
+  // handling in /api/chapter-read.
+  //
+  // Nothing else changes: a caller that sends no id gets a database-assigned
+  // one exactly as before.
+  const givenId =
+    typeof body.id === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.id)
+      ? body.id
+      : null;
+
   const { data, error } = await supabase
     .from("verse_notes")
     .insert({
+      ...(givenId ? { id: givenId } : {}),
       user_id: user.id,
       day_number,
       testament,
@@ -69,7 +88,20 @@ export async function POST(request: Request) {
     })
     .select()
     .single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    if (givenId && (error as { code?: string }).code === "23505") {
+      // Already there. Hand back the row that is, so the caller ends up in
+      // the same state as if this attempt had been the one that landed.
+      const { data: existing } = await supabase
+        .from("verse_notes")
+        .select("*")
+        .eq("id", givenId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (existing) return NextResponse.json({ ok: true, note: existing });
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
   return NextResponse.json({ ok: true, note: data });
 }
 

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useOnline } from "@/lib/offline/useOnline";
 import Link from "next/link";
 import Avatar from "./Avatar";
 import { createClient } from "@/lib/supabase/client";
@@ -37,6 +38,7 @@ export default function ReflectionCard({
   isAdmin: boolean;
 }) {
   const supabase = createClient();
+  const online = useOnline();
   const [amens, setAmens] = useState<number>(Number(item.amen_count));
   const [reacted, setReacted] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -204,9 +206,16 @@ export default function ReflectionCard({
           fills, and drawn rather than set in emoji. Amen goes sonar when
           it's yours — the same green that marks today on the gauge. */}
       <div className="mt-4 flex items-center gap-5 meta">
+        {/* Amen and Reply both write into somebody else's thread, so with
+            no signal they are turned off rather than queued: an amen that
+            lands four hours late, on a reflection whose author has long
+            since put the phone down, is not the thing the reader pressed.
+            The count still reads, because reading is the point of the
+            offline feed. */}
         <button
           onClick={amen}
-          disabled={!currentUserId}
+          disabled={!currentUserId || !online}
+          title={online ? undefined : "Offline — you can read, but not react yet"}
           className="act"
           data-on={reacted ? "true" : undefined}
           aria-pressed={reacted}
@@ -256,7 +265,7 @@ export default function ReflectionCard({
               </div>
             </div>
           ))}
-          {currentUserId && (
+          {currentUserId && online && (
             <form onSubmit={postComment} className="flex gap-2">
               <input
                 type="text"
@@ -270,6 +279,11 @@ export default function ReflectionCard({
                 Post
               </button>
             </form>
+          )}
+          {/* Not a disabled box. An empty field with a dead button beside
+              it is furniture asking to be pressed; a sentence is an answer. */}
+          {currentUserId && !online && (
+            <p className="offline-stamp">Replying comes back with your signal.</p>
           )}
         </div>
       )}

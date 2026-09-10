@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { purgeOffline } from "@/lib/offline/session";
 import Avatar from "./Avatar";
 import { currentDayNumber } from "@/lib/plan";
 import { todayISOForUser } from "@/lib/dates";
@@ -138,6 +139,22 @@ export default function MoreSheet({
 
   async function signOut() {
     onClose();
+    // Everything this device was keeping for them, gone: the chapters, the
+    // highlights, the notes, the progress, the cached lists, the mirrored
+    // preferences and every cache the offline worker holds. Awaited rather
+    // than fired off, so it happens while the session is still alive and
+    // before the next person can be in front of the screen.
+    //
+    // This is the promise that two people can share a phone. It is not the
+    // only guard — arriving as somebody the store does not belong to purges
+    // it too, which is the one that holds when the app is force-quit instead
+    // of signed out of — but it is the one that means the phone is not
+    // carrying a departed reader's notes around in the meantime.
+    //
+    // It costs the downloaded Bible as well. That is the right way round: a
+    // partial clear is how a forgotten store ends up holding somebody's
+    // private reading, and a download can be done again.
+    await purgeOffline();
     await supabase.auth.signOut();
     // replace: signing out and pressing back should not put a signed-in
     // screen in front of somebody who has just left.

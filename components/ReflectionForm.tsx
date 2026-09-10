@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { enqueue } from "@/lib/offline/queue";
+import { reportOffline, reportOnline } from "@/lib/offline/useOnline";
 
 export default function ReflectionForm({
   dayNumber,
@@ -32,20 +34,45 @@ export default function ReflectionForm({
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(!!existing);
   const [cardUrl, setCardUrl] = useState<string | null>(null);
+  /** Written with no signal and waiting in the queue. Said plainly, once,
+      where the share card would otherwise be. */
+  const [queued, setQueued] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const res = await fetch("/api/complete", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        day_number: dayNumber,
-        verse_reference: verseRef.trim() || null,
-        verse_text: verseText.trim() || null,
-        reflection: reflection.trim() || null
-      })
-    });
+    const payload = {
+      day_number: dayNumber,
+      verse_reference: verseRef.trim() || null,
+      verse_text: verseText.trim() || null,
+      reflection: reflection.trim() || null
+    };
+
+    let res: Response;
+    try {
+      res = await fetch("/api/complete", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+    } catch {
+      // A reflection is the one thing on this screen the reader wrote
+      // themselves, and it is never thrown away for want of a signal. It
+      // goes in the queue and the day is marked kept — because it is: they
+      // did the reading and they wrote the words, and the only thing still
+      // outstanding is a round trip they did not ask for.
+      //
+      // Not offered as a share card, though. The card is rendered by the
+      // server at /api/og, so there would be nothing to show.
+      reportOffline();
+      await enqueue("reflection", payload);
+      setLoading(false);
+      setDone(true);
+      setQueued(true);
+      return;
+    }
+
+    reportOnline();
     setLoading(false);
     if (res.ok) {
       setDone(true);
@@ -157,6 +184,15 @@ export default function ReflectionForm({
           </button>
         </form>
       </section>
+
+      {/* Written with no signal. Said once, plainly, and nothing is asked of
+          the reader — the queue is already carrying it. */}
+      {queued && (
+        <p className="offline-stamp mt-4">
+          Kept on this device. It&rsquo;ll be saved to your account, and shared with
+          the church if you&rsquo;ve chosen to, as soon as you have a connection.
+        </p>
+      )}
 
       {/* Level 2 — the completion reveal, mounted like a Polaroid on card stock */}
       {done && cardUrl && (

@@ -1,6 +1,13 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { Translation } from "@/lib/translations";
+import { bookBySlug } from "@/lib/bibleBooks";
+import {
+  chapterKey as dbChapterKey,
+  getChapter,
+  putChapter
+} from "@/lib/offline/db";
+import { reportOffline, reportOnline } from "@/lib/offline/useOnline";
 
 /** One translation's line: in flight, arrived, or failed on its own. */
 export type ParallelRow =
@@ -177,8 +184,79 @@ export type ParallelChapter =
  * trip — but the round trip is the whole of the flicker.
  *
  * Scripture doesn't change, so there is nothing here to invalidate.
+ *
+ * ---
+ *
+ * THIS IS ALSO THE APP'S ONE CHAPTER CACHE IN THE BROWSER, and offline
+ * reading is built underneath it rather than beside it.
+ *
+ * There are two ways a chapter reaches a screen — the server render, which
+ * arrives already in the HTML and is handed here by seedChapter(), and
+ * /api/bible/chapter, which the second pane fetches for itself. Both have
+ * always ended up in this one Map. So making chapters survive a closed tab
+ * means giving this Map a floor to stand on, not building a second store: a
+ * durable copy in IndexedDB behind the same three functions.
+ *
+ * What has NOT changed, deliberately:
+ *   - the Map itself, and every read that hits it. Still synchronous, still
+ *     the first thing tried, still the reason swapping panes doesn't flicker.
+ *   - cachedChapter(), which stays synchronous because ReaderPane calls it
+ *     during render.
+ *   - bible_cache and the in-flight map in lib/bible.ts. Those live in the
+ *     server process and can't be reached by a phone with no signal; they
+ *     exist to protect the shared API.Bible rate limit, which is a different
+ *     job from this one. Untouched.
  */
 const chapterCache = new Map<string, ParallelChapter & { status: "ready" }>();
+
+/**
+ * Keep a chapter on the device.
+ *
+ * Fire and forget on purpose. A chapter that fails to store is a chapter the
+ * reader has to be online to see again, which is the situation they were in
+ * before this existed — worth nothing at all of the reading surface's time,
+ * and certainly not worth an error.
+ */
+function keep(
+  bookSlug: string,
+  chapter: number,
+  bibleId: string,
+  value: { reference: string; html: string; resolvedId: string; fallbackNote: string | null },
+  source: "read" | "download" = "read"
+): void {
+  const book = bookBySlug(bookSlug);
+  if (!book) return;
+  void putChapter({
+    key: dbChapterKey(bibleId, bookSlug, chapter),
+    bibleId,
+    bookSlug,
+    bookName: book.name,
+    chapter,
+    reference: value.reference,
+    html: value.html,
+    resolvedId: value.resolvedId,
+    fallbackNote: value.fallbackNote,
+    source,
+    at: Date.now()
+  }).catch(() => {});
+}
+
+/** The stored copy, lifted back into the shape a pane renders. */
+async function fromStore(
+  bookSlug: string,
+  chapter: number,
+  bibleId: string
+): Promise<(ParallelChapter & { status: "ready" }) | null> {
+  const row = await getChapter(bibleId, bookSlug, chapter);
+  if (!row) return null;
+  return {
+    status: "ready",
+    reference: row.reference,
+    html: row.html,
+    resolvedId: row.resolvedId,
+    fallbackNote: row.fallbackNote
+  };
+}
 
 export const chapterCacheKey = (
   bookSlug: string,
@@ -208,6 +286,11 @@ export function seedChapter(
   value: { reference: string; html: string; fallbackNote: string | null }
 ): void {
   const key = chapterCacheKey(bookSlug, chapter, bibleId);
+  // The store write is outside the early return on purpose. The Map already
+  // having this chapter says nothing about whether the device does — the Map
+  // is a tab, the device is a journey — and this is the moment that turns
+  // "read on the sofa last night" into "readable in a tunnel tomorrow".
+  keep(bookSlug, chapter, bibleId, { ...value, resolvedId: bibleId });
   if (chapterCache.has(key)) return;
   chapterCache.set(key, {
     status: "ready",
@@ -216,6 +299,28 @@ export function seedChapter(
     resolvedId: bibleId,
     fallbackNote: value.fallbackNote
   });
+}
+
+/**
+ * The Map first, then the device.
+ *
+ * The asynchronous sibling of cachedChapter(). Everything that can wait a
+ * turn of the event loop should ask through here, because this is the half
+ * that answers on a train. cachedChapter() stays synchronous for the one
+ * caller that cannot wait — ReaderPane reads it during render, to decide
+ * whether to draw a chapter or a spinner, and an await there would put a
+ * spinner in front of a chapter that was already in memory.
+ */
+export async function cachedChapterAsync(
+  bookSlug: string,
+  chapter: number,
+  bibleId: string
+): Promise<(ParallelChapter & { status: "ready" }) | null> {
+  const hot = cachedChapter(bookSlug, chapter, bibleId);
+  if (hot) return hot;
+  const stored = await fromStore(bookSlug, chapter, bibleId);
+  if (stored) chapterCache.set(chapterCacheKey(bookSlug, chapter, bibleId), stored);
+  return stored;
 }
 
 /**
@@ -232,7 +337,9 @@ export async function fetchParallelChapter(args: {
   chapter: number;
   bibleId: string;
 }): Promise<ParallelChapter> {
-  const hit = cachedChapter(args.bookSlug, args.chapter, args.bibleId);
+  // Memory, then the device. A chapter this phone has already read comes
+  // back here without a network at all.
+  const hit = await cachedChapterAsync(args.bookSlug, args.chapter, args.bibleId);
   if (hit) return hit;
 
   try {
@@ -242,6 +349,7 @@ export async function fetchParallelChapter(args: {
       bible: args.bibleId
     });
     const res = await fetch(`/api/bible/chapter?${params.toString()}`);
+    reportOnline();
     const json = await res.json();
     if (res.ok && json?.ok && typeof json.html === "string") {
       const value = {
@@ -256,6 +364,7 @@ export async function fetchParallelChapter(args: {
         chapterCacheKey(args.bookSlug, args.chapter, args.bibleId),
         value
       );
+      keep(args.bookSlug, args.chapter, args.bibleId, value);
       return value;
     }
     return {
@@ -266,10 +375,16 @@ export async function fetchParallelChapter(args: {
           : "That chapter wouldn’t load just now."
     };
   } catch {
+    // The network died. cachedChapterAsync above has already looked on the
+    // device and found nothing, so there is genuinely nothing to show — but
+    // say which of the two it is, because "you are offline and haven't saved
+    // this one" and "that chapter wouldn't load" send a reader to two
+    // completely different places.
+    reportOffline();
     return {
       status: "error",
       message:
-        "That chapter wouldn’t load just now. Check your connection and try again."
+        "You’re offline, and this chapter isn’t saved on this device yet. It’ll load when you have a connection."
     };
   }
 }

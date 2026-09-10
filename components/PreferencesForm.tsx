@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import SelectSheet from "./SelectSheet";
 import { TRANSLATIONS, TRANSLATION_GROUPS, translationById } from "@/lib/translations";
 import { writeBookLayout } from "@/lib/bookLayout";
@@ -12,6 +13,16 @@ import {
   type TextSize,
   type Theme
 } from "@/lib/preferences";
+
+/**
+ * The offline download panel, loaded after this screen rather than with it.
+ *
+ * It carries the whole download walker — the chapter list, the batching, the
+ * storage estimate — and none of that is needed to draw a preferences screen.
+ * Somebody who came here to change their text size should not pay for a
+ * Bible downloader to do it.
+ */
+const OfflineDownload = dynamic(() => import("./OfflineDownload"), { ssr: false });
 
 type Props = {
   initial: Preferences;
@@ -291,6 +302,14 @@ export default function PreferencesForm({
             )}
           />
         </div>
+
+        {/* Under Reading rather than in a section of its own: it is a
+            reading setting — whether scripture is here when the signal
+            isn't — and it sits directly under the translation it downloads.
+            It also carries the list of anything written but not yet sent,
+            because "what is this app holding on my phone" is one question
+            and it should have one answer. */}
+        <OfflineDownload translationId={translation} />
       </Group>
 
       <Group title="Appearance" blurb="How the app looks everywhere else.">

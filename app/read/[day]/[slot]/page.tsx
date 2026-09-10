@@ -13,6 +13,7 @@ import ScriptureReader from "@/components/ScriptureReader";
 import ReadingHeader from "@/components/ReadingHeader";
 import ChapterPager from "@/components/ChapterPager";
 import ChapterPrefetch from "@/components/ChapterPrefetch";
+import ChapterKeep from "@/components/ChapterKeep";
 
 /**
  * One chapter of the day's reading.
@@ -171,6 +172,18 @@ export default async function ReadChapterPage({
 
       {/* Warms the next chapter so tapping Next is instant. */}
       <ChapterPrefetch href={next ? `/read/${day}/${slot + 1}` : null} />
+
+      {/* Keeps this chapter on the device, and gets the rest of today and
+          the whole of tomorrow ready behind the reader. Both after paint. */}
+      <ChapterKeep
+        bookSlug={bookByName(here.book)?.slug ?? null}
+        chapter={here.chapter}
+        bibleId={resolved.id}
+        reference={reference}
+        html={html}
+        fallbackNote={resolved.fallbackNote}
+        dayNumber={day}
+      />
     </>
   );
 }

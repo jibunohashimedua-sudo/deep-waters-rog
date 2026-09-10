@@ -15,6 +15,14 @@ import { bookByName } from "@/lib/bibleBooks";
 import { planDayForChapter } from "@/lib/plan";
 import { loadVerseMarks, useSharedVerseMarks } from "@/lib/verseMarks";
 import { verseFragments, verseTextOnPage } from "@/lib/verseFragments";
+import { cancelQueuedHighlights, enqueue, newId } from "@/lib/offline/queue";
+import {
+  forgetMarks,
+  isNetworkFailure,
+  rememberHighlights,
+  rememberNotes
+} from "@/lib/offline/marks";
+import { reportOffline, reportOnline } from "@/lib/offline/useOnline";
 import PlumbLine from "@/components/PlumbLine";
 import VerseToolbar from "./VerseToolbar";
 import VerseNoteSheet from "./VerseNoteSheet";
@@ -709,8 +717,19 @@ export default function ScriptureReader({
       }
       return true;
     });
-    const optimistic: Highlight[] = runs.map((r, i) => ({
-      id: `optimistic-${Date.now()}-${i}`,
+    // Real ids, chosen here rather than by the database.
+    //
+    // These used to be `optimistic-…` placeholders swapped for the server's
+    // ids once the insert came back — which works right up until the insert
+    // cannot go anywhere. A highlight made on a train has to be a highlight
+    // the reader can then *remove* on the same train, and it has to be
+    // sendable later without any chance of arriving twice. Both need it to
+    // have had a real, final id from the first moment. A uuid the client
+    // picks is exactly that, and it makes the eventual insert idempotent:
+    // a second attempt collides with the primary key, and a collision here
+    // means it is already saved.
+    const rows = runs.map((r) => ({
+      id: newId(),
       user_id: userId,
       day_number: dayNumber,
       testament,
@@ -718,50 +737,47 @@ export default function ScriptureReader({
       chapter: anchor.chapter,
       verse_start: r.start,
       verse_end: r.end,
-      colour,
-      created_at: now
+      colour
     }));
+    const optimistic: Highlight[] = rows.map((row) => ({ ...row, created_at: now }));
     setHighlights([...kept, ...optimistic]);
     clearSelection();
+    void rememberHighlights(optimistic);
 
     // Clear the old rows on these verses, then write the new ones. Deleting
     // by id is exact — a filter on verse ranges would need an overlap test
     // PostgREST can't express, and would quietly miss partial overlaps.
-    // Optimistic ids were never written, so they are dropped here rather
-    // than sent — an empty `.in()` list builds `id=in.()`, which PostgREST
-    // rejects outright and which would roll the whole highlight back.
-    const doomed = previous
-      .filter((h) => !kept.includes(h))
-      .map((h) => h.id)
-      .filter((id) => !id.startsWith("optimistic-"));
+    const doomed = previous.filter((h) => !kept.includes(h)).map((h) => h.id);
 
-    if (doomed.length > 0) {
-      const { error } = await supabase.from("highlights").delete().in("id", doomed);
+    // Any of those still sitting in the queue were never written, so they
+    // are withdrawn rather than deleted. An insert followed by a delete for
+    // a row the server has never heard of is two round trips describing
+    // something that did not happen.
+    const cancelled = new Set(await cancelQueuedHighlights(doomed));
+    const toDelete = doomed.filter((id) => !cancelled.has(id));
+    void forgetMarks(doomed);
+
+    if (toDelete.length > 0) {
+      const { error } = await supabase.from("highlights").delete().in("id", toDelete);
       if (error) {
+        if (!isNetworkFailure(error)) {
+          setHighlights(previous);
+          showToast(friendlyError(error.message));
+          return;
+        }
+        // No signal. The screen is right, and the queue carries the removal.
+        await enqueue("highlight-remove", { ids: toDelete });
+      }
+    }
+
+    const { data, error } = await supabase.from("highlights").insert(rows).select();
+    if (error) {
+      if (!isNetworkFailure(error)) {
         setHighlights(previous);
         showToast(friendlyError(error.message));
         return;
       }
-    }
-
-    const { data, error } = await supabase
-      .from("highlights")
-      .insert(
-        runs.map((r) => ({
-          user_id: userId,
-          day_number: dayNumber,
-          testament,
-          book: anchor.book,
-          chapter: anchor.chapter,
-          verse_start: r.start,
-          verse_end: r.end,
-          colour
-        }))
-      )
-      .select();
-    if (error) {
-      setHighlights(previous);
-      showToast(friendlyError(error.message));
+      await enqueue("highlight-add", { rows });
       return;
     }
     setHighlights([...kept, ...((data ?? []) as Highlight[])]);
@@ -773,16 +789,24 @@ export default function ScriptureReader({
     const doomed = touchedHighlights.map((h) => h.id);
     setHighlights(highlights.filter((h) => !doomed.includes(h.id)));
     clearSelection();
+    void forgetMarks(doomed);
 
-    // Same guard as above: a selection whose only highlight is still
-    // optimistic has nothing to delete, and an empty `.in()` is an error.
-    const saved = doomed.filter((id) => !id.startsWith("optimistic-"));
+    // Withdraw before deleting, same as above: one made offline and removed
+    // offline never needs to trouble the server at all.
+    const cancelled = new Set(await cancelQueuedHighlights(doomed));
+    const saved = doomed.filter((id) => !cancelled.has(id));
+    // An empty `.in()` list builds `id=in.()`, which PostgREST rejects
+    // outright and which would roll the whole removal back.
     if (saved.length === 0) return;
 
     const { error } = await supabase.from("highlights").delete().in("id", saved);
     if (error) {
-      setHighlights(previous);
-      showToast(friendlyError(error.message));
+      if (!isNetworkFailure(error)) {
+        setHighlights(previous);
+        showToast(friendlyError(error.message));
+        return;
+      }
+      await enqueue("highlight-remove", { ids: saved });
     }
   }
 
@@ -815,9 +839,13 @@ export default function ScriptureReader({
       const test = placed?.testament ?? testament;
 
       const prev = notes;
-      const optimistic: VerseNote = {
-        id: `optimistic-${Date.now()}`,
-        user_id: userId,
+      // Its own id from the start, for the same reason a highlight gets one:
+      // a note written with no signal has to be editable and deletable
+      // before the server has ever heard of it, and its eventual send has to
+      // be safe to repeat. /api/verse-note accepts the id and treats a
+      // collision on it as "already saved".
+      const payload = {
+        id: newId(),
         day_number: day,
         testament: test,
         book,
@@ -825,33 +853,51 @@ export default function ScriptureReader({
         verse_start: verseStart,
         verse_end: verseEnd,
         verse_text: verseText,
-        body,
+        body
+      };
+      const optimistic: VerseNote = {
+        ...payload,
+        user_id: userId,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      };
+      } as VerseNote;
       setNotes([...prev, optimistic]);
-      const res = await fetch("/api/verse-note", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          day_number: day,
-          testament: test,
-          book,
-          chapter,
-          verse_start: verseStart,
-          verse_end: verseEnd,
-          verse_text: verseText,
-          body
-        })
-      });
+      void rememberNotes([optimistic]);
+
+      let res: Response;
+      try {
+        res = await fetch("/api/verse-note", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+      } catch {
+        // No signal. The note stays on the screen and in the queue — it is
+        // the one thing in this app that must never be lost, because it is
+        // the only thing here the reader wrote themselves.
+        reportOffline();
+        await enqueue("verse-note-add", payload);
+        showToast("Note saved on this device. It’ll sync when you’re back online.");
+        return true;
+      }
+      reportOnline();
       if (!res.ok) {
+        // The server having a bad moment is worth another go; the server
+        // refusing is not, and the reader should hear about it now.
+        if (res.status >= 500 || res.status === 401) {
+          await enqueue("verse-note-add", payload);
+          showToast("Note saved on this device. It’ll sync shortly.");
+          return true;
+        }
         setNotes(prev);
+        void forgetMarks([payload.id]);
         const j = await res.json().catch(() => ({}));
         showToast(friendlyError(j.error));
         return false;
       }
       const j = await res.json();
       setNotes([...prev, j.note as VerseNote]);
+      void rememberNotes([j.note as VerseNote]);
       showToast("Note saved.");
       return true;
     },
@@ -861,18 +907,33 @@ export default function ScriptureReader({
   const updateNote = useCallback(
     async (id: string, body: string): Promise<boolean> => {
       const prev = notes;
-      setNotes(
-        notes.map((n) =>
-          n.id === id ? { ...n, body, updated_at: new Date().toISOString() } : n
-        )
+      const next = notes.map((n) =>
+        n.id === id ? { ...n, body, updated_at: new Date().toISOString() } : n
       );
+      setNotes(next);
+      void rememberNotes(next.filter((n) => n.id === id));
+
       // Server-side length cap and validation live in /api/verse-note.
-      const res = await fetch("/api/verse-note", {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ id, body })
-      });
+      let res: Response;
+      try {
+        res = await fetch("/api/verse-note", {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ id, body })
+        });
+      } catch {
+        reportOffline();
+        await enqueue("verse-note-edit", { id, body });
+        showToast("Saved on this device. It’ll sync when you’re back online.");
+        return true;
+      }
+      reportOnline();
       if (!res.ok) {
+        if (res.status >= 500 || res.status === 401) {
+          await enqueue("verse-note-edit", { id, body });
+          showToast("Saved on this device. It’ll sync shortly.");
+          return true;
+        }
         setNotes(prev);
         const j = await res.json().catch(() => ({}));
         showToast(friendlyError(j.error));
@@ -888,11 +949,18 @@ export default function ScriptureReader({
     async (id: string): Promise<boolean> => {
       const prev = notes;
       setNotes(notes.filter((n) => n.id !== id));
+      void forgetMarks([id]);
+
       const { error } = await supabase.from("verse_notes").delete().eq("id", id);
       if (error) {
-        setNotes(prev);
-        showToast(friendlyError(error.message));
-        return false;
+        if (!isNetworkFailure(error)) {
+          setNotes(prev);
+          showToast(friendlyError(error.message));
+          return false;
+        }
+        await enqueue("verse-note-remove", { id });
+        showToast("Deleted on this device. It’ll sync when you’re back online.");
+        return true;
       }
       showToast("Note deleted.");
       return true;

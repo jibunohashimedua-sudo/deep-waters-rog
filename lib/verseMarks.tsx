@@ -16,6 +16,9 @@ import {
   type Highlight,
   type VerseNote
 } from "@/lib/highlights";
+import { getMarksForChapters, putMarksForChapters } from "@/lib/offline/db";
+import { isNetworkFailure } from "@/lib/offline/marks";
+import { reportOffline, reportOnline } from "@/lib/offline/useOnline";
 
 /** One chapter on screen, as the marks tables name it. */
 export type ChapterKey = { book: string; chapter: number };
@@ -44,16 +47,36 @@ export async function loadVerseMarks(
   const errors: string[] = [];
   if (bookNames.length === 0) return { highlights: [], notes: [], errors };
 
+  const chapterKeys = chapters.map((c) => `${c.book}|${c.chapter}`);
+
   // Separate plain queries — no nested joins (avoids HTTP 300 ambiguity).
   const [{ data: hData, error: hErr }, { data: nData, error: nErr }] =
     await Promise.all([
       supabase.from("highlights").select("*").eq("user_id", userId).in("book", bookNames),
       supabase.from("verse_notes").select("*").eq("user_id", userId).in("book", bookNames)
     ]);
+
+  // No signal. A reader's own marks are the last thing that should vanish
+  // when the network does — a highlight is a place they meant to come back
+  // to — so the device's copy answers instead, and nothing is said. The
+  // offline bar is already saying it, once, for the whole app; a toast per
+  // chapter reading "Load failed" would be six ways of repeating it.
+  if (isNetworkFailure(hErr) || isNetworkFailure(nErr)) {
+    reportOffline();
+    const stored = await getMarksForChapters(chapterKeys);
+    return {
+      highlights: stored
+        .filter((m) => m.kind === "highlight")
+        .map((m) => m.row as unknown as Highlight),
+      notes: stored.filter((m) => m.kind === "note").map((m) => m.row as unknown as VerseNote),
+      errors
+    };
+  }
+
   if (hErr) errors.push(hErr.message);
   if (nErr) errors.push(nErr.message);
 
-  const chapterSet = new Set(chapters.map((c) => `${c.book}|${c.chapter}`));
+  const chapterSet = new Set(chapterKeys);
 
   // Colours come back through the palette on the way in, so a row written
   // by the previous build during the deploy still paints. See
@@ -66,6 +89,27 @@ export async function loadVerseMarks(
   const notes = (nData ?? []).filter((n) =>
     chapterSet.has(`${n.book}|${n.chapter}`)
   ) as VerseNote[];
+
+  // Keep them, for the next journey. Only when both queries came back
+  // clean: storing a half-answer would let one failed query quietly delete
+  // the device's copy of the other half.
+  if (!hErr && !nErr) {
+    reportOnline();
+    void putMarksForChapters(chapterKeys, [
+      ...highlights.map((h) => ({
+        id: String(h.id),
+        kind: "highlight" as const,
+        chapterKey: `${h.book}|${h.chapter}`,
+        row: h as unknown as Record<string, unknown>
+      })),
+      ...notes.map((n) => ({
+        id: String(n.id),
+        kind: "note" as const,
+        chapterKey: `${n.book}|${n.chapter}`,
+        row: n as unknown as Record<string, unknown>
+      }))
+    ]).catch(() => {});
+  }
 
   return { highlights, notes, errors };
 }

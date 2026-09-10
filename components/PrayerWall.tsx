@@ -8,6 +8,8 @@ import ReportButton from "@/components/ReportButton";
 import { createClient } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/errors";
 import { readCache, writeCache } from "@/lib/viewCache";
+import { rememberView } from "@/lib/offline/views";
+import { useOnline } from "@/lib/offline/useOnline";
 
 type Prayer = {
   id: string;
@@ -31,6 +33,7 @@ const CACHE_KEY = "prayer-wall";
 
 export default function PrayerWall() {
   const supabase = createClient();
+  const online = useOnline();
   // Same reason as the feed: mounting empty collapses the page, so a back
   // navigation has no height to restore into and lands at the top.
   const cached = readCache<Prayer[]>(CACHE_KEY);
@@ -102,6 +105,17 @@ export default function PrayerWall() {
     setError(null);
     setLoading(false);
     writeCache<Prayer[]>(CACHE_KEY, merged);
+
+    // A copy on the device, so the board can be read on a train. The name
+    // and the request, nothing else — no ids, no photo, no record of who
+    // has prayed. See lib/offline/views.ts.
+    void rememberView(
+      "prayer",
+      merged.map((p) => ({
+        who: p.is_answered ? `${p.name} · answered` : p.name,
+        text: p.answered_note ? `${p.body}\n\n${p.answered_note}` : p.body
+      }))
+    );
   }, [supabase]);
 
   useEffect(() => {
@@ -253,14 +267,27 @@ export default function PrayerWall() {
 
   return (
     <>
+      {/* Posting needs a connection, and says so rather than failing on the
+          press. A prayer request is not queued the way a reflection is: a
+          reflection is the reader's own record and can wait quietly, but
+          this is a request to a room full of people, and holding one on a
+          phone for an unknown number of hours — possibly answered by then,
+          possibly no longer wanted — is not a kindness. Better to say the
+          board is read-only right now and let them post it when they mean
+          to. The words they have typed are left in the box either way. */}
       <form onSubmit={post} className="mt-6 card">
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           rows={3}
           enterKeyHint="send"
-          placeholder="What can we pray about with you? Use @name to mention someone."
-          className="w-full border border-rog-line bg-white px-5 py-3 focus:border-rog-purple focus:outline-none"
+          disabled={!online}
+          placeholder={
+            online
+              ? "What can we pray about with you? Use @name to mention someone."
+              : "Posting needs a connection."
+          }
+          className="w-full border border-rog-line bg-white px-5 py-3 focus:border-rog-purple focus:outline-none disabled:opacity-50"
         />
         <div className="mt-3">
           <Check
@@ -269,9 +296,18 @@ export default function PrayerWall() {
             onChange={(e) => setNeedsPastor(e.target.checked)}
           />
         </div>
-        <button type="submit" disabled={posting || !draft.trim()} className="btn-primary w-full mt-3 disabled:opacity-50">
-          {posting ? "Posting..." : "Post prayer request"}
+        <button
+          type="submit"
+          disabled={!online || posting || !draft.trim()}
+          className="btn-primary w-full mt-3 disabled:opacity-50"
+        >
+          {!online ? "Offline — can’t post yet" : posting ? "Posting..." : "Post prayer request"}
         </button>
+        {!online && (
+          <p className="offline-stamp text-center">
+            You can read the board. Posting comes back with your signal.
+          </p>
+        )}
         {error && <p className="mt-2 text-sm text-danger text-center">{error}</p>}
       </form>
 

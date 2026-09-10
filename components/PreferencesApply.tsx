@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { readBookLayout, writeBookLayout } from "@/lib/bookLayout";
 import { DEFAULT_PREFERENCES, type Preferences } from "@/lib/preferences";
+import { PREFS_KEY } from "@/lib/offline/session";
 
 /**
  * Carry a setting the browser already held up into the database, once.
@@ -48,6 +49,40 @@ export default function PreferencesApply({ prefs }: { prefs: Preferences }) {
     el.dataset.readingFont = prefs.reading_font;
     el.dataset.verseNumbers = prefs.verse_numbers ? "on" : "off";
   }, [prefs.text_size, prefs.line_spacing, prefs.reading_font, prefs.verse_numbers]);
+
+  // The mirror the head script reads before paint, so these four survive a
+  // journey with no signal. Written on every render the server has given us
+  // a profile for, which is every signed-in page — so the copy is refreshed
+  // whenever the database has had a chance to speak, and is stale by exactly
+  // as long as the reader has been offline.
+  //
+  // Written after the effect above rather than instead of it: this is the
+  // *next* load's problem being solved, and this load is already correct.
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        PREFS_KEY,
+        JSON.stringify({
+          text_size: prefs.text_size,
+          line_spacing: prefs.line_spacing,
+          reading_font: prefs.reading_font,
+          verse_numbers: prefs.verse_numbers,
+          book_layout: prefs.book_layout,
+          theme: prefs.theme
+        })
+      );
+    } catch {
+      // Private mode, or a full disk. The app is correct on this load and
+      // will be correct on the next one too as long as there is a network.
+    }
+  }, [
+    prefs.text_size,
+    prefs.line_spacing,
+    prefs.reading_font,
+    prefs.verse_numbers,
+    prefs.book_layout,
+    prefs.theme
+  ]);
 
   useEffect(() => {
     const cached = readBookLayout();

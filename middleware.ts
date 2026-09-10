@@ -25,7 +25,14 @@ const PUBLIC_PATHS = [
   "/c",
   // Attribution for the CC BY datasets behind the Bench. A licence
   // condition met behind a login is not met.
-  "/sources"
+  "/sources",
+  // The offline shell. It has to be fetchable with no cookies at all,
+  // because the service worker fetches it with `credentials: "omit"` on
+  // purpose — that is what guarantees the one document it stores can never
+  // carry anybody's name. Behind the login check this would redirect, and
+  // the worker would cheerfully cache the login page as the offline page.
+  // It holds nothing of its own: it draws itself from IndexedDB.
+  "/offline"
 ];
 
 function isPublicPath(pathname: string): boolean {
@@ -177,6 +184,12 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|manifest.json|.*\\.png$|.*\\.jpg$|.*\\.svg$|.*\\.webmanifest$).*)"
+    // `sw.js` joins the static exclusions for the same reason they are all
+    // there: it is a file in public/, it carries nothing user-specific, and
+    // the browser re-checks it on every navigation looking for an update. A
+    // Supabase round trip on each of those would be pure waste — and worse,
+    // a signed-out visitor would be redirected to /login instead of the
+    // worker, so offline would never install for anyone before they signed in.
+    "/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|.*\\.png$|.*\\.jpg$|.*\\.svg$|.*\\.webmanifest$).*)"
   ]
 };

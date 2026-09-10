@@ -4,6 +4,7 @@ import LoadingRule from "@/components/LoadingRule";
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import { createClient } from "@/lib/supabase/client";
+import { rememberView } from "@/lib/offline/views";
 
 type N = {
   id: string;
@@ -51,8 +52,21 @@ export default function NotificationsPage() {
       .select("*")
       .order("created_at", { ascending: false })
       .limit(100);
-    setItems((data ?? []) as N[]);
+    const next = (data ?? []) as N[];
+    setItems(next);
     setLoading(false);
+
+    // Readable with no signal. Titles and bodies only — the link is left
+    // behind on purpose, because every one of them goes to a screen that
+    // needs the network, and an offline list of taps that all dead-end is
+    // worse than a list that doesn't offer them.
+    void rememberView(
+      "notifications",
+      next.map((n) => ({
+        who: KIND_LABEL[n.kind] ?? n.kind,
+        text: n.body ? `${n.title}\n\n${n.body}` : n.title
+      }))
+    );
   }, [supabase]);
 
   useEffect(() => {

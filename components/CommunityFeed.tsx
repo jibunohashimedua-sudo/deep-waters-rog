@@ -7,6 +7,7 @@ import ReflectionCard from "@/components/ReflectionCard";
 import { createClient } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/errors";
 import { readCache, writeCache } from "@/lib/viewCache";
+import { rememberView } from "@/lib/offline/views";
 
 type Item = {
   id: string;
@@ -69,6 +70,25 @@ export default function CommunityFeed() {
       votd: prev?.votd ?? null,
       cohorts: prev?.cohorts ?? []
     });
+
+    // And a copy on the device, for reading with no signal.
+    //
+    // Only reached when the query actually succeeded, so a moment of bad
+    // signal can never write an empty list over a good copy. Replaced whole
+    // rather than merged, which is what makes a member who has gone private
+    // disappear from the offline copy the first time this runs with any
+    // connection at all. Only what is on the screen goes in — a name and the
+    // words — never a row, an id or a photo. See lib/offline/views.ts for
+    // what that trade is and what it is not.
+    void rememberView(
+      "community",
+      next
+        .filter((i) => i.reflection)
+        .map((i) => ({
+          who: `${i.name} · Day ${i.day_number}`,
+          text: [i.verse_reference, i.reflection].filter(Boolean).join("\n\n")
+        }))
+    );
   }, [supabase]);
 
   useEffect(() => {

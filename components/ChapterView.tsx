@@ -10,6 +10,7 @@ import { readingAttrs } from "@/lib/readingAttrs";
 import ScriptureReader from "@/components/ScriptureReader";
 import ReadingHeader from "@/components/ReadingHeader";
 import ChapterPrefetch from "@/components/ChapterPrefetch";
+import ChapterKeep from "@/components/ChapterKeep";
 import ParallelBible from "@/components/ParallelBible";
 import { parseParallelParams } from "@/lib/parallel";
 
@@ -177,6 +178,26 @@ export default async function ChapterView({
 
       {/* Warms the next chapter in the background so tapping Next is instant. */}
       <ChapterPrefetch href={href(next)} />
+
+      {/* Keeps this chapter on the device.
+          ParallelBible's seed reaches the offline store too, but only once a
+          ReaderPane has mounted — which is the two-pane view and the
+          client-rendered single pane, not the ordinary server-rendered one
+          that almost everybody is looking at. This is the half that covers
+          the common case. No day number: the Bible tab is free browsing, and
+          warming a plan day from here would be the app deciding what somebody
+          is about to read. */}
+      {html && (
+        <ChapterKeep
+          bookSlug={book.slug}
+          chapter={chapter}
+          bibleId={resolved.id}
+          reference={outcome.ok ? outcome.chapter.reference : `${book.name} ${chapter}`}
+          html={html}
+          fallbackNote={resolved.fallbackNote}
+          dayNumber={null}
+        />
+      )}
     </ParallelBible>
   );
 }

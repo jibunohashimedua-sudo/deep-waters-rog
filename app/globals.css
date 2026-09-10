@@ -4623,3 +4623,115 @@ html[data-bench-rack-two="false"] .bench[data-mode="wide"] .bench-rack {
 main[data-surface="reading"] {
   padding-bottom: calc(2.5rem + var(--verse-bar-h, 0px));
 }
+
+/* =========================================================
+   OFFLINE
+   Where the reader stands with the network, and what is still on its way
+   to the server. One hairline strip under the header, never over the page:
+   a bar that floats covers a line of scripture, and this is not important
+   enough to cover anything.
+
+   Square, no shadow, no blur, no rounded container — it is a strip of the
+   page ground with a rule under it, which is what every other quiet band
+   in this app is. The one number it can show is mono, because every number
+   in Deep Waters is mono.
+
+   Tone is carried almost entirely by the words. Being offline is not an
+   error and gets no colour at all: somebody on the Underground has done
+   nothing wrong. The only state that earns a colour is the one that will
+   not resolve without them.
+   ========================================================= */
+.offline-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 24px;
+  background: var(--soft-bg);
+  border-bottom: var(--rule-hairline) solid var(--line);
+  color: var(--ink-data);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+}
+
+/* The number of things waiting. Tabular so a count going from 9 to 10
+   doesn't shuffle the words after it sideways. */
+.offline-bar-count {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+/* A 5px square, not a dot: round is for things you touch, and this is a
+   state indicator. Sized and placed to read as punctuation. */
+.offline-bar-dot {
+  flex: none;
+  width: 5px;
+  height: 5px;
+  background: var(--ink-data);
+}
+
+.offline-bar-link {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Something the server refused. The only offline state with a colour on
+   it, because it is the only one that stays until the reader acts. */
+.offline-bar[data-tone="attention"] {
+  color: var(--warning);
+}
+.offline-bar[data-tone="attention"] .offline-bar-count,
+.offline-bar[data-tone="attention"] .offline-bar-link {
+  color: var(--warning);
+}
+
+/* "Confirm quietly when it has gone through." Sonar, the app's one green,
+   used here exactly as it is used everywhere else: a state that just
+   became true, on a strip a few pixels tall, gone in three seconds. */
+.offline-bar[data-tone="done"] {
+  color: var(--sonar);
+}
+
+/* The last-updated line over a cached list. Reading a feed that cannot be
+   refreshed is fine; not knowing how old it is, is not. */
+.offline-stamp {
+  display: block;
+  padding: 10px 0 0;
+  color: var(--ink-data);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.02em;
+}
+
+/* The download's progress. A rule that fills, not a capsule: same drawn-
+   scale idea as the plan gauge, square ends, hairline height, no shadow.
+   The percentage is printed beside it in words, because a two-pixel
+   difference is not a number anybody can read. */
+.offline-progress {
+  position: relative;
+  height: 3px;
+  background: var(--line);
+  overflow: hidden;
+}
+.offline-progress-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 220ms linear;
+}
+@media (prefers-reduced-motion: reduce) {
+  .offline-progress-fill { transition: none; }
+}
+
+/* Something the reader needs to read, rather than glance at: set in the
+   prose face at prose size, not in the metadata face. Paused downloads,
+   full phones, refused writes. */
+.offline-note {
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.5;
+  max-width: 34rem;
+}

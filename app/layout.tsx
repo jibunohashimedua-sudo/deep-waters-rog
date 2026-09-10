@@ -4,6 +4,7 @@ import { IBM_Plex_Sans, IBM_Plex_Mono, Literata } from "next/font/google";
 import "./globals.css";
 import SplashScreen from "@/components/SplashScreen";
 import RouteHistory from "@/components/RouteHistory";
+import ServiceWorker from "@/components/ServiceWorker";
 
 // Self-hosted at build time rather than pulled from Google at run time.
 // globals.css used to open with an @import of the Google Fonts stylesheet,
@@ -75,16 +76,44 @@ export const viewport: Viewport = {
 };
 
 // Runs before React hydrates so we don't flash the wrong theme.
+//
+// It now applies the rest of the reading settings from the same place, and
+// that is what makes the app open correctly with no signal. The settings
+// themselves live on the profile row, which is right — they follow a reader
+// from their phone to a borrowed laptop. But a profile row needs a network
+// to fetch, and someone who reads at large text in dark mode must not open
+// the app in a tunnel and find it back at the defaults.
+//
+// So the browser keeps a mirror, written by PreferencesApply whenever the
+// server has told it something, and read here before the first pixel. The
+// database is still the truth; this is the truth's last known position.
+//
+// Only the four that are visible on a reading surface, plus the theme that
+// was already here. Anything that is not about how the page looks has no
+// business running before paint.
 const themeScript = `
 (function() {
+  var el = document.documentElement;
   try {
     var t = localStorage.getItem('theme');
     if (t === 'dark' || t === 'light') {
-      document.documentElement.dataset.theme = t;
+      el.dataset.theme = t;
     } else {
       var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.dataset.theme = prefersDark ? 'dark' : 'light';
+      el.dataset.theme = prefersDark ? 'dark' : 'light';
     }
+  } catch (e) {}
+  try {
+    var raw = localStorage.getItem('dw_prefs');
+    if (!raw) return;
+    var p = JSON.parse(raw);
+    // Each guarded on its own: a mirror written by an older build, or one a
+    // reader has poked at in devtools, must leave the app on its defaults
+    // rather than on an attribute the stylesheet has no rule for.
+    if (['small','medium','large','xlarge'].indexOf(p.text_size) >= 0) el.dataset.textSize = p.text_size;
+    if (['tight','normal','relaxed'].indexOf(p.line_spacing) >= 0) el.dataset.lineSpacing = p.line_spacing;
+    if (['serif','sans'].indexOf(p.reading_font) >= 0) el.dataset.readingFont = p.reading_font;
+    if (typeof p.verse_numbers === 'boolean') el.dataset.verseNumbers = p.verse_numbers ? 'on' : 'off';
   } catch (e) {}
 })();
 `;
@@ -128,6 +157,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Suspense fallback={null}>
           <RouteHistory />
         </Suspense>
+        {/* Installs the offline worker after load, on idle. See the file —
+            it is deliberately the last thing that happens on a cold visit. */}
+        <ServiceWorker />
         {children}
       </body>
     </html>

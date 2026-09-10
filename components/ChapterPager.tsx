@@ -2,6 +2,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { IDLE_AFTER_MS, requiredDwellMs } from "@/lib/readingPace";
+import { enqueue } from "@/lib/offline/queue";
+import { noteLocalRead, hasLocalRead } from "@/lib/offline/progress";
+import { reportOffline, reportOnline } from "@/lib/offline/useOnline";
 
 type Props = {
   dayNumber: number;
@@ -83,6 +86,23 @@ export default function ChapterPager({
   const lastActive = useRef(Date.now());
   const sent = useRef(alreadyRead);
 
+  // A chapter recorded with no signal is still recorded. The server row
+  // isn't there yet, so `alreadyRead` arrived false — but the reader read
+  // it, and coming back to it must not say otherwise, nor offer to record
+  // it a second time.
+  useEffect(() => {
+    if (alreadyRead) return;
+    let cancelled = false;
+    void hasLocalRead({ day_number: dayNumber, book, chapter }).then((yes) => {
+      if (cancelled || !yes) return;
+      sent.current = true;
+      setRecorded(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [alreadyRead, dayNumber, book, chapter]);
+
   useEffect(() => {
     if (typeof IntersectionObserver === "undefined") return;
 
@@ -142,27 +162,43 @@ export default function ChapterPager({
    *
    * "mark" mode, never a toggle — see /api/chapter-read. Re-reading a
    * chapter must not quietly un-record it.
+   *
+   * A failed request used to put the tick back and hope a later pass caught
+   * it. On a train there is no later pass — the reader walks fourteen
+   * chapters, every request fails, and the day ends up recording none of
+   * them. So a failure now goes into the queue instead, and the queue sends
+   * it when the signal comes back. The screen keeps saying "Read", because
+   * they did read it.
    */
   const record = useCallback(() => {
     if (!canRecord || sent.current) return;
     sent.current = true;
     setRecorded(true);
+
+    const payload = { day_number: dayNumber, book, chapter, mode: "mark" };
+
+    // Noted on the device first, so the day view is right the moment the
+    // reader gets back to it, with or without a network.
+    void noteLocalRead({ day_number: dayNumber, book, chapter });
+
     void fetch("/api/chapter-read", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        day_number: dayNumber,
-        book,
-        chapter,
-        mode: "mark"
-      }),
+      body: JSON.stringify(payload),
       keepalive: true
-    }).catch(() => {
-      // Let a later pass try again rather than losing the chapter to one
-      // bad request. Nothing is said: the reader is already reading on.
-      sent.current = false;
-      setRecorded(false);
-    });
+    })
+      .then((res) => {
+        reportOnline();
+        // A 5xx or a 401 is worth another go later; the endpoint already
+        // treats a duplicate as success, so re-sending costs nothing.
+        if (!res.ok && (res.status >= 500 || res.status === 401)) {
+          void enqueue("chapter-read", payload);
+        }
+      })
+      .catch(() => {
+        reportOffline();
+        void enqueue("chapter-read", payload);
+      });
   }, [canRecord, dayNumber, book, chapter]);
 
   function onNext() {

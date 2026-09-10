@@ -1,4 +1,5 @@
 "use client";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -14,6 +15,19 @@ import BackControl from "./BackControl";
 import PreferencesApply from "./PreferencesApply";
 import PreferencesNudge from "./PreferencesNudge";
 import { readPreferences, type Preferences } from "@/lib/preferences";
+
+/**
+ * The offline bar, loaded after the page rather than with it.
+ *
+ * It renders nothing at all in the ordinary case — online, nothing waiting
+ * — and none of what it does belongs on the critical path: claiming the
+ * device's store and replaying the write queue are both things that should
+ * happen a moment after the reader can see the page, not before. Kept out
+ * of the first-load bundle for the same reason BenchLayer is in
+ * ScriptureReader: it is real weight on every route in the app in exchange
+ * for a hairline of text almost nobody will see.
+ */
+const OfflineBar = dynamic(() => import("./OfflineBar"), { ssr: false });
 
 // The wide-screen bar and the phone's tab bar read the same list — see
 // lib/nav.tsx for why. There used to be a second list here naming
@@ -75,6 +89,9 @@ export default function Nav({ profile }: { profile?: NavProfile | null } = {}) {
   // for everyone else the component that would set it never mounts.
   const [pastoralMore, setPastoralMore] = useState(false);
   const [hasUser, setHasUser] = useState(given !== null);
+  // Who the offline store belongs to. The bar below claims it for this
+  // reader, and deletes it whole if it belonged to somebody else.
+  const [userId, setUserId] = useState<string | null>(given?.id ?? null);
   const [moreOpen, setMoreOpen] = useState(false);
   const [me, setMe] = useState<{ name: string; photoUrl: string | null } | null>(
     given ? { name: given.name, photoUrl: given.photo_url ?? null } : null
@@ -102,6 +119,7 @@ export default function Nav({ profile }: { profile?: NavProfile | null } = {}) {
         user = res.data.user ?? null;
         if (cancelled) return;
         setHasUser(!!user);
+        setUserId(user?.id ?? null);
       }
       if (!user) return;
       if (given) {
@@ -141,6 +159,13 @@ export default function Nav({ profile }: { profile?: NavProfile | null } = {}) {
       setReady(true);
       if (p) setMe({ name: p.name, photoUrl: p.photo_url ?? null });
       if (p) {
+        // The four facts the offline screens need, refreshed off a row this
+        // page had already paid for. See lib/offline/me.ts — it is not the
+        // profile, it is the short list that makes a chapter drawable in a
+        // tunnel.
+        void import("@/lib/offline/me").then((m) =>
+          m.rememberMe(user.id, p as Record<string, unknown>)
+        );
         setPrefs(readPreferences(p as Record<string, unknown>));
         // Absent column reads as "not seen" and the prompt shows once;
         // dismissing it remembers in the browser too, so a deployment
@@ -312,6 +337,14 @@ export default function Nav({ profile }: { profile?: NavProfile | null } = {}) {
         </div>
       </header>
       )}
+
+      {/* Outside the header's condition on purpose. Reading screens hide
+          the bar above for focus, and reading is exactly where somebody is
+          most likely to be offline — the tube, the plane, the church hall
+          with one bar of signal. A reader walking a day's chapters in a
+          tunnel needs to know the app is keeping them; that is worth one
+          hairline of the page. */}
+      <OfflineBar userId={userId} />
 
       {prefs && <PreferencesApply prefs={prefs} />}
 

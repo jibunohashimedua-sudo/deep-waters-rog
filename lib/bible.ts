@@ -162,6 +162,112 @@ async function writeSharedCache(
   }
 }
 
+/**
+ * Many chapters out of the shared cache in one query, and nothing else.
+ *
+ * Added for the offline download, which asks for chapters twenty-five at a
+ * time. Going through fetchChapter for each of those would be twenty-five
+ * separate `bible_cache` round trips to answer one batch, and on the warm
+ * cache — which is most of the plan, most of the time — those round trips
+ * are the entire cost of the request.
+ *
+ * Deliberately cache-only. It never calls API.Bible and never writes
+ * anything: the caller decides, against its own budget, whether a miss is
+ * worth spending a live fetch on, and fetchChapter still owns every fetch
+ * and every write. This is a faster way to ask the same question of the
+ * same table, not a second cache.
+ *
+ * Returns a map of `book.chapter` → text, holding only what was found.
+ */
+export async function readCachedChapters(
+  bibleId: string,
+  refs: { book: string; chapter: number }[]
+): Promise<Map<string, ChapterText>> {
+  const found = new Map<string, ChapterText>();
+  if (refs.length === 0) return found;
+
+  // The per-process cache first: a repeated batch in the same lambda, or a
+  // chapter already read this invocation, costs nothing.
+  const outstanding: { book: string; chapter: number }[] = [];
+  for (const ref of refs) {
+    const hot = memoryCache.get(cacheKey(bibleId, ref.book, ref.chapter));
+    if (hot) found.set(`${ref.book}.${ref.chapter}`, hot);
+    else outstanding.push(ref);
+  }
+  if (outstanding.length === 0 || sharedCacheUnavailable) return found;
+
+  const sb = getServiceClient();
+  if (!sb) return found;
+
+  // `in` on both columns rather than a compound filter: PostgREST has no
+  // tuple-IN, so this over-fetches the cross product and the check below
+  // throws away what wasn't asked for. At twenty-five chapters spanning at
+  // most a handful of books that is a small over-read for one round trip
+  // instead of twenty-five.
+  const books = Array.from(new Set(outstanding.map((r) => r.book)));
+  const chapters = Array.from(new Set(outstanding.map((r) => r.chapter)));
+  const wanted = new Set(outstanding.map((r) => `${r.book}.${r.chapter}`));
+
+  const { data, error } = await sb
+    .from("bible_cache")
+    .select("book, chapter, reference, content, fetched_at")
+    .eq("bible_id", bibleId)
+    .in("book", books)
+    .in("chapter", chapters);
+
+  if (error) {
+    if (isMissingTable(error.message)) sharedCacheUnavailable = true;
+    else console.error("[deep-waters] bible_cache batch read:", error.message);
+    return found;
+  }
+
+  for (const row of data ?? []) {
+    const id = `${row.book}.${row.chapter}`;
+    if (!wanted.has(id)) continue;
+    const age = Date.now() - new Date(row.fetched_at as string).getTime();
+    if (age > CACHE_TTL_MS) continue;
+    const text: ChapterText = {
+      reference: row.reference as string,
+      content: row.content as string
+    };
+    memoryCache.set(cacheKey(bibleId, row.book as string, row.chapter as number), text);
+    found.set(id, text);
+  }
+
+  return found;
+}
+
+/**
+ * How many chapters the whole church has had to fetch live in the last day.
+ *
+ * This is the budget the offline download spends against, and it is measured
+ * rather than tracked: every live fetch writes a row here with a fresh
+ * `fetched_at`, so counting recent rows *is* counting recent API.Bible
+ * calls. No new table, no counter to keep in step, and it caps the thing
+ * that actually matters — the shared key — rather than capping each member
+ * separately and letting four of them exhaust it between them.
+ *
+ * Returns null when it cannot be known, which the caller treats as "do not
+ * spend": refusing to start a download is recoverable, and running the
+ * church out of scripture for the rest of the day is not.
+ */
+export async function liveFetchesInLastDay(): Promise<number | null> {
+  if (sharedCacheUnavailable) return null;
+  const sb = getServiceClient();
+  if (!sb) return null;
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { count, error } = await sb
+    .from("bible_cache")
+    .select("*", { count: "exact", head: true })
+    .gte("fetched_at", since);
+  if (error) {
+    if (isMissingTable(error.message)) sharedCacheUnavailable = true;
+    else console.error("[deep-waters] bible_cache budget count:", error.message);
+    return null;
+  }
+  return count ?? 0;
+}
+
 // ---------------------------------------------------------------- fetching
 
 /**
