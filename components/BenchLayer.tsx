@@ -38,6 +38,11 @@ import BenchPaneBoundary from "./BenchPaneBoundary";
 import BenchNotepad from "./BenchNotepad";
 import type { HouseRow } from "./BenchHouse";
 import BenchSermonPicker from "./BenchSermonPicker";
+import BenchDivider from "./BenchDivider";
+import {
+  BENCH_WIDTH_VAR, DEFAULT_FRACTION, NOTES_BESIDE_MIN_PX, RACK_TWO_MIN_PX,
+  readStoredFraction, widthFor, writeStoredFraction
+} from "@/lib/benchSplit";
 import BenchSecondText, {
   SECOND_TEXT_MAX_VERSES, type SecondPassage
 } from "./BenchSecondText";
@@ -456,6 +461,51 @@ export default function BenchLayer(props: Props) {
       cancelAnimationFrame(inner);
     };
   }, [wordScrollSignal, activeWordKey, open]);
+
+  // ------------------------------------------------------------- the split
+  //
+  // One number: the Bench's share of the window. It is written to a single
+  // CSS property, and every rule that used to carry a hard-coded width now
+  // reads that property — the Bench's own width, the padding that keeps
+  // the reader clear of it, and the right edge of the verse toolbar.
+  const [fraction, setFraction] = useState<number>(DEFAULT_FRACTION[mode]);
+
+  // What was left last time, for this layout on this device. Read after
+  // mount so the server and the first paint agree.
+  useEffect(() => {
+    setFraction(readStoredFraction(mode) ?? DEFAULT_FRACTION[mode]);
+  }, [mode]);
+
+  const applyWidth = useCallback((f: number) => {
+    const px = widthFor(f, window.innerWidth);
+    const root = document.documentElement;
+    root.style.setProperty(BENCH_WIDTH_VAR, `${px}px`);
+    // What the Bench has room for, decided from the same number and
+    // written as plain attributes so the rearranging keeps up with the
+    // finger without React re-rendering for it.
+    root.dataset.benchNarrow = px < NOTES_BESIDE_MIN_PX ? "true" : "false";
+    root.dataset.benchRackTwo = px >= RACK_TWO_MIN_PX ? "true" : "false";
+  }, []);
+
+  const commitWidth = useCallback(
+    (f: number) => {
+      setFraction(f);
+      applyWidth(f);
+      writeStoredFraction(mode, f);
+    },
+    [applyWidth, mode]
+  );
+
+  // Keep the width honest as the window changes: a rotation or a Split
+  // View drag can put a pane under its floor, and clamping happens inside
+  // widthFor so the divider simply stops rather than collapsing a pane.
+  useEffect(() => {
+    if (!open || sheet) return;
+    applyWidth(fraction);
+    const onResize = () => applyWidth(fraction);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [open, sheet, fraction, applyWidth]);
 
   // The reader column gets out of the way of a Bench that is a column.
   // Done on <html> with a width variable rather than by re-rendering the
@@ -887,6 +937,17 @@ export default function BenchLayer(props: Props) {
       aria-modal={sheet ? "true" : undefined}
       aria-label={`The Bench, ${reference}`}
     >
+      {/* The one divider. There is no second one anywhere inside the
+          Bench: everything in there reflows on the width it is given
+          instead. */}
+      {!sheet && (
+        <BenchDivider
+          fraction={fraction}
+          onPreview={applyWidth}
+          onCommit={commitWidth}
+        />
+      )}
+
       {/* The grab handle. One tap collapses the Bench back to the toolbar;
           it never goes straight to closed, because the verse you selected
           is still selected and closing it would be answering a question

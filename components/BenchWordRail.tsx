@@ -25,6 +25,28 @@ type Props = {
 export default function BenchWordRail({ words, activeKey, onPick }: Props) {
   const railRef = useRef<HTMLDivElement>(null);
 
+  // The fade at the right edge promises more chips off-screen, so it has
+  // to go once there are none. Watched rather than assumed: the rail is
+  // scrolled by finger, by the keyboard moving focus through the chips,
+  // and by the code that keeps the chosen one in view.
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+    const update = () => {
+      const atEnd = rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 2;
+      if (atEnd) rail.dataset.atEnd = "true";
+      else delete rail.dataset.atEnd;
+    };
+    update();
+    rail.addEventListener("scroll", update, { passive: true });
+    const ro = new ResizeObserver(update);
+    ro.observe(rail);
+    return () => {
+      rail.removeEventListener("scroll", update);
+      ro.disconnect();
+    };
+  }, [words]);
+
   // The chosen chip stays where it can be seen. Chosen from the Words lens
   // rather than the rail, it may be off the right-hand edge; this brings it
   // just inside, scrolling the strip alone.

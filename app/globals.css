@@ -1856,8 +1856,13 @@ input::placeholder, textarea::placeholder {
    on a layout change: a rotation that dissolves between two layouts
    looks broken, and a fold is not a transition.
    ========================================================= */
+/* The width before the script has set one. Declared once, so even the
+   fallback is not a number copied about. */
+html { --bench-w-fallback: min(760px, 62vw); }
+
 .bench {
   position: fixed;
+  min-width: 0;
   z-index: 65;
   display: flex;
   flex-direction: column;
@@ -1891,7 +1896,6 @@ input::placeholder, textarea::placeholder {
   top: 0;
   right: 0;
   bottom: 0;
-  width: min(420px, 46vw);
   border-left: 1px solid var(--line);
   padding-right: env(safe-area-inset-right);
   padding-top: env(safe-area-inset-top);
@@ -1907,8 +1911,14 @@ input::placeholder, textarea::placeholder {
   padding-right: env(safe-area-inset-right);
   padding-top: env(safe-area-inset-top);
 }
-.bench[data-mode="desk"] { width: min(760px, 62vw); }
-.bench[data-mode="wide"] { width: min(1040px, 66vw); }
+/* One number, set by lib/benchSplit.ts. The fallbacks are what the app
+   used before the divider existed, and only ever apply for the instant
+   before the script sets the property. */
+.bench[data-mode="split"],
+.bench[data-mode="desk"],
+.bench[data-mode="wide"] {
+  width: var(--bench-w, var(--bench-w-fallback));
+}
 
 /* ---- Folding phones ------------------------------------------------
    Where the browser reports segments, the boundary goes on the seam
@@ -1955,23 +1965,15 @@ input::placeholder, textarea::placeholder {
 /* The reader gets out of the way of a Bench that is a column. Done with
    padding on the body rather than by re-rendering the page, so the
    chapter keeps its scroll position when the layout changes. */
+/* Nine hard-coded lengths used to live here — three widths for three
+   jobs — and changing the split meant finding all nine. There is one
+   number now, and these are the only two rules that read it besides the
+   Bench's own width. */
 html[data-bench="beside"] body {
-  padding-right: min(420px, 46vw);
-}
-html[data-bench="beside"][data-bench-mode="desk"] body {
-  padding-right: min(760px, 62vw);
-}
-html[data-bench="beside"][data-bench-mode="wide"] body {
-  padding-right: min(1040px, 66vw);
+  padding-right: var(--bench-w, var(--bench-w-fallback));
 }
 html[data-bench="beside"] .verse-bar {
-  right: min(420px, 46vw);
-}
-html[data-bench="beside"][data-bench-mode="desk"] .verse-bar {
-  right: min(760px, 62vw);
-}
-html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
-  right: min(1040px, 66vw);
+  right: var(--bench-w, var(--bench-w-fallback));
 }
 
 /* The grab handle. One tap collapses the Bench back onto the toolbar. */
@@ -4431,3 +4433,146 @@ html[data-bench="beside"] main.parallel-single {
   text-underline-offset: 2px;
 }
 .bench-source-link:hover { color: var(--accent); }
+
+/* =========================================================
+   THE DIVIDER
+   One handle, between the reader and the Bench, and nowhere else.
+   ========================================================= */
+
+/* What you grab. Far wider than what you see, because on an iPad the
+   thing doing the grabbing is a fingertip. Centred on the boundary, so
+   the width either side of the line is the same. */
+.bench-divider {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: var(--bench-w, var(--bench-w-fallback));
+  z-index: 66;                 /* above the Bench's own edge */
+  width: 28px;
+  margin-right: -14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: col-resize;
+  background: transparent;
+  /* Without this a drag on iPad scrolls the page instead of moving the
+     divider, because the browser claims the gesture first. */
+  touch-action: none;
+}
+
+/* What you see: the hairline the Bench already had. It thickens under a
+   pointer and while dragging, and takes the accent so it reads as a
+   control rather than as the edge of a box. */
+.bench-divider-line {
+  width: 1px;
+  height: 100%;
+  background: var(--line);
+  transition: width 0.12s ease, background-color 0.12s ease;
+}
+.bench-divider:hover .bench-divider-line,
+.bench-divider:focus-visible .bench-divider-line,
+.bench-divider[data-dragging="true"] .bench-divider-line {
+  width: 3px;
+  background: var(--accent);
+}
+.bench-divider:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+/* While dragging, the whole window keeps the resize cursor even when the
+   pointer runs ahead of the line. */
+.bench-divider[data-dragging="true"] { cursor: col-resize; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bench-divider-line { transition: none; }
+}
+
+/* The Bench draws its own left edge, so with the divider sitting on it
+   there is no need for two lines in the same place. */
+html[data-bench="beside"] .bench { border-left-color: transparent; }
+
+/* =========================================================
+   REFLOW INSIDE THE BENCH
+   No second divider in here. Everything answers to the width the Bench
+   has actually been given, which is why the body is a container.
+   Deliberately not on .bench itself: inline-size containment would make
+   it the containing block for the pickers it renders, which are fixed to
+   the viewport on purpose.
+   ========================================================= */
+/* Notes sits beside the lenses only when both can be themselves. Below
+   that it drops underneath, which is what keeps the Bench's minimum width
+   honest — the lens column never has to share with a 300px column there
+   is no room for. Driven by data-bench-narrow, set from the same width
+   the divider is writing. */
+html[data-bench-narrow="true"] .bench[data-mode="desk"] .bench-body,
+html[data-bench-narrow="true"] .bench[data-mode="wide"] .bench-body {
+  grid-template-columns: minmax(0, 1fr);
+}
+html[data-bench-narrow="true"] .bench-notes-col {
+  position: static;
+  border-left: 0;
+  border-top: 1px solid var(--line);
+  padding-left: 0;
+  padding-top: 16px;
+}
+
+/* Two columns of panels only when two columns fit. This used to depend on
+   the window being 1500px wide, which stopped being true the moment the
+   Bench could be dragged narrow inside a wide window. */
+html[data-bench-rack-two="false"] .bench[data-mode="wide"] .bench-rack {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* A long unbroken word — a Greek lemma, a URL — otherwise refuses to let
+   its column shrink, and the divider appears to stick for reasons nobody
+   can see. Straight from the parallel Bible panes, where the same thing
+   was learned. */
+.bench-body,
+.bench-rack,
+.bench-panel,
+.bench-notes-col,
+.bench-pinned,
+.bench-second,
+.bench-lens-body {
+  min-width: 0;
+}
+
+/* The pinned reference must not be the thing that gets squeezed as the
+   Bench narrows — that is the mistake the parallel pair-bar was built to
+   undo. It wraps instead. */
+.bench-head { flex-wrap: wrap; }
+.bench-second-head { min-width: 0; }
+
+/* =========================================================
+   THE WORD RAIL
+   It scrolls sideways, and now says so.
+   ========================================================= */
+.bench-rail {
+  /* The chips nearest the right edge fade out, so a row that continues
+     looks like a row that continues. A mask, not an overlay: it adds no
+     colour and works on either theme. */
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+}
+/* Scrolled to the end there is nothing more to promise, so the fade goes. */
+.bench-rail[data-at-end="true"] {
+  mask-image: none;
+  -webkit-mask-image: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bench-rail { scroll-behavior: auto; }
+}
+
+/* =========================================================
+   THE VERSE TOOLBAR AND THE LAST VERSE
+   The bar is fixed to the bottom of the window, so without room made for
+   it the last verses of a chapter sit underneath it. The bar publishes
+   its own height — it wraps to two or three rows depending on width — and
+   the reading surface leaves exactly that much room, plus its own.
+   Every reading screen, not only the split one.
+   ========================================================= */
+main[data-surface="reading"] {
+  padding-bottom: calc(2.5rem + var(--verse-bar-h, 0px));
+}

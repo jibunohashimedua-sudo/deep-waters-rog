@@ -1,6 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   HIGHLIGHT_COLOURS,
   highlightName,
@@ -84,6 +84,38 @@ export default function VerseToolbar({
 }: Props) {
   const [showColours, setShowColours] = useState(false);
 
+  const barRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Tell the page how tall this bar is.
+   *
+   * It is fixed to the bottom of the window, so without room made for it
+   * the last verses of a chapter sit underneath it — and its height is not
+   * a constant: the actions wrap to two or three rows depending on how
+   * wide the window is, and it carries the safe-area inset on a notched
+   * phone. Measuring it and publishing the number is the only way the
+   * reading surface can leave exactly the right amount of room.
+   */
+  useEffect(() => {
+    const el = barRef.current;
+    const root = document.documentElement;
+    if (!el) return;
+    if (!open) {
+      root.style.setProperty("--verse-bar-h", "0px");
+      return;
+    }
+    const measure = () => {
+      root.style.setProperty("--verse-bar-h", `${Math.round(el.offsetHeight)}px`);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      root.style.setProperty("--verse-bar-h", "0px");
+    };
+  }, [open]);
+
   // Coming back to a fresh selection should never land on the swatch row —
   // the first question is always what to do, not which colour.
   useEffect(() => {
@@ -92,6 +124,7 @@ export default function VerseToolbar({
 
   return (
     <div
+      ref={barRef}
       className="verse-bar"
       data-open={open ? "true" : undefined}
       role="dialog"

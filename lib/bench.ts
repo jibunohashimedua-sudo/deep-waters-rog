@@ -7,6 +7,8 @@
  * the renderer.
  */
 
+import { SPLIT_MIN_WINDOW_PX } from "./benchSplit";
+
 export type LensId =
   | "translations"
   | "words"
@@ -137,6 +139,10 @@ export function modeForViewport(
   // width, and let the CSS align the boundary to the seam.
   if (segments === "horizontal" && width < 1024) return "split";
   if (segments === "vertical" && width < 1024) return "split";
+  // Too narrow to give both sides a workable width, so there is no split
+  // worth having: the reader takes the window and the Bench is a sheet
+  // over it, exactly as on a phone. See READER_MIN_PX and BENCH_MIN_PX.
+  if (width < SPLIT_MIN_WINDOW_PX && height >= 500) return "sheet";
   if (width >= 1500) return "wide";
   if (width >= 1024) return "desk";
   if (width >= 600) return "split";

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { modeForViewport, type BenchMode, type Segments } from "@/lib/bench";
+import { SPLIT_MIN_WINDOW_PX } from "@/lib/benchSplit";
 
 /**
  * Which layout the Bench is in, measured and never guessed.
@@ -21,9 +22,15 @@ import { modeForViewport, type BenchMode, type Segments } from "@/lib/bench";
  * the answers are turned back into a representative width and height so the
  * rule itself lives in exactly one place.
  */
+// The width is read in buckets, one per threshold the rule table cares
+// about — and the smallest-split threshold has to be one of them. Without
+// its own step, a 834px iPad in portrait was measured as "600 or more",
+// compared against the 820px minimum, and sent to a sheet: the number was
+// right and the thing it was measured against was not.
 const WIDTH_STEPS: [string, number][] = [
   ["(min-width: 1500px)", 1500],
   ["(min-width: 1024px)", 1024],
+  [`(min-width: ${SPLIT_MIN_WINDOW_PX}px)`, SPLIT_MIN_WINDOW_PX],
   ["(min-width: 600px)", 600]
 ];
 const TALL = "(min-height: 500px)";
