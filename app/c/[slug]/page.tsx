@@ -3,9 +3,9 @@ import Link from "next/link";
 import Check from "@/components/Check";
 import { createClient } from "@/lib/supabase/server";
 import CohortShareBox from "@/components/CohortShareBox";
-import BackButton from "@/components/BackButton";
 import CohortGone from "@/components/CohortGone";
 import Mark from "@/components/Mark";
+import BackControl from "@/components/BackControl";
 import { redirect } from "next/navigation";
 
 export default async function CohortLandingPage({
@@ -115,10 +115,14 @@ export default async function CohortLandingPage({
       <section className="bg-rog-purple text-white relative">
         {user && (
           <div className="absolute top-4 left-4 z-10">
-            <Link href="/today" className="glass-dark inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm text-white font-medium hover:bg-white/25 transition">
-              <span aria-hidden>&larr;</span>
-              <span>Back to app</span>
-            </Link>
+            {/* Was a Link to /today, which took a member who had come
+                from People back to the front door instead of to People.
+                Same treatment, the app's one back behaviour. */}
+            <BackControl
+              variant="on-dark"
+              fallbackHref="/community?view=cohorts"
+              label="Back"
+            />
           </div>
         )}
         <div className="max-w-3xl mx-auto px-6 py-16 text-center">

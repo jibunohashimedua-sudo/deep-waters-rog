@@ -3697,15 +3697,21 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   padding: var(--sp-2) var(--sp-4) var(--sp-7);
 }
 
+/* Back, the mark, the menu. A grid rather than space-between, so the
+   mark holds the middle whatever is either side of it — and so it stays
+   centred on paper, where back and the menu are both gone. */
 .sermon-read-head {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   padding-bottom: var(--sp-3);
   border-bottom: 1px solid var(--line);
 }
+.sermon-read-head > .reading-back { justify-self: start; margin-left: -10px; }
+.sermon-read-head > .sermon-read-menu { justify-self: end; }
 .sermon-read-brand {
+  justify-self: center;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -3926,6 +3932,7 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
     padding: 0;
   }
   .sermon-read-head {
+    display: block;
     border-bottom: 1px solid #bbb;
     padding-bottom: 8pt;
   }

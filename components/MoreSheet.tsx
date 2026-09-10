@@ -139,7 +139,9 @@ export default function MoreSheet({
   async function signOut() {
     onClose();
     await supabase.auth.signOut();
-    router.push("/");
+    // replace: signing out and pressing back should not put a signed-in
+    // screen in front of somebody who has just left.
+    router.replace("/");
   }
 
 

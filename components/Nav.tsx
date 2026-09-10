@@ -10,6 +10,7 @@ import Mark from "./Mark";
 import EliteLockup from "./EliteLockup";
 import { backHrefFor, isReadingRoute } from "@/lib/routes";
 import { navTabsFor, MORE_ICON, moreMatches } from "@/lib/nav";
+import BackControl from "./BackControl";
 import PreferencesApply from "./PreferencesApply";
 import PreferencesNudge from "./PreferencesNudge";
 import { readPreferences, type Preferences } from "@/lib/preferences";
@@ -153,13 +154,18 @@ export default function Nav() {
   // shortcut that redirects into it, and its own header carries the
   // prev/next arrows and the day picker, so the app-bar back would be
   // a second answer to the same question.
-  const mainRoutes = ["/today", "/bible", "/community", "/leaderboard", "/cohorts", "/finishers", "/depth", "/admin", "/notifications"];
+  // The four tabs, and the routes that redirect into them. Nothing else
+  // belongs here: /admin and /notifications used to, and neither is a
+  // tab — they are reached from the More sheet and the app bar, so they
+  // had no way back at all except the tab bar underneath them.
+  const mainRoutes = ["/today", "/bible", "/community", "/leaderboard", "/cohorts", "/finishers", "/depth"];
   const isDayRoute = pathname === "/day" || pathname.startsWith("/day/");
   const showBack = !mainRoutes.includes(pathname) && !isDayRoute;
 
-  // A named destination wherever we have one, so back always means the
-  // page above this one rather than whatever the history stack happens to
-  // hold. History stays as the fallback for anything unmapped.
+  // Where "up" is, for a reader who arrived cold and has nothing of ours
+  // behind them. When they do have something behind them the control pops
+  // it instead, so the app bar and the device's own gesture agree — see
+  // components/BackControl.
   const backHref = backHrefFor(pathname);
 
   // On a reading screen the sticky reading header is the only chrome, so
@@ -177,26 +183,9 @@ export default function Nav() {
       <header className="glass-nav safe-top-bar sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 shrink-0">
-            {showBack &&
-              (backHref ? (
-                <Link
-                  href={backHref}
-                  className="glass-chip inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium text-rog-purple hover:opacity-70 transition"
-                  aria-label="Go back"
-                >
-                  <span aria-hidden>&larr;</span>
-                  <span className="hidden sm:inline">Back</span>
-                </Link>
-              ) : (
-                <button
-                  onClick={() => router.back()}
-                  className="glass-chip inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium text-rog-purple hover:opacity-70 transition"
-                  aria-label="Go back"
-                >
-                  <span aria-hidden>&larr;</span>
-                  <span className="hidden sm:inline">Back</span>
-                </button>
-              ))}
+            {showBack && (
+              <BackControl fallbackHref={backHref ?? "/today"} />
+            )}
             {/* The one always-on signal that Elite is active. Same size,
                 same place, same tokens as the standard lockup — it is the
                 same app with more in it. A member never sees it. */}

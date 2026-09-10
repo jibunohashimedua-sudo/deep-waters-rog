@@ -3,6 +3,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Mark from "@/components/Mark";
+import BackControl from "@/components/BackControl";
+import { noteBack } from "@/lib/navHistory";
 import { friendlyError } from "@/lib/errors";
 import { humanDate } from "@/lib/dates";
 import {
@@ -185,7 +187,12 @@ export default function SermonReader({
         setBusy(false);
         return;
       }
-      router.push("/sermons");
+      // replace, not push: the sermon this page was showing no longer
+      // exists, so it must not be left in the stack for the back gesture
+      // to walk into. noteBack keeps the depth honest with the entry
+      // that just went.
+      noteBack();
+      router.replace("/sermons");
     } catch (e: any) {
       setError(friendlyError(e?.message));
       setBusy(false);
@@ -201,15 +208,23 @@ export default function SermonReader({
           which is why the mark and the title live in one block rather
           than being assembled by the page around them. */}
       <header className="sermon-read-head">
+        {/* Back sits top left, in the same shape and the same place as
+            the Bible reader's — this page had no back control at all,
+            only a "Sermons" link over by the dots, which read as part of
+            the menu and was a forward navigation besides. */}
+        <BackControl
+          variant="bare"
+          fallbackHref="/sermons"
+          label="Back to your sermons"
+          className="no-print"
+        />
+
         <div className="sermon-read-brand">
           <Mark size={26} />
           <span className="sermon-read-wordmark">Deep Waters</span>
         </div>
 
         <div className="sermon-read-menu no-print">
-          <Link href="/sermons" className="sermon-read-back">
-            Sermons
-          </Link>
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}

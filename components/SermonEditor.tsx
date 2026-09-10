@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import SelectSheet from "@/components/SelectSheet";
@@ -9,6 +8,7 @@ import {
   SERMON_PASSAGE_MAX,
   SERMON_BLOCK_TEXT_MAX
 } from "@/lib/limits";
+import BackControl from "@/components/BackControl";
 import SermonScriptureInput from "@/components/SermonScriptureInput";
 import { newBlockId, type SermonBlock, type SermonBlockKind } from "@/lib/sermons";
 
@@ -438,9 +438,14 @@ export default function SermonEditor({
           sermon is one place too many, and the riskier of the two is the
           screen you are typing in. */}
       <div className="mt-8 flex justify-center">
-        <Link href={`/sermons/${id}`} className="meta">
-          Done editing
-        </Link>
+        {/* A back, not a link to the same page: the read view is where
+            this was opened from, and pushing it again would leave the
+            editor sitting behind it for the back gesture to find. */}
+        <BackControl
+          variant="bare"
+          fallbackHref={`/sermons/${id}`}
+          label="Done editing"
+        />
       </div>
 
     </>

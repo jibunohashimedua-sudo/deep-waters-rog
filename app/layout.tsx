@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans, IBM_Plex_Mono, Literata } from "next/font/google";
 import "./globals.css";
 import SplashScreen from "@/components/SplashScreen";
+import RouteHistory from "@/components/RouteHistory";
 
 // Self-hosted at build time rather than pulled from Google at run time.
 // globals.css used to open with an @import of the Google Fonts stylesheet,
@@ -120,6 +122,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <SplashScreen />
+        {/* Counts navigations so every back control in the app can tell
+            a page it can pop from a cold arrival it cannot. Inside a
+            boundary because it reads the query string. */}
+        <Suspense fallback={null}>
+          <RouteHistory />
+        </Suspense>
         {children}
       </body>
     </html>

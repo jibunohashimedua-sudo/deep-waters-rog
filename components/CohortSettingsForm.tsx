@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { noteBack } from "@/lib/navHistory";
 import {
   COHORT_NAME_MAX,
   COHORT_DESCRIPTION_MAX,
@@ -73,8 +74,16 @@ export default function CohortSettingsForm({
 
   async function del() {
     const { error } = await supabase.from("cohorts").delete().eq("id", cohortId);
-    if (error) setMsg(error.message);
-    else router.push("/cohorts");
+    if (error) {
+      setMsg(error.message);
+      return;
+    }
+    // replace, not push: this page is about a cohort that no longer
+    // exists, so the back gesture must not be able to walk into it.
+    // Straight to People rather than through /cohorts, which is itself
+    // only a redirect.
+    noteBack();
+    router.replace("/community?view=cohorts");
   }
 
   return (

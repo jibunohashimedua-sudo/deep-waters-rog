@@ -42,8 +42,9 @@ export function backHrefFor(pathname: string): string | null {
     case "read":
       return "/today";
 
+    // /me is itself a redirect to /depth, so climbing to it would bounce.
     case "me":
-      return seg.length > 1 ? "/me" : "/today";
+      return "/depth";
 
     // /bible/[book] climbs to the book list; a chapter climbs to its book.
     // (Chapters are reading routes, where the reading header carries this
@@ -57,18 +58,47 @@ export function backHrefFor(pathname: string): string | null {
     // /admin/notes/12 -> /admin/notes -> /admin. One segment at a time.
     case "admin":
       if (seg.length === 1) return null;
+      // Except the figure drill-downs, where climbing one segment lands
+      // on /admin/figures — which is not a page. They hang off the
+      // dashboard, so that is where up goes.
+      if (seg[1] === "figures") return "/admin";
       return `/${seg.slice(0, -1).join("/")}`;
 
     case "cohorts":
-      if (seg.length === 1) return null;
+      // The bare /cohorts route is a redirect into People; a cold back
+      // should go where it would have landed rather than through it.
+      if (seg.length === 1) return "/community?view=cohorts";
       // Managing a cohort climbs to that cohort's own page, not the list.
       if (seg.length >= 3 && seg[2] === "manage") return `/c/${seg[1]}`;
-      return "/cohorts";
+      return "/community?view=cohorts";
 
+    // Reached from the More sheet, so "up" is the app's front door.
+    // These matter only for somebody who arrived cold — from a
+    // notification, a shared link, a home-screen shortcut — because
+    // anybody with history behind them gets that popped instead. See
+    // components/BackControl.
     case "announcements":
     case "testimonials":
     case "prayer":
+    case "preferences":
+    case "pulse":
+    case "finished":
       return "/today";
+
+    // The pastoral workspace. A sermon climbs to the list; the list is
+    // reached from More, so it climbs to the front door.
+    case "sermons":
+      if (seg.length === 1) return "/today";
+      if (seg.length >= 3 && seg[2] === "edit") return `/sermons/${seg[1]}`;
+      return "/sermons";
+
+    // The private owner's own section.
+    case "private":
+      return seg.length > 1 ? "/private" : "/today";
+
+    // A cohort's public page. Somebody signed in came from People.
+    case "c":
+      return "/community?view=cohorts";
 
     default:
       return null;

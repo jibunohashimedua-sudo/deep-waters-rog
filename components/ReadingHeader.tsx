@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import TranslationSwitcher from "./TranslationSwitcher";
 import ReferencePicker from "./ReferencePicker";
+import BackControl from "./BackControl";
 
 type Props = {
   /** Where the back chevron goes — the day, or the book's chapter list. */
@@ -86,9 +87,7 @@ export default function ReadingHeader({
         data-condensed={condensed ? "true" : undefined}
         aria-label="Reading"
       >
-        <Link href={backHref} className="reading-back" aria-label={backLabel}>
-          Back
-        </Link>
+        <BackControl variant="bare" fallbackHref={backHref} label={backLabel} />
 
         {/* The condensed reference, which is also the picker once it has
             faded up. It is invisible and unpressable until then — see
