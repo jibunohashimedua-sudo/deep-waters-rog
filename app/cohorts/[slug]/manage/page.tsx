@@ -13,7 +13,7 @@ export default async function CohortManagePage({
 }: {
   params: { slug: string };
 }) {
-  const { userId } = await requireProfile();
+  const { userId, profile } = await requireProfile();
   const supabase = createClient();
 
   const { data: cohort } = await supabase
@@ -64,7 +64,7 @@ export default async function CohortManagePage({
 
   return (
     <>
-      <Nav />
+      <Nav profile={profile} />
       <main className="max-w-4xl mx-auto px-6 py-10">
         {/* The app bar's arrow goes back to the cohort itself. */}
         <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">{cohort.name}</h1>

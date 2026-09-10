@@ -38,45 +38,79 @@ import { readPreferences, type Preferences } from "@/lib/preferences";
  */
 let cachedNav: { isAdmin: boolean; isPastoral: boolean; isPrivate: boolean } | null = null;
 
-export default function Nav() {
+/** What the bar needs to know about you. Every field is already on the
+    profile row the server fetched for this request, so a page that has one
+    can hand it over and save the bar two round trips. */
+export type NavProfile = Record<string, unknown> & {
+  id: string;
+  name: string;
+  photo_url: string | null;
+  role?: string | null;
+  is_pastoral?: boolean | null;
+  is_private?: boolean | null;
+  prefs_intro_seen?: boolean | null;
+};
+
+export default function Nav({ profile }: { profile?: NavProfile | null } = {}) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  // The bar's own reading of the profile, whichever way it arrived. A
+  // server-rendered page hands its row down as `profile`; anything that
+  // cannot (a loading.tsx, a static client page) leaves it undefined and
+  // the effect below asks Supabase as it always did.
+  const given = profile ?? null;
   const [unread, setUnread] = useState(0);
-  const [isAdmin, setIsAdmin] = useState(() => cachedNav?.isAdmin ?? false);
+  const [isAdmin, setIsAdmin] = useState(() => (given ? given.role === "admin" : cachedNav?.isAdmin ?? false));
   // The Elite gate, read in the same breath as the role so there is one
   // place in the client that decides who is pastoral.
-  const [isPastoral, setIsPastoral] = useState(() => cachedNav?.isPastoral ?? false);
+  const [isPastoral, setIsPastoral] = useState(() => (given ? given.is_pastoral === true : cachedNav?.isPastoral ?? false));
   // The private member's shape of the app. The bar holds still until this
   // is known rather than drawing a People tab and taking it away a beat
   // later — see cachedNav above.
-  const [isPrivate, setIsPrivate] = useState(() => cachedNav?.isPrivate ?? false);
-  const [ready, setReady] = useState(() => cachedNav !== null);
+  const [isPrivate, setIsPrivate] = useState(() => (given ? given.is_private === true : cachedNav?.isPrivate ?? false));
+  const [ready, setReady] = useState(() => given !== null || cachedNav !== null);
   // Reported up by the pastoral rows in the More sheet, which are the only
   // place that knows those routes' names. False for everyone else, because
   // for everyone else the component that would set it never mounts.
   const [pastoralMore, setPastoralMore] = useState(false);
-  const [hasUser, setHasUser] = useState(false);
+  const [hasUser, setHasUser] = useState(given !== null);
   const [moreOpen, setMoreOpen] = useState(false);
-  const [me, setMe] = useState<{ name: string; photoUrl: string | null } | null>(null);
+  const [me, setMe] = useState<{ name: string; photoUrl: string | null } | null>(
+    given ? { name: given.name, photoUrl: given.photo_url ?? null } : null
+  );
   // The reader's own settings, applied to the document wherever they are
   // signed in. Read off the profile query already going out below rather
   // than costing a second one.
-  const [prefs, setPrefs] = useState<Preferences | null>(null);
+  const [prefs, setPrefs] = useState<Preferences | null>(given ? readPreferences(given) : null);
   // Members who were here before Preferences existed get one quiet
   // pointer at it. `null` means we don't know yet and show nothing.
-  const [introSeen, setIntroSeen] = useState<boolean | null>(null);
+  const [introSeen, setIntroSeen] = useState<boolean | null>(given ? given.prefs_intro_seen === true : null);
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
     let cancelled = false;
     (async () => {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
-      if (cancelled) return;
-      setHasUser(!!user);
+      // Two round trips the bar used to make on every single page — an
+      // auth check and a profiles row — for a row the server had already
+      // read to render the page around it. When the page hands it down we
+      // skip straight to the unread count, which is the one thing on this
+      // bar the server does not already know.
+      let user: { id: string } | null = given ? { id: given.id } : null;
+      if (!user) {
+        const res = await supabase.auth.getUser();
+        user = res.data.user ?? null;
+        if (cancelled) return;
+        setHasUser(!!user);
+      }
       if (!user) return;
+      if (given) {
+        cachedNav = {
+          isAdmin: given.role === "admin",
+          isPastoral: given.is_pastoral === true,
+          isPrivate: given.is_private === true
+        };
+      }
       // Widened from just the role: the bar carries the portrait now, and
       // asking for more columns on a query already going out costs nothing,
       // where a second round trip would cost a round trip.
@@ -87,13 +121,15 @@ export default function Nav() {
       // without the column simply reads as false, which is the right answer
       // for every member and for the minutes between a deploy and a
       // migration.
-      const { data: p, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .maybeSingle();
+      const { data: p, error } = given
+        ? { data: given as Record<string, unknown> & { name: string; photo_url: string | null; role?: string | null; is_pastoral?: boolean | null; is_private?: boolean | null; prefs_intro_seen?: boolean | null }, error: null }
+        : await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .maybeSingle();
       if (cancelled) return;
-      if (error) console.error("[deep-waters] nav profile:", error.message);
+      if (error) console.error("[deep-waters] nav profile:", (error as { message: string }).message);
       cachedNav = {
         isAdmin: p?.role === "admin",
         isPastoral: p?.is_pastoral === true,
@@ -134,7 +170,7 @@ export default function Nav() {
       if (channel) supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [given?.id]);
 
   // Highlighted or not — nothing else. Which section you are in is the
   // section's own `match`, shared with the tab bar, rather than a prefix

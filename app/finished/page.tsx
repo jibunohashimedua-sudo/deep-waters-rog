@@ -40,7 +40,7 @@ export default async function FinishedPage() {
 
   return (
     <>
-      <Nav />
+      <Nav profile={profile} />
       <main className="max-w-2xl mx-auto px-6 py-16">
         <h1 className="mt-3 font-serif text-[32px] md:text-[40px] leading-[1.12] tracking-[-0.01em] text-rog-ink">
           You reached the end of Deep Waters.

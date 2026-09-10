@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function RhapsodyPage() {
   // requireProfile redirects to /login when signed out, so nothing below
   // this line ever runs for a stranger.
-  await requireProfile();
+  const { profile } = await requireProfile();
   const supabase = createClient();
 
   // Reader's own timezone. Without the cookie (first paint of a fresh
@@ -60,7 +60,7 @@ export default async function RhapsodyPage() {
 
   return (
     <>
-      <Nav />
+      <Nav profile={profile} />
       <main data-surface="reading" className="max-w-3xl mx-auto px-6 py-10">
         {/* No "back to day N" link here: the app bar's arrow already goes
             there, and two back controls on one screen is a question the

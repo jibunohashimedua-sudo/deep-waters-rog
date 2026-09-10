@@ -5,14 +5,14 @@ import { requireAdmin } from "@/lib/auth";
 import { READING_PLAN, formatReading } from "@/lib/plan";
 
 export default async function AdminNotesPage() {
-  await requireAdmin();
+  const { profile } = await requireAdmin();
   const supabase = createClient();
   const { data: notes } = await supabase.from("study_notes").select("day_number, title, body");
   const written = new Map((notes ?? []).map((n) => [n.day_number, n]));
 
   return (
     <>
-      <Nav />
+      <Nav profile={profile} />
       <main className="max-w-4xl mx-auto px-6 py-10">
         <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Study notes</h1>
         <p className="mt-2 text-sm text-rog-muted">

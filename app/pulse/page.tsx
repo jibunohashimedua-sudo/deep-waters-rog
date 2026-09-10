@@ -43,7 +43,7 @@ export const metadata = { title: "Church pulse · Deep Waters" };
  *  · No reason is ever guessed. Nine days quiet, and stop.
  */
 export default async function PulsePage() {
-  await requirePastoral();
+  const { profile } = await requirePastoral();
   const supabase = createClient();
   const today = todayForCurrentRequest();
 
@@ -89,7 +89,7 @@ export default async function PulsePage() {
 
   return (
     <>
-      <Nav />
+      <Nav profile={profile} />
       <main className="max-w-3xl mx-auto px-6 py-10">
         <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">
           Church pulse

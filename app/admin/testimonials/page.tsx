@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import TestimonialAdminControls from "@/components/TestimonialAdminControls";
 
 export default async function AdminTestimonialsPage() {
-  await requireAdmin();
+  const { profile } = await requireAdmin();
   const supabase = createClient();
   const { data: items } = await supabase
     .from("testimonials")
@@ -14,7 +14,7 @@ export default async function AdminTestimonialsPage() {
 
   return (
     <>
-      <Nav />
+      <Nav profile={profile} />
       <main className="max-w-3xl mx-auto px-6 py-10">
         <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Testimonials</h1>
         <p className="mt-2 text-sm text-rog-muted">

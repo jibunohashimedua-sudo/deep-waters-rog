@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { requireProfile } from "@/lib/auth";
 import {
   READING_PLAN,
   currentDayNumber,
@@ -35,35 +36,40 @@ export default async function DayPage({
   params: { n: string };
 }) {
   const supabase = createClient();
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
 
-  // Fetch profile + every completion + today's Rhapsody in parallel. Same
-  // pattern the old /today used, since nothing else has changed there.
-  const [profileResult, completionsResult] = await Promise.all([
-    supabase.from("profiles").select("*").eq("id", user.id).single(),
+  // The profile comes off the request middleware already paid for — see
+  // lib/requestProfile.ts. That removes getUser() and the profiles row from
+  // this render entirely: two Supabase round trips, in series, before any
+  // of the page's own data could start.
+  const { userId: uid, profile } = await requireProfile();
+
+  // The day's own reads, in one wave. `day` comes out of the URL, so the
+  // chapter ticks never needed to wait for the profile — they used to,
+  // three awaits further down the file.
+  const askedDay = Number.parseInt(params.n, 10);
+  const ticksDay = Number.isFinite(askedDay) && askedDay >= 1 && askedDay <= 90 ? askedDay : 1;
+  const [completionsResult, ticksResult] = await Promise.all([
     supabase
       .from("completions")
       .select("day_number, verse_reference, verse_text, reflection, is_full")
-      .eq("user_id", user.id)
-      .order("day_number", { ascending: false })
+      .eq("user_id", uid)
+      .order("day_number", { ascending: false }),
+    supabase
+      .from("chapter_reads")
+      .select("book, chapter")
+      .eq("user_id", uid)
+      .eq("day_number", ticksDay)
   ]);
-
-  const profile = profileResult.data;
-  if (!profile) redirect("/onboarding");
 
   const currentDay = currentDayNumber(profile.start_date, todayForCurrentRequest());
 
   // Validate the URL day. Anything wrong sends the reader to their own
   // current day rather than to an error page — a stale bookmark from before
   // the plan reset is not the reader's problem.
-  const asked = Number.parseInt(params.n, 10);
-  if (!Number.isFinite(asked) || asked < 1 || asked > 90) {
+  if (!Number.isFinite(askedDay) || askedDay < 1 || askedDay > 90) {
     redirect(`/day/${currentDay}`);
   }
-  const day = asked;
+  const day = askedDay;
   const reading = READING_PLAN[day - 1];
 
   const isCurrent = day === currentDay;
@@ -123,12 +129,8 @@ export default async function DayPage({
 
   // What the reader has already recorded for this day. Chapters record
   // themselves as they are read — see components/ChapterPager — so this is
-  // a readout, not a control.
-  const { data: ticksRows } = await supabase
-    .from("chapter_reads")
-    .select("book, chapter")
-    .eq("user_id", user.id)
-    .eq("day_number", day);
+  // a readout, not a control. Fetched in the first wave above.
+  const ticksRows = ticksResult.data;
   const initialTicks = new Set(
     (ticksRows ?? []).map((r) => `${r.book}|${r.chapter}`)
   );
@@ -158,7 +160,7 @@ export default async function DayPage({
 
   return (
     <>
-      <Nav />
+      <Nav profile={profile} />
       <main data-surface="reading" className="max-w-3xl mx-auto px-6 py-10">
         {/* One-time notice about the timezone-drift fix. Self-retires two
             weeks after deploy — see components/TimezoneNotice.tsx. */}

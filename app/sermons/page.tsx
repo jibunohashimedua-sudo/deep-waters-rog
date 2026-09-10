@@ -35,7 +35,7 @@ type Row = {
  * in the database. ELITE_EXCELLENCE_AUDIT P1-B.
  */
 export default async function SermonsPage() {
-  const { userId } = await requirePastoral();
+  const { userId, profile } = await requirePastoral();
   const supabase = createClient();
 
   const withCount = await supabase
@@ -67,7 +67,7 @@ export default async function SermonsPage() {
 
   return (
     <>
-      <Nav />
+      <Nav profile={profile} />
       <main className="max-w-3xl mx-auto px-6 py-10">
         <h1 className="text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">
           Sermons

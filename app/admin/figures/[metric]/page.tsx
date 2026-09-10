@@ -19,14 +19,14 @@ export default async function AdminFigurePage({
 }: {
   params: { metric: string };
 }) {
-  await requireAdmin();
+  const { profile } = await requireAdmin();
   if (!isFigureKey(params.metric)) notFound();
 
   const figure = await loadFigure(params.metric);
 
   return (
     <>
-      <Nav />
+      <Nav profile={profile} />
       <main className="max-w-3xl mx-auto px-6 py-10">
         <Link href="/admin" className="meta">
           Admin

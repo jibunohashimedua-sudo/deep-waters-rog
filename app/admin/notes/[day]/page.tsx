@@ -7,7 +7,7 @@ import { READING_PLAN, formatReading } from "@/lib/plan";
 import NoteEditor from "@/components/NoteEditor";
 
 export default async function EditNotePage({ params }: { params: { day: string } }) {
-  await requireAdmin();
+  const { profile } = await requireAdmin();
   const day = Number(params.day);
   if (!Number.isInteger(day) || day < 1 || day > 90) notFound();
 
@@ -22,7 +22,7 @@ export default async function EditNotePage({ params }: { params: { day: string }
 
   return (
     <>
-      <Nav />
+      <Nav profile={profile} />
       <main className="max-w-3xl mx-auto px-6 py-10">
         {/* The app bar's arrow climbs to /admin/notes. */}
         <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Study note</h2>

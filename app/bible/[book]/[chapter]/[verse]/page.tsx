@@ -3,6 +3,7 @@ import { bookBySlug } from "@/lib/bibleBooks";
 import { parseVerseSegment } from "@/lib/reference";
 import Nav from "@/components/Nav";
 import ChapterView from "@/components/ChapterView";
+import { requireProfile } from "@/lib/auth";
 
 /**
  * A chapter opened at a verse: /bible/john/3/16, or a range,
@@ -28,7 +29,7 @@ export async function generateMetadata({
   return { title: `${ref} · Deep Waters` };
 }
 
-export default function ChapterVersePage({
+export default async function ChapterVersePage({
   params,
   searchParams
 }: {
@@ -40,9 +41,12 @@ export default function ChapterVersePage({
   const verses = parseVerseSegment(params.verse);
   if (!verses) notFound();
 
+  // Free now: requireProfile() reads the row middleware forwarded on this
+  // same request rather than asking Supabase for it again.
+  const { profile } = await requireProfile();
   return (
     <>
-      <Nav />
+      <Nav profile={profile} />
       <ChapterView
         bookSlug={params.book}
         chapter={Number.parseInt(params.chapter, 10)}

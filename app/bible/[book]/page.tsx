@@ -19,7 +19,7 @@ export default async function BookChaptersPage({
   const book = bookBySlug(params.book);
   if (!book) notFound();
 
-  const { userId } = await requireProfile();
+  const { userId, profile } = await requireProfile();
   const supabase = createClient();
 
   // Which chapters this reader has already met through the plan. A failure
@@ -39,7 +39,7 @@ export default async function BookChaptersPage({
 
   return (
     <>
-      <Nav />
+      <Nav profile={profile} />
       <main className="max-w-3xl mx-auto px-6 py-10">
         {/* The app bar's arrow is the way back to the book list. */}
         <h1 className="text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">

@@ -9,7 +9,7 @@ export default async function AdminUsersPage({
 }: {
   searchParams: { filter?: string; q?: string };
 }) {
-  const { userId: me } = await requireAdmin();
+  const { userId: me, profile } = await requireAdmin();
   const supabase = createClient();
 
   let query = supabase
@@ -25,7 +25,7 @@ export default async function AdminUsersPage({
 
   return (
     <>
-      <Nav />
+      <Nav profile={profile} />
       <main className="max-w-4xl mx-auto px-6 py-10">
         <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Users</h1>
 

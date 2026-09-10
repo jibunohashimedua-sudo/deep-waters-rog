@@ -11,7 +11,7 @@ export default async function AdminRhapsodyPage({
 }: {
   searchParams: { m?: string };
 }) {
-  const { userId } = await requireAdmin();
+  const { userId, profile } = await requireAdmin();
   const supabase = createClient();
 
   // ?m=2026-09-01 picks the month being mapped; today's month is the default.
@@ -39,7 +39,7 @@ export default async function AdminRhapsodyPage({
 
   return (
     <>
-      <Nav />
+      <Nav profile={profile} />
       <main className="max-w-3xl mx-auto px-6 py-10">
         <div className="select-none">
           <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">

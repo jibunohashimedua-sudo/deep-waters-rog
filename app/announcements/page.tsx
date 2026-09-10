@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 
 export default async function AnnouncementsPage() {
-  const { userId } = await requireProfile();
+  const { userId, profile } = await requireProfile();
   const supabase = createClient();
 
   const { data: myCohorts } = await supabase
@@ -28,7 +28,7 @@ export default async function AnnouncementsPage() {
 
   return (
     <>
-      <Nav />
+      <Nav profile={profile} />
       <main className="max-w-2xl mx-auto px-6 py-10">
         <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Announcements</h1>
 

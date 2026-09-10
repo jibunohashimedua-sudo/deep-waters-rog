@@ -298,7 +298,7 @@ export default async function DepthPage() {
 
   return (
     <>
-      <Nav />
+      <Nav profile={profile} />
       <main className="max-w-3xl mx-auto px-6 py-10">
         {/* This is you. Portrait, name, and one mono line of where you are
             — no card round it, no label above it. */}

@@ -20,7 +20,7 @@ type Params = { params: { id: string } };
  * reason to write it so there can only ever be one.
  */
 export default async function PrivateMemberPage({ params }: Params) {
-  const { members } = await requirePrivateOwner();
+  const { members, profile } = await requirePrivateOwner();
   const member = members.find((m) => m.user_id === params.id);
   if (!member) notFound();
 
@@ -101,7 +101,7 @@ export default async function PrivateMemberPage({ params }: Params) {
 
   return (
     <>
-      <Nav />
+      <Nav profile={profile} />
       <main className="max-w-3xl mx-auto px-6 py-10">
         <div className="flex items-center gap-3">
           <Avatar name={member.name} photoUrl={member.photo_url} size="lg" decorative />

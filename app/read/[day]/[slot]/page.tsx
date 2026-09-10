@@ -97,7 +97,7 @@ export default async function ReadChapterPage({
 
   return (
     <>
-      <Nav />
+      <Nav profile={profile} />
       <main
         data-surface="reading"
         className="max-w-3xl mx-auto px-6 pt-0 pb-10"

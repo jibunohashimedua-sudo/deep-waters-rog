@@ -6,7 +6,7 @@ import { countPeople } from "@/lib/adminFigures";
 import AnnouncementForm from "@/components/AnnouncementForm";
 
 export default async function AdminPage() {
-  await requireAdmin();
+  const { profile } = await requireAdmin();
   const supabase = createClient();
 
   const now = new Date();
@@ -71,7 +71,7 @@ export default async function AdminPage() {
 
   return (
     <>
-      <Nav />
+      <Nav profile={profile} />
       <main className="max-w-4xl mx-auto px-6 py-10">
         <h1 className="text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Admin dashboard</h1>
 
