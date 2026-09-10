@@ -4,18 +4,22 @@ import { requireProfile } from "@/lib/auth";
 import { bookBySlug, stepChapter } from "@/lib/bibleBooks";
 import { planDayForChapter } from "@/lib/plan";
 import { fetchChapter, chapterErrorMessage } from "@/lib/bible";
-import { resolveTranslation } from "@/lib/translations";
+import { resolveTranslation, DEFAULT_BIBLE_ID } from "@/lib/translations";
 import { wrapVersesInHtml } from "@/lib/verseParse";
 import { readingAttrs } from "@/lib/readingAttrs";
 import ScriptureReader from "@/components/ScriptureReader";
 import ReadingHeader from "@/components/ReadingHeader";
 import ChapterPrefetch from "@/components/ChapterPrefetch";
+import ParallelBible from "@/components/ParallelBible";
+import { parseParallelParams } from "@/lib/parallel";
 
 type Props = {
   bookSlug: string;
   chapter: number;
   /** Set when the URL named a verse, so the reader lands on it. */
   focus?: { start: number; end: number };
+  /** The query string, which is where a second pane is described. */
+  searchParams?: Record<string, string | string[] | undefined>;
 };
 
 /**
@@ -31,7 +35,12 @@ type Props = {
  * notes still work, filed under the plan day that chapter belongs to, which
  * is how a highlight made here shows up on /read and the other way round.
  */
-export default async function ChapterView({ bookSlug, chapter, focus }: Props) {
+export default async function ChapterView({
+  bookSlug,
+  chapter,
+  focus,
+  searchParams
+}: Props) {
   const book = bookBySlug(bookSlug);
   if (!book) notFound();
   if (!Number.isFinite(chapter) || chapter < 1 || chapter > book.chapters) {
@@ -40,9 +49,25 @@ export default async function ChapterView({ bookSlug, chapter, focus }: Props) {
 
   const { userId, profile } = await requireProfile();
 
+  // What the reader is reading in. A parallel link names it in the query,
+  // so opening someone else's two-pane URL puts you in their translations
+  // rather than in yours — the whole view is restored or none of it is.
+  // Everything else, which is every Bible URL there has ever been, still
+  // reads the profile.
+  const parallel = parseParallelParams(
+    {
+      bookSlug: book.slug,
+      chapter,
+      verse: focus?.start ?? null,
+      verseEnd: focus?.end ?? null
+    },
+    searchParams ?? {},
+    (profile.preferred_bible_id as string) ?? DEFAULT_BIBLE_ID
+  );
+
   // Honour the reader's translation unless this book isn't in it, or is
   // numbered on a different tradition — then fall back and say so.
-  const resolved = resolveTranslation(profile.preferred_bible_id, book.abbr, book.name);
+  const resolved = resolveTranslation(parallel.left.bibleId, book.abbr, book.name);
   const outcome = await fetchChapter(book.abbr, chapter, resolved.id);
 
   const planDay = planDayForChapter(book.name, chapter);
@@ -51,8 +76,32 @@ export default async function ChapterView({ bookSlug, chapter, focus }: Props) {
   const href = (t: { book: { slug: string }; chapter: number } | null) =>
     t ? `/bible/${t.book.slug}/${t.chapter}` : null;
 
+  // Marked up once, and handed both to the page below and to the parallel
+  // shell, so opening a second pane never re-fetches the chapter that is
+  // already on the screen.
+  const html = outcome.ok ? wrapVersesInHtml(outcome.chapter.content) : null;
+
   return (
-    <>
+    <ParallelBible
+      userId={userId}
+      isPastoral={profile.is_pastoral === true}
+      readingAttrs={readingAttrs(profile as unknown as Record<string, unknown>)}
+      initial={parallel}
+      seed={
+        outcome.ok && html
+          ? {
+              bookSlug: book.slug,
+              chapter,
+              verse: focus?.start ?? null,
+              verseEnd: focus?.end ?? null,
+              bibleId: parallel.left.bibleId,
+              reference: outcome.chapter.reference,
+              html,
+              fallbackNote: resolved.fallbackNote
+            }
+          : null
+      }
+    >
       <main
         data-surface="reading"
         className="max-w-3xl mx-auto px-6 pt-0 pb-10"
@@ -66,7 +115,7 @@ export default async function ChapterView({ bookSlug, chapter, focus }: Props) {
           backLabel={`Back to ${book.name}`}
           reference={`${book.name} ${chapter}`}
           userId={userId}
-          translationId={resolved.chosen.id}
+          translationId={parallel.left.bibleId}
           bookSlug={book.slug}
           chapter={chapter}
         />
@@ -90,7 +139,7 @@ export default async function ChapterView({ bookSlug, chapter, focus }: Props) {
                 book: book.name,
                 chapter,
                 reference: outcome.chapter.reference,
-                html: wrapVersesInHtml(outcome.chapter.content)
+                html: html!
               }
             ]}
           />
@@ -128,6 +177,6 @@ export default async function ChapterView({ bookSlug, chapter, focus }: Props) {
 
       {/* Warms the next chapter in the background so tapping Next is instant. */}
       <ChapterPrefetch href={href(next)} />
-    </>
+    </ParallelBible>
   );
 }

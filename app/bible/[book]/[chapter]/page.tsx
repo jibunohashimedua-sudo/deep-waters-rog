@@ -14,9 +14,11 @@ export async function generateMetadata({
 }
 
 export default function ChapterPage({
-  params
+  params,
+  searchParams
 }: {
   params: { book: string; chapter: string };
+  searchParams: Record<string, string | string[] | undefined>;
 }) {
   return (
     <>
@@ -24,6 +26,7 @@ export default function ChapterPage({
       <ChapterView
         bookSlug={params.book}
         chapter={Number.parseInt(params.chapter, 10)}
+        searchParams={searchParams}
       />
     </>
   );

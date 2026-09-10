@@ -76,15 +76,26 @@ export default function PlumbLine({
     if (!root) return;
     let raf = 0;
 
+    // What actually scrolls around this passage. The window, on every
+    // reading screen there has ever been — and the pane, when the chapter
+    // is one of two side by side, because there the page itself never
+    // moves. Reading window.scrollY in a pane gives a sounding that is
+    // always zero: a plumb line that says you are at the surface however
+    // far down the chapter you have read.
+    const pane = root.closest<HTMLElement>("[data-pane-scroll]");
+    const scrollTop = () => (pane ? pane.scrollTop : window.scrollY);
+    const viewport = () => (pane ? pane.clientHeight : window.innerHeight);
+    const originTop = () => (pane ? pane.getBoundingClientRect().top : 0);
+
     const update = () => {
       raf = 0;
       const rect = root.getBoundingClientRect();
-      const y = window.scrollY;
+      const y = scrollTop();
       // 0 when the first line of the passage is at the top of the screen,
       // 1 when the last line is at the bottom of it. A passage shorter
       // than the screen is entirely in front of you, so it is 1 at once.
-      const start = rect.top + y;
-      const end = start + rect.height - window.innerHeight;
+      const start = rect.top - originTop() + y;
+      const end = start + rect.height - viewport();
       const span = end - start;
       const f = span <= 0 ? 1 : Math.max(0, Math.min(1, (y - start) / span));
       setTop(f * Math.max(0, root.offsetHeight - MARKER));
@@ -101,10 +112,11 @@ export default function PlumbLine({
 
     update();
     onResize();
-    window.addEventListener("scroll", onScroll, { passive: true });
+    const scroller: HTMLElement | Window = pane ?? window;
+    scroller.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onResize);
     return () => {
-      window.removeEventListener("scroll", onScroll);
+      scroller.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
       if (raf) cancelAnimationFrame(raf);
     };

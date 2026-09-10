@@ -1439,7 +1439,11 @@ input::placeholder, textarea::placeholder {
   top: 0;
   z-index: 40;
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) auto;
+  /* The fourth column is the second-Bible chip, which only the Bible tab
+     renders and only on a viewport wide enough for two columns. An `auto`
+     track with nothing in it takes no room, so every other reading screen
+     is laid out exactly as it was. */
+  grid-template-columns: 44px minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 8px;
   /* 52px of bar, plus whatever the status bar takes. Box-sizing is
@@ -4134,4 +4138,209 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   text-align: left;
   font-size: 14.5px;
   color: var(--accent);
+}
+
+/* =========================================================
+   TWO BIBLES, SIDE BY SIDE
+   The Bible tab only, and only where two columns can actually be
+   read. Everything here is layout: a grid, a hairline between the
+   columns, and two scroll containers. No new shadow, no gradient,
+   no elevation — the panes are beside each other, not above.
+
+   The threshold is in lib/parallel.ts and matched here rather than
+   duplicated as a number: below it there is no .parallel-split in
+   the document at all, because the shell renders the single pane
+   instead. So these rules describe a layout that only ever exists
+   when it fits, and the narrow case needs no undoing.
+   ========================================================= */
+
+main.parallel-split {
+  /* The page itself stops scrolling; the panes scroll inside it. Body
+     already carries the top and bottom safe-area insets, so the height
+     is the viewport less those, and the split lands exactly between the
+     status bar and the home indicator. dvh, not vh, so a browser with a
+     collapsing toolbar doesn't leave a strip of the second pane under
+     the fold on a phone in landscape. */
+  height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  display: grid;
+  /* One row for the pair's own controls, then the two columns. The bar
+     spans both, so the hairline between the panes starts below it. */
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+  max-width: none;
+  margin: 0;
+  /* Landscape is where a phone's insets move to the sides. Without these
+     the left column's verse numbers sit under the notch on one rotation
+     and under the rounded corner on the other. Zero everywhere else. */
+  padding: 0 env(safe-area-inset-right) 0 env(safe-area-inset-left);
+}
+
+/* The single pane, when it is client-rendered — after a reference has
+   moved and the window has since become too narrow to hold two. Same
+   measure and same gutters as the server's own page. */
+main.parallel-single {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: 1fr;
+  overflow: hidden;
+}
+
+/* Link, swap, close — and the way out. Full width, above both panes, and
+   outside their scroll containers, so it never moves. */
+.parallel-pair-bar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 12px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+
+.parallel-pair-end {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.parallel-pane {
+  min-width: 0;   /* or a long unbroken word makes the column refuse to shrink */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* One hairline between the columns, and nothing else. */
+.parallel-pane + .parallel-pane {
+  border-left: 1px solid var(--line);
+}
+
+.parallel-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  /* Keeps a flick at the end of one pane from scrolling the page behind
+     it — and, on iOS, from triggering the rubber-band on the whole
+     document while the other pane sits still. */
+  overscroll-behavior: contain;
+  padding: 0 20px;
+  scrollbar-width: none;
+}
+.parallel-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Each pane's own controls, stuck to the top of its own scroll container
+   rather than to the window. Sticky inside a scroller sticks to that
+   scroller, which is exactly what a pane wants: scroll one column and its
+   reference and translation stay where your eye already is. */
+.parallel-bar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  /* Out to the pane's edges, past .parallel-scroll's own gutters, so the
+     opaque ground runs the full width and no scripture shows through
+     beside it. */
+  margin: 0 -20px;
+  padding: 0 12px;
+  background: var(--bg);   /* opaque. Nothing is frosted anywhere. */
+  border-bottom: 1px solid var(--line);
+}
+
+.parallel-ref {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  min-height: 44px;
+  padding: 0 2px;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--text);
+  text-align: left;
+}
+
+.parallel-bar-end {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+/* Previous and next. Quiet, square, and the same 44px target as
+   everything else that is pressed on a phone. */
+.parallel-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  min-height: 44px;
+  font-size: 15px;
+  color: var(--ink-quiet);
+}
+.parallel-step:disabled {
+  opacity: 0.3;
+}
+
+/* The pair's own controls — link, swap, close. Chips, because they are
+   pressed, and the pill is the one shape in the system that means that. */
+.parallel-toggle {
+  min-height: 40px;
+  padding: 0 12px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.parallel-toggle[aria-pressed="false"] {
+  color: var(--ink-quiet);
+}
+
+.parallel-body {
+  /* The same measure the single column has always had, centred in the
+     pane. .bible-content sets its own 36ch besides, so this is only
+     stopping a very wide pane from running the header out to the edges. */
+  max-width: 46rem;
+  margin: 0 auto;
+  /* Room for the verse toolbar, which is fixed to the bottom of the
+     window and would otherwise sit on top of the last verses of both
+     panes at once. */
+  padding-bottom: 128px;
+}
+
+/* The scripture column's top margin is set for a page that begins with a
+   large title. A pane begins with its bar, so it needs less. */
+.parallel-body .scripture-column {
+  margin-top: 24px;
+}
+
+/* Said once, quietly, when the window has become too narrow to hold the
+   second pane. Not an error — the pane is still there, and comes back
+   the moment there is room for it. */
+.parallel-folded {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-quiet);
+}
+
+/* The Bench opens over a pane as it opens over a page. It reserves its
+   room with padding on the body, which a split view must answer by
+   getting narrower rather than by sliding out from under it. */
+html[data-bench="beside"] main.parallel-split,
+html[data-bench="beside"] main.parallel-single {
+  width: 100%;
 }

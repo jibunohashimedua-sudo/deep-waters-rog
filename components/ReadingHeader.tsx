@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import TranslationSwitcher from "./TranslationSwitcher";
 import ReferencePicker from "./ReferencePicker";
 import BackControl from "./BackControl";
+import { useParallelOpener } from "@/lib/parallelUi";
 
 type Props = {
   /** Where the back chevron goes — the day, or the book's chapter list. */
@@ -53,6 +54,11 @@ export default function ReadingHeader({
   bookSlug = null,
   chapter = null
 }: Props) {
+  // Offered only on a Bible chapter wide enough for two columns. Null on
+  // /read, on the devotional, and on a phone held upright, where the header
+  // is exactly the header it has always been.
+  const parallel = useParallelOpener();
+
   const sentinel = useRef<HTMLDivElement>(null);
   const bar = useRef<HTMLElement>(null);
   const [condensed, setCondensed] = useState(false);
@@ -105,6 +111,18 @@ export default function ReadingHeader({
         </button>
 
         <TranslationSwitcher userId={userId} currentId={translationId} />
+
+        {parallel?.available && (
+          <button
+            type="button"
+            onClick={parallel.open}
+            className="chip !px-3.5 min-h-[44px] font-mono !text-[9.5px] tracking-[0.13em] uppercase"
+            aria-label="Open a second Bible beside this one"
+            title="Read two translations side by side"
+          >
+            + Bible
+          </button>
+        )}
       </header>
 
       <div className="pt-8">

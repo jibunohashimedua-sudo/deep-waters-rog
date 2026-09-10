@@ -29,9 +29,11 @@ export async function generateMetadata({
 }
 
 export default function ChapterVersePage({
-  params
+  params,
+  searchParams
 }: {
   params: { book: string; chapter: string; verse: string };
+  searchParams: Record<string, string | string[] | undefined>;
 }) {
   // The URL is ours to generate, so a malformed verse segment is a broken
   // link rather than someone mistyping — 404 rather than guess at it.
@@ -45,6 +47,7 @@ export default function ChapterVersePage({
         bookSlug={params.book}
         chapter={Number.parseInt(params.chapter, 10)}
         focus={verses}
+        searchParams={searchParams}
       />
     </>
   );

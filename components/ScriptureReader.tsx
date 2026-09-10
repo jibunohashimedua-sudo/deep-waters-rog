@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -7,12 +7,12 @@ import { friendlyError } from "@/lib/errors";
 import {
   formatVerseList,
   formatVerseReference,
-  normaliseHighlightColour,
   type Highlight,
   type HighlightColour,
   type VerseNote
 } from "@/lib/highlights";
 import { bookByName } from "@/lib/bibleBooks";
+import { loadVerseMarks, useSharedVerseMarks } from "@/lib/verseMarks";
 import { verseFragments, verseTextOnPage } from "@/lib/verseFragments";
 import PlumbLine from "@/components/PlumbLine";
 import VerseToolbar from "./VerseToolbar";
@@ -74,6 +74,19 @@ type Props = {
     header and leaves it room to breathe rather than jamming it to the edge. */
 const FOCUS_OFFSET_PX = 120;
 
+/**
+ * The thing that actually scrolls around this reader.
+ *
+ * On every surface but parallel reading that is the window, and always was.
+ * A pane scrolls inside itself, so a verse link landing in one has to move
+ * the pane rather than the page — the page doesn't move at all there, and
+ * window.scrollTo would silently do nothing.
+ */
+function scrollerFor(el: HTMLElement | null): HTMLElement | Window {
+  const pane = el?.closest<HTMLElement>("[data-pane-scroll]");
+  return pane ?? window;
+}
+
 /** How long the focus mark stays at full strength, then how long it fades. */
 const FOCUS_HOLD_MS = 1800;
 const FOCUS_FADE_MS = 600;
@@ -119,8 +132,24 @@ export default function ScriptureReader({
   const rootRef = useRef<HTMLDivElement>(null);
   const chapterRefs = useRef<Map<string, HTMLElement>>(new Map());
 
-  const [highlights, setHighlights] = useState<Highlight[]>([]);
-  const [notes, setNotes] = useState<VerseNote[]>([]);
+  /**
+   * The marks on these verses — shared when the page has more than one pane
+   * on it, held here when it has one.
+   *
+   * A highlight belongs to a verse, not to a surface, so two panes showing
+   * the same verse have to be looking at the same row rather than at two
+   * copies of it that drift apart the moment one of them is written to.
+   * When there is no shared store — every surface in the app except a Bible
+   * page with a second pane open — this is the same local state, the same
+   * fetch and the same code path it has always been. See lib/verseMarks.
+   */
+  const shared = useSharedVerseMarks();
+  const [ownHighlights, setOwnHighlights] = useState<Highlight[]>([]);
+  const [ownNotes, setOwnNotes] = useState<VerseNote[]>([]);
+  const highlights = shared ? shared.highlights : ownHighlights;
+  const notes = shared ? shared.notes : ownNotes;
+  const setHighlights = shared ? shared.setHighlights : setOwnHighlights;
+  const setNotes = shared ? shared.setNotes : setOwnNotes;
   const [selected, setSelected] = useState<SelKey[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
@@ -140,47 +169,45 @@ export default function ScriptureReader({
     toastTimer.current = window.setTimeout(() => setToast(null), 2600);
   }, []);
 
-  // Load highlights + notes for these chapters.
+  // Which chapters this reader is showing, as one comparable string, so a
+  // re-render that rebuilds the array doesn't re-enter either effect below.
+  const chapterKeysList = useMemo(
+    () => chapters.map((c) => ({ book: c.book, chapter: c.chapter })),
+    [chapters]
+  );
+  const chaptersKey = chapterKeysList
+    .map((c) => `${c.book}|${c.chapter}`)
+    .join(",");
+
+  // With a shared store, this reader doesn't fetch — it says which chapters
+  // it has on screen and the store loads their union once for every pane.
+  const paneId = useId();
+  const registerShared = shared?.register;
+  const unregisterShared = shared?.unregister;
   useEffect(() => {
+    if (!registerShared || !unregisterShared) return;
+    registerShared(paneId, chapterKeysList);
+    return () => unregisterShared(paneId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [registerShared, unregisterShared, paneId, chaptersKey]);
+
+  // Load highlights + notes for these chapters. Only when this reader holds
+  // its own — a shared store has already loaded them for every pane at once.
+  useEffect(() => {
+    if (shared) return;
     let cancelled = false;
-    const chapterKeys = chapters.map((c) => ({ book: c.book, chapter: c.chapter }));
     (async () => {
-      const bookNames = Array.from(new Set(chapterKeys.map((c) => c.book)));
-      // Separate plain queries — no nested joins (avoids HTTP 300 ambiguity).
-      const [{ data: hData, error: hErr }, { data: nData, error: nErr }] =
-        await Promise.all([
-          supabase
-            .from("highlights")
-            .select("*")
-            .eq("user_id", userId)
-            .in("book", bookNames),
-          supabase
-            .from("verse_notes")
-            .select("*")
-            .eq("user_id", userId)
-            .in("book", bookNames)
-        ]);
+      const res = await loadVerseMarks(supabase, userId, chapterKeysList);
       if (cancelled) return;
-      if (hErr) showToast(friendlyError(hErr.message));
-      if (nErr) showToast(friendlyError(nErr.message));
-      const chapterSet = new Set(chapterKeys.map((c) => `${c.book}|${c.chapter}`));
-      // Colours come back through the palette on the way in, so a row
-      // written by the previous build during the deploy still paints. See
-      // normaliseHighlightColour, and the colour-rename migration.
-      setHighlights(
-        (hData ?? [])
-          .filter((h) => chapterSet.has(`${h.book}|${h.chapter}`))
-          .map((h) => ({ ...h, colour: normaliseHighlightColour(h.colour) }))
-          .filter((h): h is Highlight => h.colour !== null)
-      );
-      setNotes(
-        (nData ?? []).filter((n) => chapterSet.has(`${n.book}|${n.chapter}`)) as VerseNote[]
-      );
+      for (const message of res.errors) showToast(friendlyError(message));
+      setOwnHighlights(res.highlights);
+      setOwnNotes(res.notes);
     })();
     return () => {
       cancelled = true;
     };
-  }, [userId, chapters, supabase, showToast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shared, userId, chaptersKey, supabase, showToast]);
 
   // ------------------------------------------------------------ painting
 
@@ -479,8 +506,15 @@ export default function ScriptureReader({
         if (!el) return;
 
         const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        const top = el.getBoundingClientRect().top + window.scrollY;
-        window.scrollTo({
+        const scroller = scrollerFor(rootRef.current);
+        const currentTop =
+          scroller === window ? window.scrollY : (scroller as HTMLElement).scrollTop;
+        const originTop =
+          scroller === window
+            ? 0
+            : (scroller as HTMLElement).getBoundingClientRect().top;
+        const top = el.getBoundingClientRect().top - originTop + currentTop;
+        scroller.scrollTo({
           top: Math.max(0, top - FOCUS_OFFSET_PX),
           behavior: reduced ? "auto" : "smooth"
         });
@@ -766,7 +800,7 @@ export default function ScriptureReader({
       showToast("Note saved.");
       return true;
     },
-    [anchor, notes, userId, dayNumber, testament, spanStart, spanEnd, showToast]
+    [anchor, notes, setNotes, userId, dayNumber, testament, spanStart, spanEnd, showToast]
   );
 
   const updateNote = useCallback(
@@ -792,7 +826,7 @@ export default function ScriptureReader({
       showToast("Note updated.");
       return true;
     },
-    [notes, showToast]
+    [notes, setNotes, showToast]
   );
 
   const removeNote = useCallback(
@@ -808,7 +842,7 @@ export default function ScriptureReader({
       showToast("Note deleted.");
       return true;
     },
-    [notes, supabase, showToast]
+    [notes, setNotes, supabase, showToast]
   );
 
   /** The note sheet's Save. Create or update, then close and let go. */

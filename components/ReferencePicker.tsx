@@ -21,6 +21,16 @@ type Props = {
   bookSlug?: string | null;
   chapter?: number | null;
   startStep?: PickerStep;
+  /**
+   * Take the choice instead of going to it.
+   *
+   * The picker's job is to let someone name a passage; navigating there is
+   * only what the reading screen happens to want done with the answer. A
+   * reading pane wants the same three steps and the same verse counts, but
+   * moves itself rather than the page. Left unset — which is everywhere it
+   * is used today — it pushes the route exactly as it always has.
+   */
+  onPick?: (ref: { bookSlug: string; chapter: number; verse: number | null }) => void;
 };
 
 type VerseState =
@@ -48,7 +58,8 @@ export default function ReferencePicker({
   onClose,
   bookSlug = null,
   chapter = null,
-  startStep = "book"
+  startStep = "book",
+  onPick
 }: Props) {
   const router = useRouter();
 
@@ -163,12 +174,20 @@ export default function ReferencePicker({
   function openChapter(n: number) {
     if (!book) return;
     onClose();
+    if (onPick) {
+      onPick({ bookSlug: book.slug, chapter: n, verse: null });
+      return;
+    }
     router.push(`/bible/${book.slug}/${n}`);
   }
 
   function openVerse(v: number) {
     if (!book || !ch) return;
     onClose();
+    if (onPick) {
+      onPick({ bookSlug: book.slug, chapter: ch, verse: v });
+      return;
+    }
     router.push(`/bible/${book.slug}/${ch}/${v}`);
   }
 

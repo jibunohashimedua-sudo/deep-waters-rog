@@ -29,10 +29,32 @@ import {
  */
 export default function TranslationSwitcher({
   userId,
-  currentId
+  currentId,
+  onChange,
+  persist = true,
+  label
 }: {
   userId: string;
   currentId: string;
+  /**
+   * Take the choice instead of reloading the page with it.
+   *
+   * A reading pane changes its own text where it stands; there is no route
+   * to re-render and nothing to scroll back to. Left unset — which is every
+   * place this is used today — the chapter re-renders on the server and the
+   * reader is put back exactly where they were, as before.
+   */
+  onChange?: (id: string) => void;
+  /**
+   * Whether this choice is the reader's translation.
+   *
+   * True for the pane you are reading in, which is what "my translation"
+   * has always meant and what follows you to your other devices. False for
+   * the second pane, which is a comparison rather than a change of mind.
+   */
+  persist?: boolean;
+  /** Read out instead of "Translation: …" where a pane needs naming. */
+  label?: string;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -76,6 +98,28 @@ export default function TranslationSwitcher({
       setOpen(false);
       return;
     }
+
+    // A pane takes the new translation immediately and fetches its own text.
+    // The profile write still happens where this is the reader's own
+    // translation, but nothing waits on it and nothing re-renders: a pane
+    // that stopped to reload the route would throw away the other pane's
+    // place on the page along with its own.
+    if (onChange) {
+      setOpen(false);
+      setError(null);
+      onChange(id);
+      if (persist) {
+        supabase
+          .from("profiles")
+          .update({ preferred_bible_id: id })
+          .eq("id", userId)
+          .then(({ error: err }) => {
+            if (err) console.error("[deep-waters] translation:", err.message);
+          });
+      }
+      return;
+    }
+
     restoreTo.current = window.scrollY;
     setSaving(true);
     setError(null);
@@ -106,7 +150,11 @@ export default function TranslationSwitcher({
         disabled={busy}
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-label={`Translation: ${current.name}. Change it.`}
+        aria-label={
+          label
+            ? `${label}: ${current.name}. Change it.`
+            : `Translation: ${current.name}. Change it.`
+        }
         className="chip gap-1.5 !px-3.5 min-h-[44px] font-mono !text-[9.5px] tracking-[0.13em] uppercase disabled:opacity-60"
       >
         {busy ? "…" : current.abbr}

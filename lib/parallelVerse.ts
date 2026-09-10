@@ -149,3 +149,127 @@ export function useParallelRows(args: {
 
   return rows;
 }
+
+// ---------------------------------------------------------- whole chapters
+
+/** One chapter's worth of a pane: in flight, arrived, or failed on its own. */
+export type ParallelChapter =
+  | { status: "loading" }
+  | {
+      status: "ready";
+      reference: string;
+      html: string;
+      /** What was actually fetched, which is the KJV where the chosen
+          translation doesn't carry this book. */
+      resolvedId: string;
+      fallbackNote: string | null;
+    }
+  | { status: "error"; message: string };
+
+/**
+ * Chapters already fetched, kept for the life of the tab.
+ *
+ * Module state, not component state, and that is the point: a pane unmounts
+ * whenever the split folds away on a rotation, and remounts when it comes
+ * back. Without this, coming back out of portrait would show a spinner over
+ * a chapter the browser fetched thirty seconds ago. The server caches the
+ * same chapters behind /api/bible/chapter, so this is only saving the round
+ * trip — but the round trip is the whole of the flicker.
+ *
+ * Scripture doesn't change, so there is nothing here to invalidate.
+ */
+const chapterCache = new Map<string, ParallelChapter & { status: "ready" }>();
+
+export const chapterCacheKey = (
+  bookSlug: string,
+  chapter: number,
+  bibleId: string
+) => `${bookSlug}|${chapter}|${bibleId}`;
+
+export function cachedChapter(
+  bookSlug: string,
+  chapter: number,
+  bibleId: string
+): (ParallelChapter & { status: "ready" }) | null {
+  return chapterCache.get(chapterCacheKey(bookSlug, chapter, bibleId)) ?? null;
+}
+
+/**
+ * Seed the cache with a chapter the server already rendered.
+ *
+ * The first pane of a parallel view is showing a chapter this page was
+ * server-rendered with. Swapping the panes and swapping back must not send
+ * that same chapter over the network again to get it back.
+ */
+export function seedChapter(
+  bookSlug: string,
+  chapter: number,
+  bibleId: string,
+  value: { reference: string; html: string; fallbackNote: string | null }
+): void {
+  const key = chapterCacheKey(bookSlug, chapter, bibleId);
+  if (chapterCache.has(key)) return;
+  chapterCache.set(key, {
+    status: "ready",
+    reference: value.reference,
+    html: value.html,
+    resolvedId: bibleId,
+    fallbackNote: value.fallbackNote
+  });
+}
+
+/**
+ * One chapter, in one translation, for a reading pane.
+ *
+ * Shaped like fetchParallelVerse above and failing the same way for the
+ * same reasons, so a pane that can't load says the same sort of thing the
+ * Compare sheet says rather than inventing its own vocabulary for the same
+ * network. The difference is only what comes back: a run of verses as text
+ * there, a whole chapter as verse-wrapped HTML here.
+ */
+export async function fetchParallelChapter(args: {
+  bookSlug: string;
+  chapter: number;
+  bibleId: string;
+}): Promise<ParallelChapter> {
+  const hit = cachedChapter(args.bookSlug, args.chapter, args.bibleId);
+  if (hit) return hit;
+
+  try {
+    const params = new URLSearchParams({
+      book: args.bookSlug,
+      chapter: String(args.chapter),
+      bible: args.bibleId
+    });
+    const res = await fetch(`/api/bible/chapter?${params.toString()}`);
+    const json = await res.json();
+    if (res.ok && json?.ok && typeof json.html === "string") {
+      const value = {
+        status: "ready" as const,
+        reference: String(json.reference ?? ""),
+        html: json.html as string,
+        resolvedId: String(json.resolvedId ?? args.bibleId),
+        fallbackNote:
+          typeof json.fallbackNote === "string" ? json.fallbackNote : null
+      };
+      chapterCache.set(
+        chapterCacheKey(args.bookSlug, args.chapter, args.bibleId),
+        value
+      );
+      return value;
+    }
+    return {
+      status: "error",
+      message:
+        typeof json?.message === "string"
+          ? json.message
+          : "That chapter wouldn’t load just now."
+    };
+  } catch {
+    return {
+      status: "error",
+      message:
+        "That chapter wouldn’t load just now. Check your connection and try again."
+    };
+  }
+}
