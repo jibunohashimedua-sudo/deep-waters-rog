@@ -41,6 +41,7 @@ import BenchSermonPicker from "./BenchSermonPicker";
 import BenchDivider from "./BenchDivider";
 import {
   BENCH_WIDTH_VAR, DEFAULT_FRACTION, NOTES_BESIDE_MIN_PX, RACK_TWO_MIN_PX,
+  openingFraction,
   readStoredFraction, widthFor, writeStoredFraction
 } from "@/lib/benchSplit";
 import BenchSecondText, {
@@ -471,9 +472,13 @@ export default function BenchLayer(props: Props) {
   const [fraction, setFraction] = useState<number>(DEFAULT_FRACTION[mode]);
 
   // What was left last time, for this layout on this device. Read after
-  // mount so the server and the first paint agree.
+  // mount so the server and the first paint agree. Nothing remembered means
+  // the opening width, which respects a comfortable reader rather than the
+  // floor the divider can be dragged to.
   useEffect(() => {
-    setFraction(readStoredFraction(mode) ?? DEFAULT_FRACTION[mode]);
+    setFraction(
+      readStoredFraction(mode) ?? openingFraction(mode, window.innerWidth)
+    );
   }, [mode]);
 
   const applyWidth = useCallback((f: number) => {

@@ -43,11 +43,29 @@ export const DEFAULT_FRACTION: Record<BenchMode, number> = {
 };
 
 /**
+ * The reader width the Bench opens at, as opposed to the one it can be
+ * dragged down to.
+ *
+ * These are two different questions and they used to share one answer.
+ * While the reader's floor was 440px it was quietly doing both jobs: it
+ * stopped the drag, and because the opening width was clamped by the same
+ * number it also capped how wide the Bench started out on a 1024px iPad.
+ * Lowering the floor to give the divider somewhere to go would have
+ * narrowed that opening reader from 440px to 389px for everyone who never
+ * touches the divider — a change nobody asked for, made by accident.
+ *
+ * So the floor stays low and this stays where the floor was. Drag past it
+ * as far as you like; you just do not arrive there.
+ */
+export const READER_COMFORT_PX = 440;
+
+/**
  * The floors. Below these a pane stops being narrow and starts being
  * useless, so the divider stops rather than letting either side collapse.
  *
- * The reader's floor is a comfortable line of scripture: about 45 to 50
- * characters of Literata once its own side padding is taken off.
+ * The reader's floor is a short but readable line of scripture — around 35
+ * characters of Literata once its own side padding is off. It is a floor,
+ * not a target: you only meet it by dragging there on purpose.
  *
  * The Bench's floor assumes the harder case — the lens column carrying
  * Greek and a lexicon entry, with the Notes column reflowed below it
@@ -55,11 +73,24 @@ export const DEFAULT_FRACTION: Record<BenchMode, number> = {
  * number honest; reserving room for a 300px Notes column here would cost
  * the reader 300px it does not need to lose.
  */
-export const READER_MIN_PX = 440;
-export const BENCH_MIN_PX = 380;
+export const READER_MIN_PX = 380;
+export const BENCH_MIN_PX = 300;
+
+/**
+ * How far the divider must be able to travel before offering one is worth
+ * it at all.
+ *
+ * The floors alone are not the right test. An 834px iPad in portrait can
+ * honour both and still leave the divider fourteen pixels to move in,
+ * which is a control that looks broken rather than a control. Asking for
+ * this much room on top means a split is only offered where dragging it
+ * actually changes something.
+ */
+export const MIN_TRAVEL_PX = 120;
 
 /** Under this, there is no honest split to be had and the Bench is a sheet. */
-export const SPLIT_MIN_WINDOW_PX = READER_MIN_PX + BENCH_MIN_PX;
+export const SPLIT_MIN_WINDOW_PX =
+  READER_MIN_PX + BENCH_MIN_PX + MIN_TRAVEL_PX;
 
 /**
  * Widths at which the inside of the Bench rearranges.
@@ -111,6 +142,22 @@ export function clampFraction(fraction: number, windowWidth: number): number {
   const max = 1 - READER_MIN_PX / windowWidth;
   if (min > max) return fraction;           // too narrow to honour both
   return Math.min(Math.max(fraction, min), max);
+}
+
+/**
+ * Where the Bench opens, before anyone has dragged it or if nothing was
+ * remembered.
+ *
+ * The comfortable reader width is a preference, not a rule: on a window
+ * too narrow to honour it the hard floors win and this gives way.
+ */
+export function openingFraction(mode: BenchMode, windowWidth: number): number {
+  const wanted = DEFAULT_FRACTION[mode];
+  if (windowWidth <= 0) return wanted;
+  const comfortMax = 1 - READER_COMFORT_PX / windowWidth;
+  const hardMin = BENCH_MIN_PX / windowWidth;
+  const capped = comfortMax > hardMin ? Math.min(wanted, comfortMax) : wanted;
+  return clampFraction(capped, windowWidth);
 }
 
 /** The Bench's width in pixels, which is the number the stylesheet wants. */

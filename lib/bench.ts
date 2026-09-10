@@ -139,9 +139,11 @@ export function modeForViewport(
   // width, and let the CSS align the boundary to the seam.
   if (segments === "horizontal" && width < 1024) return "split";
   if (segments === "vertical" && width < 1024) return "split";
-  // Too narrow to give both sides a workable width, so there is no split
-  // worth having: the reader takes the window and the Bench is a sheet
-  // over it, exactly as on a phone. See READER_MIN_PX and BENCH_MIN_PX.
+  // Too narrow to give both sides a workable width and still leave the
+  // divider somewhere to go, so there is no split worth having: the reader
+  // takes the window and the Bench is a sheet over it, exactly as on a
+  // phone. The threshold is the two floors plus the travel between them —
+  // see READER_MIN_PX, BENCH_MIN_PX and MIN_TRAVEL_PX.
   if (width < SPLIT_MIN_WINDOW_PX && height >= 500) return "sheet";
   if (width >= 1500) return "wide";
   if (width >= 1024) return "desk";

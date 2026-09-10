@@ -25,8 +25,10 @@ import { SPLIT_MIN_WINDOW_PX } from "@/lib/benchSplit";
 // The width is read in buckets, one per threshold the rule table cares
 // about — and the smallest-split threshold has to be one of them. Without
 // its own step, a 834px iPad in portrait was measured as "600 or more",
-// compared against the 820px minimum, and sent to a sheet: the number was
-// right and the thing it was measured against was not.
+// compared against a minimum well above 600, and sent to a sheet: the
+// number was right and the thing it was measured against was not. The step
+// is interpolated from the constant rather than written out, so it follows
+// the floors whenever they move.
 const WIDTH_STEPS: [string, number][] = [
   ["(min-width: 1500px)", 1500],
   ["(min-width: 1024px)", 1024],
