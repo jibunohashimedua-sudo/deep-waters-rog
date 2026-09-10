@@ -941,3 +941,31 @@ leaderboard keep their old cost until it is too.
 - No feature removed. The one `.limit()` added is a safety cap at 200 on a
   list that holds two.
 - `next build` clean, `next lint` clean.
+
+---
+
+# Deployed
+
+Four commits, pushed to `main` at `61e2fba`, auto-deployed to Vercel under
+`hesed/deep-waters-rog`. Live at **https://deepwaters.online**.
+
+Verified against the live site after the deploy:
+
+| Check | Result |
+|---|---|
+| The new stylesheet is serving | `/_next/static/css/95974fedaccb6fa8.css` carries `touch-action:manipulation` |
+| Public routes | `/`, `/login`, `/signup`, `/welcome`, `/sources` all **200** |
+| Protected routes, signed out | `/today`, `/day/5`, `/community`, `/pulse` all **307 → /login** |
+| A forged `x-dw-profile` header naming an admin, pastoral account | **307 → /login** on `/today`, `/pulse` and `/admin` — identical to sending no header |
+
+## Still outstanding
+
+```
+GET /rest/v1/leaderboard?user_id=eq.<the private member>   with the anon key
+  -> 200, content-range 0-0/1
+```
+
+**The anonymous-read hole is still open on production**, because
+`supabase/migrations/2026_09_22_private_access_cost.sql` has not been run.
+Running it in the Supabase SQL editor closes it, and brings the feed and
+leaderboard timings with it. Nothing in the deployed code depends on it.
