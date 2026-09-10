@@ -10,7 +10,7 @@
 export type LensId =
   | "translations"
   | "words"
-  | "wordstudy"
+  | "exposition"
   | "concordance"
   | "crossrefs"
   | "commentary"
@@ -42,8 +42,8 @@ export const LENSES: Lens[] = [
     takesWord: true
   },
   {
-    id: "wordstudy",
-    label: "Word study",
+    id: "exposition",
+    label: "Exposition",
     source:
       "Old Testament: Keil and Delitzsch, Biblical Commentary on the Old Testament (1864), public domain — CrossWire module KD. New Testament: A. T. Robertson, Word Pictures in the New Testament — CrossWire module RWP; volumes 1–4 public domain, volumes 5–6 © Broadman Press, used under the module's free non-commercial distribution licence",
     takesWord: true
@@ -153,7 +153,7 @@ export const PRESETS: { id: string; label: string; panels: LensId[] }[] = [
     label: "Sermon prep",
     panels: ["translations", "crossrefs", "commentary", "house"]
   },
-  { id: "word", label: "Word study", panels: ["words", "wordstudy", "concordance"] },
+  { id: "word", label: "Word study", panels: ["words", "exposition", "concordance"] },
   { id: "devotional", label: "Devotional", panels: ["translations", "house"] },
   {
     id: "everything",

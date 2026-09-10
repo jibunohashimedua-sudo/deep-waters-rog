@@ -2157,6 +2157,22 @@ html[data-bench="beside"][data-bench-mode="wide"] .verse-bar {
   padding: 10px 16px 0;
 }
 .bench-rack .bench-presets { padding: 8px 0 0; }
+
+/* A labelled row of controls. The label sits above its row, in mono like
+   every other label in this system, so the mode row and the lens row read
+   as two instruments rather than one wrapped row of chips. */
+.bench-control-row {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 16px 0;
+}
+.bench-control-row .bench-presets { padding: 0; }
+.bench-row-label {
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+}
 .bench-preset {
   min-height: 34px;
   padding: 0 12px;

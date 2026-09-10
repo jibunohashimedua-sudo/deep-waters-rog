@@ -1,7 +1,7 @@
 "use client";
-import type { WordStudyEntry } from "@/lib/studyData";
+import type { ExpositionEntry } from "@/lib/studyData";
 
-type Props = { entries: WordStudyEntry[] | null; loading: boolean; verse: number };
+type Props = { entries: ExpositionEntry[] | null; loading: boolean; verse: number };
 
 /** What each source is called, in full, wherever one of its entries shows. */
 const SOURCE_NAMES: Record<string, string> = {
@@ -10,25 +10,30 @@ const SOURCE_NAMES: Record<string, string> = {
 };
 
 /**
- * Word study on the pinned passage.
+ * The exposition of the pinned passage.
  *
- * This lens replaced Vine's, which never had anything in it — no edition of
- * Vine's Expository Dictionary could be found under a licence clean enough
- * to import, and putting a different dictionary behind Vine's name would
- * have been worse than an empty tab. So the lens says what it is, and every
- * entry is labelled with the book it actually came out of.
+ * Named for what it holds, like every lens beside it. It was briefly
+ * called Word study, which collided with the Word study *mode* in the row
+ * above it — one screen, one name, two different kinds of control. The
+ * mode kept the name; the lens took the one that describes its contents.
+ *
+ * Before that it was Vine's, which never had anything in it: no edition of
+ * the Expository Dictionary could be found under a licence clean enough to
+ * import, and putting a different dictionary behind Vine's name would have
+ * been worse than an empty tab. Every entry here is labelled with the book
+ * it actually came out of.
  *
  * Keil and Delitzsch cover the Old Testament, Robertson the New. Neither
  * writes on every verse, so the empty state says that plainly rather than
  * leaving a reader to wonder whether something failed to load.
  */
-export default function BenchWordStudy({ entries, loading, verse }: Props) {
-  if (loading) return <p className="bench-empty">Looking for a word study…</p>;
+export default function BenchExposition({ entries, loading, verse }: Props) {
+  if (loading) return <p className="bench-empty">Looking for an exposition…</p>;
 
   if (!entries || entries.length === 0) {
     return (
       <>
-        <p className="bench-empty">No word study on this verse.</p>
+        <p className="bench-empty">No exposition on this verse.</p>
         <p className="bench-empty">
           Keil and Delitzsch cover the Old Testament and Robertson the New,
           but neither writes on every verse.

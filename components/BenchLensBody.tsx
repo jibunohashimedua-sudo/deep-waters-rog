@@ -4,7 +4,7 @@ import type { Translation } from "@/lib/translations";
 import type { ParallelRow } from "@/lib/parallelVerse";
 import type {
   CommentaryEntry, ConcordanceHit, CrossRef, StrongsEntry, TaggedWord,
-  WordStudyEntry
+  ExpositionEntry
 } from "@/lib/studyData";
 import BenchTranslations from "./BenchTranslations";
 import BenchHouse, { type HouseRow } from "./BenchHouse";
@@ -12,7 +12,7 @@ import BenchWords from "./BenchWords";
 import BenchConcordance from "./BenchConcordance";
 import BenchCrossRefs from "./BenchCrossRefs";
 import BenchCommentary from "./BenchCommentary";
-import BenchWordStudy from "./BenchWordStudy";
+import BenchExposition from "./BenchExposition";
 
 export type LensData = {
   visibleTranslations: Translation[];
@@ -36,8 +36,8 @@ export type LensData = {
   onConcordanceMore: () => void;
   crossRefs: CrossRef[] | null;
   crossRefsLoading: boolean;
-  wordStudy: WordStudyEntry[] | null;
-  wordStudyLoading: boolean;
+  exposition: ExpositionEntry[] | null;
+  expositionLoading: boolean;
   commentary: CommentaryEntry[] | null;
   commentaryLoading: boolean;
   verse: number;
@@ -100,10 +100,10 @@ export default function BenchLensBody({
         <BenchCrossRefs refs={data.crossRefs} loading={data.crossRefsLoading} />
       )}
 
-      {lens === "wordstudy" && (
-        <BenchWordStudy
-          entries={data.wordStudy}
-          loading={data.wordStudyLoading}
+      {lens === "exposition" && (
+        <BenchExposition
+          entries={data.exposition}
+          loading={data.expositionLoading}
           verse={data.verse}
         />
       )}

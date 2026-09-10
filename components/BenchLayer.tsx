@@ -25,9 +25,9 @@ import {
 } from "@/lib/bench";
 import {
   fetchCommentary, fetchConcordance, fetchCrossRefs,
-  fetchStrongsEntries, fetchTaggedWords, fetchWordStudy,
+  fetchStrongsEntries, fetchTaggedWords, fetchExposition,
   type CommentaryEntry, type ConcordanceHit, type CrossRef,
-  type StrongsEntry, type TaggedWord, type WordStudyEntry
+  type ExpositionEntry, type StrongsEntry, type TaggedWord
 } from "@/lib/studyData";
 import { useStudyLens } from "@/lib/useStudyLens";
 import { newBlockId } from "@/lib/sermons";
@@ -193,7 +193,7 @@ export default function BenchLayer(props: Props) {
   // Words. The rail is built from this, so it loads whenever any lens that
   // uses a word is on screen.
   const wantsWords =
-    lensVisible("words") || lensVisible("wordstudy") || lensVisible("concordance");
+    lensVisible("words") || lensVisible("exposition") || lensVisible("concordance");
 
   const wordsLens = useStudyLens<{ words: TaggedWord[]; entries: Map<string, StrongsEntry> }>({
     active: wantsWords,
@@ -258,12 +258,12 @@ export default function BenchLayer(props: Props) {
     load: () => fetchCrossRefs(book, chapter, spanStart, CROSSREF_LIMIT)
   });
 
-  const wordStudy = useStudyLens<WordStudyEntry[]>({
-    active: lensVisible("wordstudy"),
+  const exposition = useStudyLens<ExpositionEntry[]>({
+    active: lensVisible("exposition"),
     key: passageKey,
     onError: onToast,
     onSettled: stack ? advanceStack : undefined,
-    load: () => fetchWordStudy(book, chapter, spanStart)
+    load: () => fetchExposition(book, chapter, spanStart)
   });
 
   const commentary = useStudyLens<CommentaryEntry[]>({
@@ -323,7 +323,7 @@ export default function BenchLayer(props: Props) {
   // changed, the second measures a layout that has settled. In Stack the
   // entry is inside the Words block, so the same query finds it and the
   // pane lands on it there. Where the pane has no entry for a word at all
-  // — the Concordance and Word study are wholly about the chosen word —
+  // — the Concordance and Exposition are wholly about the chosen word —
   // the pane goes to its own top instead, which is where the new content
   // begins.
   useEffect(() => {
@@ -624,8 +624,8 @@ export default function BenchLayer(props: Props) {
     onConcordanceMore: () => setConcordancePage((n) => n + 1),
     crossRefs: crossRefs.data,
     crossRefsLoading: crossRefs.loading,
-    wordStudy: wordStudy.data,
-    wordStudyLoading: wordStudy.loading,
+    exposition: exposition.data,
+    expositionLoading: exposition.loading,
     commentary: commentary.data,
     commentaryLoading: commentary.loading,
     verse: spanStart,
@@ -716,7 +716,7 @@ export default function BenchLayer(props: Props) {
             // Aim the two lenses the rail is for, without moving anyone
             // away from a lens that has nothing to do with a word.
             if (!rack && !stack && !LENS_BY_ID.get(activeLens)?.takesWord) {
-              setActiveLens("wordstudy");
+              setActiveLens("exposition");
             }
           }}
         />
@@ -771,7 +771,14 @@ export default function BenchLayer(props: Props) {
           ScriptureReader's outside-click handler. */}
       {rack && (
         <>
-          <div className="bench-presets">
+          {/* Two rows, two kinds of control, and they used to be told apart
+              only by what they happened to say. A mode sets the whole rack
+              at once; a lens is one panel on or off. The labels say which
+              is which, so the rows read as different instruments rather
+              than as one long row of chips that wrapped. */}
+          <div className="bench-control-row">
+            <p className="meta bench-row-label" id="bench-mode-label">Mode</p>
+            <div className="bench-presets" role="group" aria-labelledby="bench-mode-label">
             {PRESETS.map((p) => (
               <button
                 key={p.id}
@@ -785,8 +792,12 @@ export default function BenchLayer(props: Props) {
                 {p.label}
               </button>
             ))}
+            </div>
           </div>
-          <div className="bench-presets" role="group" aria-label="Panels">
+
+          <div className="bench-control-row">
+            <p className="meta bench-row-label" id="bench-lenses-label">Lenses</p>
+            <div className="bench-presets" role="group" aria-labelledby="bench-lenses-label">
             {LENSES.map((l) => {
               const on = panels.includes(l.id);
               return (
@@ -808,6 +819,7 @@ export default function BenchLayer(props: Props) {
                 </button>
               );
             })}
+            </div>
           </div>
         </>
       )}

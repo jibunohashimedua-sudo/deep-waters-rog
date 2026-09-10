@@ -39,7 +39,7 @@ export type CrossRef = {
   text: string | null;
 };
 
-export type WordStudyEntry = {
+export type ExpositionEntry = {
   source: string;
   verse_start: number;
   verse_end: number;
@@ -182,12 +182,14 @@ export async function fetchCrossRefs(
   }));
 }
 
-/** Word study on the passage containing this verse. */
-export async function fetchWordStudy(
+/** The exposition of the passage containing this verse.
+    The table is still called word_study_entries: it is the store's name,
+    not the lens's, and the two importers that fill it write there. */
+export async function fetchExposition(
   book: string,
   chapter: number,
   verse: number
-): Promise<WordStudyEntry[]> {
+): Promise<ExpositionEntry[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("word_study_entries")
@@ -199,7 +201,7 @@ export async function fetchWordStudy(
     .order("verse_start")
     .limit(3);
   if (error) throw new Error(error.message);
-  return (data ?? []) as WordStudyEntry[];
+  return (data ?? []) as ExpositionEntry[];
 }
 
 /** Matthew Henry on the passage containing this verse. */
