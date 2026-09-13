@@ -27,6 +27,7 @@ import PlumbLine from "@/components/PlumbLine";
 import VerseToolbar from "./VerseToolbar";
 import VerseNoteSheet from "./VerseNoteSheet";
 import CompareSheet from "./CompareSheet";
+import ShareCardSheet from "./ShareCardSheet";
 import type { BenchPhase } from "./BenchLayer";
 // Type-only, so it is erased at compile time and pulls the panel in with it.
 import type { SecondPassage } from "./BenchSecondText";
@@ -172,6 +173,10 @@ export default function ScriptureReader({
   const [selected, setSelected] = useState<SelKey[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  // Captured the moment the reader opens the sheet, so a later selection
+  // change on the page doesn't rewrite what they're about to share.
+  const [shareText, setShareText] = useState("");
   // closed → open → collapsed. Collapsing puts the six-chip toolbar back
   // with the verse still selected; the toolbar's own handle is what closes
   // the rest of the way.
@@ -1050,52 +1055,15 @@ export default function ScriptureReader({
     }
   }
 
-  async function shareImage() {
+  // "Share as image" no longer generates on the spot. It opens the
+  // picker sheet so the reader can pick a shape and a background, see a
+  // scaled preview, and only then fetch the full-resolution PNG. The
+  // sheet remembers their choice for next time.
+  function shareImage() {
     const text = selectionText();
     if (!text) return;
-    // The day travels with the verse so the mark on the card fills to
-    // the depth the sharer is actually at.
-    const params = new URLSearchParams({
-      ref: reference,
-      text,
-      day: String(dayNumber)
-    });
-    showToast("Building your card…");
-    try {
-      const res = await fetch(`/api/og/verse?${params.toString()}`);
-      if (!res.ok) throw new Error(`card responded ${res.status}`);
-      const blob = await res.blob();
-      const file = new File(
-        [blob], `deep-waters-${reference.replace(/[^\w]+/g, "-")}.png`,
-        { type: "image/png" }
-      );
-      const nav: any = navigator;
-      if (nav.canShare && nav.canShare({ files: [file] })) {
-        try {
-          await nav.share({ files: [file], text: reference, url: shareUrl() });
-          setToast(null);
-          clearSelection();
-          return;
-        } catch {
-          /* fall through to the download */
-        }
-      }
-      const objUrl = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = objUrl;
-      a.download = file.name;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(objUrl);
-      showToast("Card downloaded.");
-      clearSelection();
-    } catch (err) {
-      // Say what went wrong rather than shrugging — a card that silently
-      // never arrives is indistinguishable from a broken button.
-      console.error("[deep-waters] verse card:", err);
-      showToast("Couldn't build the card. Try again.");
-    }
+    setShareText(text);
+    setShareOpen(true);
   }
 
   const noteReference = anchor
@@ -1209,6 +1177,19 @@ export default function ScriptureReader({
         onCopy={copy}
         onShare={share}
         onShareImage={shareImage}
+      />
+
+      {/* Share-as-image picker. Opened from the verse toolbar. Remembers
+          the reader's last shape + background so the second card doesn't
+          ask again. */}
+      <ShareCardSheet
+        open={shareOpen}
+        reference={noteReference || reference}
+        verseText={shareText}
+        dayNumber={dayNumber}
+        onClose={() => setShareOpen(false)}
+        onToast={(m) => (m ? showToast(m) : setToast(null))}
+        onShared={clearSelection}
       />
 
       {/* The same verses, in several translations at once. Uses the anchor's

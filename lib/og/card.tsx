@@ -1,28 +1,48 @@
 /* eslint-disable @next/next/no-img-element -- @vercel/og renders with
    Satori, which only supports plain <img>; next/image cannot be used here. */
 import { ImageResponse } from "@vercel/og";
+import {
+  ORIENT_SPECS,
+  type Orient,
+  type OrientSpec
+} from "./orientations";
+import {
+  BACKGROUNDS,
+  GROUND,
+  INK,
+  QUIET,
+  RULE,
+  isBackground,
+  renderBackground,
+  resolveBackground,
+  type Background
+} from "./backgrounds";
 
 /**
  * The share card, in Fathom.
  *
- * Violet-black ground, ink at full strength, Literata for the scripture and
- * Plex Mono for everything that is a label or a number. Square corners, no
- * lift, no orbs, no blur. The mark sits small and quiet in the corner
- * with the wordmark beside it: branding present, not dominating.
+ * Violet-black ground, ink at full strength, Literata for the scripture
+ * and Plex Mono for everything that is a label or a number. Square
+ * corners, no lift, no orbs, no blur. The mark sits small and quiet in
+ * the corner with the wordmark beside it: branding present, not
+ * dominating.
  *
- * Shared by /api/og (a day kept) and /api/og/verse (a verse shared) so the
- * two cards cannot drift apart.
+ * Now composed per orientation and per background, not stretched. See
+ * lib/og/orientations for the size + spacing per shape, and
+ * lib/og/backgrounds for the marks that go behind the scripture.
+ *
+ * Shared by /api/og (a day kept) and /api/og/verse (a verse shared) so
+ * the two cards cannot drift apart.
  */
 
-export const CARD_W = 1080;
-export const CARD_H = 1350;
+// Default (backwards compatible with the pre-orientations card).
+export const CARD_W = ORIENT_SPECS.portrait.w;
+export const CARD_H = ORIENT_SPECS.portrait.h;
 
-// Fathom, dark. A share card is always dark — it goes out into other
-// people's feeds, where it is one image and not a themed page.
-const GROUND = "#0C0A18";
-const INK = "#E9E6F2";
-const QUIET = "#8B87A3";
-const RULE = "#262239";
+export type CardOptions = {
+  orient?: Orient;
+  bg?: Background | "random";
+};
 
 type LoadedFont = {
   name: string;
@@ -35,19 +55,17 @@ type LoadedFont = {
  * Load a font, but never let a failed fetch crash the whole card.
  *
  * Google sometimes returns an HTML error page instead of the font file,
- * which is what produced "Unsupported OpenType signature <!DO" and took the
- * whole route down with it. Content type and size are both checked, and a
- * miss falls back to the system font rather than throwing.
+ * which is what produced "Unsupported OpenType signature <!DO" and took
+ * the whole route down with it. Content type and size are both checked,
+ * and a miss falls back to the system font rather than throwing.
  */
 async function loadFont(url: string): Promise<ArrayBuffer | null> {
   try {
     const res = await fetch(url);
     if (!res.ok) return null;
     const type = res.headers.get("content-type") ?? "";
-    // If Google handed us HTML, bail out.
     if (type.includes("text/html")) return null;
     const buf = await res.arrayBuffer();
-    // A real font file is well over 1KB; an error page is tiny.
     if (buf.byteLength < 1000) return null;
     return buf;
   } catch {
@@ -80,47 +98,44 @@ export async function loadCardFonts(): Promise<{
 }
 
 /**
- * Fit the verse to the card.
+ * Fit the verse to the card, per shape.
  *
  * A psalm and a genealogy are not the same length, and one type size for
- * both means either a card with six words rattling around it or one with
- * the last line running off the bottom. Long passages are cut at a word
- * boundary rather than mid-syllable, and the cut is marked, because a
- * quotation that stops without saying so is a misquotation.
+ * both means a card with six words rattling around it or one with the
+ * last line running off the bottom. The spec chooses both the size
+ * bracket and the length cap.
  */
-export function fitVerse(text: string): { text: string; size: number } {
+export function fitVerse(text: string, spec: OrientSpec): { text: string; size: number } {
   const clean = text.replace(/\s+/g, " ").trim();
-  const LIMIT = 560;
 
   let out = clean;
-  if (clean.length > LIMIT) {
-    const cut = clean.slice(0, LIMIT);
+  if (clean.length > spec.maxChars) {
+    const cut = clean.slice(0, spec.maxChars);
     const lastSpace = cut.lastIndexOf(" ");
-    out = (lastSpace > LIMIT * 0.6 ? cut.slice(0, lastSpace) : cut).trimEnd() + "…";
+    out = (lastSpace > spec.maxChars * 0.6 ? cut.slice(0, lastSpace) : cut).trimEnd() + "…";
   }
 
   const n = out.length;
-  const size = n <= 110 ? 72 : n <= 200 ? 60 : n <= 320 ? 50 : n <= 460 ? 42 : 36;
+  const bracket = spec.verseBrackets.find(([limit]) => n <= limit);
+  const size = bracket ? bracket[1] : spec.verseBrackets[spec.verseBrackets.length - 1][1];
   return { text: out, size };
 }
 
 /** The four-bar mark, drawn in divs — Satori has no SVG path layout. */
 function FourBarMark({
   colour = INK,
-  depth
+  depth,
+  scale = 1
 }: {
   colour?: string;
-  /** 0 to 1. Fills the bars to the sharer's day. Undefined leaves them
-      unfilled, which is what a card with no day behind it should show. */
   depth?: number;
+  scale?: number;
 }) {
-  // The brand mark's own proportions, scaled up a little for a 1080px
-  // card: at the drawn size the four bars closed up into one shape.
   const bars = [
-    { w: 72, h: 12 },
-    { w: 54, h: 12 },
-    { w: 36, h: 12 },
-    { w: 18, h: 12 }
+    { w: 72 * scale, h: 12 * scale },
+    { w: 54 * scale, h: 12 * scale },
+    { w: 36 * scale, h: 12 * scale },
+    { w: 18 * scale, h: 12 * scale }
   ];
   const fill = depth === undefined ? null : Math.max(0, Math.min(1, depth));
   return (
@@ -129,7 +144,7 @@ function FourBarMark({
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: 8
+        gap: 8 * scale
       }}
     >
       {bars.map((b, i) => (
@@ -139,15 +154,11 @@ function FourBarMark({
             display: "flex",
             width: b.w,
             height: b.h,
-            // The bars are the one round thing on the card, because they
-            // are the mark and the mark is drawn that way.
             borderRadius: b.h / 2,
             background: fill === null ? colour : RULE,
             overflow: "hidden"
           }}
         >
-          {/* The identity and the data are the same object: the mark is
-              filled to the day the sharer is on. */}
           {fill !== null && (
             <div
               style={{
@@ -164,23 +175,31 @@ function FourBarMark({
   );
 }
 
-/** Mark + wordmark, small and quiet in the bottom corner. */
-function Footer({ mono, depth }: { mono: string; depth?: number }) {
+/** Mark + wordmark, small and quiet at the foot of the card. */
+function Footer({
+  spec,
+  mono,
+  depth
+}: {
+  spec: OrientSpec;
+  mono: string;
+  depth?: number;
+}) {
   return (
     <div
       style={{
         display: "flex",
         alignItems: "center",
-        gap: 24,
+        gap: spec.footerGap,
         borderTop: `1px solid ${RULE}`,
-        paddingTop: 40
+        paddingTop: spec.footerRulePad
       }}
     >
-      <FourBarMark colour={INK} depth={depth} />
+      <FourBarMark colour={INK} depth={depth} scale={spec.footerBarScale} />
       <div
         style={{
           fontFamily: mono,
-          fontSize: 24,
+          fontSize: spec.footerWordSize,
           letterSpacing: "0.13em",
           color: QUIET
         }}
@@ -191,67 +210,99 @@ function Footer({ mono, depth }: { mono: string; depth?: number }) {
   );
 }
 
-const shell = (serif: string): React.CSSProperties => ({
-  width: `${CARD_W}px`,
-  height: `${CARD_H}px`,
-  display: "flex",
-  flexDirection: "column",
-  justifyContent: "space-between",
-  background: GROUND,
-  color: INK,
-  fontFamily: serif,
-  padding: "88px 88px 80px"
-});
+/** The outer shell. Always has the background layer behind the content. */
+function CardShell({
+  spec,
+  serif,
+  bg,
+  children
+}: {
+  spec: OrientSpec;
+  serif: string;
+  bg: Background;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        position: "relative",
+        display: "flex",
+        width: spec.w,
+        height: spec.h,
+        background: GROUND
+      }}
+    >
+      {renderBackground(bg, spec)}
+      <div
+        style={{
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          width: spec.w,
+          height: spec.h,
+          padding: `${spec.padT}px ${spec.padH}px ${spec.padB}px`,
+          color: INK,
+          fontFamily: serif
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
 
 /** A verse, shared. The scripture is the hero and everything else is a gauge. */
-export async function verseCard(reference: string, text: string, day?: number) {
+export async function verseCard(
+  reference: string,
+  text: string,
+  day?: number,
+  opts: CardOptions = {}
+) {
+  const orient: Orient = opts.orient ?? "portrait";
+  const spec = ORIENT_SPECS[orient];
+  const bg: Background = opts.bg === "random" || !opts.bg
+    ? (opts.bg === "random" ? resolveBackground("random") : "plain")
+    : (isBackground(opts.bg) ? opts.bg : "plain");
   const { fonts, serif, mono } = await loadCardFonts();
-  const verse = fitVerse(text);
+  const verse = fitVerse(text, spec);
   const depth = day && day > 0 ? Math.min(1, day / 90) : undefined;
-  // A reference is metadata, so it is set as metadata. Ranges like
-  // "Psalm 42:1–4" come through whole — nothing here parses them.
   const ref = reference.replace(/\s+/g, " ").trim().toUpperCase();
 
   return new ImageResponse(
     (
-      <div style={shell(serif)}>
+      <CardShell spec={spec} serif={serif} bg={bg}>
         <div style={{ display: "flex", flexDirection: "column" }}>
-          {/* The verse leads. It is a quotation, not a passage: no verse
-              number, no hanging margin, ragged right, and a measure that
-              still reads when this lands in somebody's feed as a
-              screenshot on a phone. */}
           <div
             style={{
               fontSize: verse.size,
-              lineHeight: 1.44,
+              lineHeight: spec.verseLineHeight,
               color: INK
             }}
           >
             {verse.text}
           </div>
-          {/* The reference sits under what it names, the way it does
-              everywhere else in the app. */}
           <div
             style={{
               fontFamily: mono,
-              fontSize: 26,
+              fontSize: spec.refSize,
               letterSpacing: "0.13em",
               color: QUIET,
-              marginTop: 40
+              marginTop: spec.refMarginTop
             }}
           >
             {ref || "DEEP WATERS"}
           </div>
         </div>
 
-        <Footer mono={mono} depth={depth} />
-      </div>
+        <Footer spec={spec} mono={mono} depth={depth} />
+      </CardShell>
     ),
-    { width: CARD_W, height: CARD_H, fonts: fonts.length > 0 ? fonts : undefined }
+    { width: spec.w, height: spec.h, fonts: fonts.length > 0 ? fonts : undefined }
   );
 }
 
-/** A day kept. The person's name leads; the verse they wrote down follows. */
+/** A day kept. Portrait only for now; unchanged shape. */
 export async function dayCard(opts: {
   day: string;
   name: string;
@@ -259,10 +310,9 @@ export async function dayCard(opts: {
   text: string;
   photo: string;
 }) {
+  const spec = ORIENT_SPECS.portrait;
   const { fonts, serif, mono } = await loadCardFonts();
-  const verse = opts.text ? fitVerse(opts.text) : null;
-  // Up to two initials, the same as the portrait everywhere else in the
-  // app — one letter reads as a placeholder, two read as a person.
+  const verse = opts.text ? fitVerse(opts.text, spec) : null;
   const parts = opts.name.trim().split(/\s+/).filter(Boolean);
   const initial = (
     parts.length === 0
@@ -274,7 +324,7 @@ export async function dayCard(opts: {
 
   return new ImageResponse(
     (
-      <div style={shell(serif)}>
+      <CardShell spec={spec} serif={serif} bg="plain">
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div
             style={{
@@ -290,8 +340,6 @@ export async function dayCard(opts: {
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 36, marginTop: 64 }}>
-            {/* Square, like every portrait in the app. A person is not a
-                button, so nothing about them is a pill. */}
             {opts.photo ? (
               <img
                 src={opts.photo}
@@ -345,9 +393,15 @@ export async function dayCard(opts: {
           )}
         </div>
 
-        <Footer mono={mono} depth={Math.min(1, (Number(opts.day) || 0) / 90)} />
-      </div>
+        <Footer spec={spec} mono={mono} depth={Math.min(1, (Number(opts.day) || 0) / 90)} />
+      </CardShell>
     ),
-    { width: CARD_W, height: CARD_H, fonts: fonts.length > 0 ? fonts : undefined }
+    { width: spec.w, height: spec.h, fonts: fonts.length > 0 ? fonts : undefined }
   );
 }
+
+// Re-export so callers get a single import surface.
+export { BACKGROUNDS, isBackground, resolveBackground } from "./backgrounds";
+export type { Background } from "./backgrounds";
+export { ORIENT_SPECS, isOrient } from "./orientations";
+export type { Orient } from "./orientations";

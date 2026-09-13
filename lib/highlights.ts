@@ -14,7 +14,13 @@
 // See supabase/migrations/2026_09_07_highlight_colour_names.sql.
 
 /** What the database stores, and what a reader is shown. */
-export type HighlightColour = "shoal" | "current" | "coral" | "fathom" | "silt";
+export type HighlightColour =
+  | "shoal"
+  | "current"
+  | "coral"
+  | "beacon"
+  | "fathom"
+  | "silt";
 
 export type HighlightPaint = {
   /** The name, shown to the reader. */
@@ -24,11 +30,15 @@ export type HighlightPaint = {
   dark: { ground: string; rule: string };
 };
 
-/** Display order, as the palette is written down. */
+/** Display order, as the palette is written down. Beacon sits between the
+    two warm marks (coral) and the violet mark (fathom) — a pink light on
+    the shore between the two, and the order the eye reads them on the
+    picker moves left-to-right through the spectrum. */
 export const HIGHLIGHT_COLOURS: HighlightColour[] = [
   "shoal",
   "current",
   "coral",
+  "beacon",
   "fathom",
   "silt"
 ];
@@ -60,6 +70,15 @@ export const HIGHLIGHT_PAINT: Record<HighlightColour, HighlightPaint> = {
     name: "Coral",
     light: { ground: "#F5DCDC", rule: "#B23A1F" },
     dark:  { ground: "#2E1618", rule: "#E8735A" }
+  },
+  beacon: {
+    // A pink light on the shore. Distinct from Coral (red) on the axis a
+    // deuteranope loses: pink carries a blue channel that red does not,
+    // which is what keeps the two apart when green sensitivity drops.
+    // Ink on both grounds measures well above the 7:1 floor.
+    name: "Beacon",
+    light: { ground: "#F5DCE6", rule: "#A83466" },
+    dark:  { ground: "#2A1421", rule: "#F19BC4" }
   },
   fathom: {
     name: "Fathom",
