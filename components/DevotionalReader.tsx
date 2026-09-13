@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/errors";
-import { HIGHLIGHT_COLOURS, type HighlightColour } from "@/lib/highlights";
+import { type HighlightColour } from "@/lib/highlights";
 import {
   RHAPSODY_ATTRIBUTION,
   articleFrom,
@@ -22,6 +22,7 @@ import {
 } from "@/lib/devotionalHighlights";
 import { paintBlock, offsetIn } from "@/lib/devotionalPaint";
 import ShareCardSheet from "./ShareCardSheet";
+import VerseToolbar from "./VerseToolbar";
 
 /**
  * The interactive layer on top of a Rhapsody article.
@@ -31,11 +32,21 @@ import ShareCardSheet from "./ShareCardSheet";
  * carrying a data-devo-section / data-devo-block pair — that pair is the
  * stable id the placement algorithm anchors highlights and notes to.
  *
- * The paint pass is the same idea as the scripture fix: an unconditional
- * useEffect wipes every block back to its plain text on every render, then
- * re-derives the highlight wrappers and note markers from stored data.
- * A selection change or any other transient DOM state can never leave a
- * highlight looking half-painted, because every paint starts from truth.
+ * The paint pass is where devotional differs from the scripture reader.
+ * Scripture's paint is unconditional because React re-injects each verse's
+ * `dangerouslySetInnerHTML`, so the paint has to reassert on every render
+ * or it loses the fight. Here we own the DOM directly: rewriting a block's
+ * `innerHTML` blows away any live text selection, and doing it on every
+ * render — one for each `selectionchange` during a drag — destroys the
+ * selection mid-drag. So the paint effect is gated on
+ * `[placedHighlights, placedNotes, doc]`; it fires when marks or the
+ * article change, and stays out of the way while the reader is selecting.
+ *
+ * The toolbar is the shared VerseToolbar from the scripture reader,
+ * bottom-fixed and out of the way of the text. Only the callbacks that
+ * make sense for prose are passed in — highlight, note, copy, share as
+ * image. Compare and Share (link + text) are omitted; the toolbar skips
+ * rendering those buttons.
  *
  * Attribution: a shared card of a Rhapsody selection carries a small
  * mono credit line — the constant is in lib/devotionalHighlights.ts, and
@@ -63,9 +74,9 @@ type PlacedNote = Note & { placement: Placement };
 
 // A selection captured from the browser, resolved to plain-text anchors
 // per block. One selection can produce several anchors (a cross-block
-// pick).
+// pick). No client rect: the toolbar is bottom-fixed and doesn't need
+// to know where on screen the words are.
 type Captured = {
-  reference: string;
   fullQuote: string;
   ranges: Array<{
     section: Section;
@@ -76,8 +87,6 @@ type Captured = {
     prefix: string;
     suffix: string;
   }>;
-  // For positioning the floating toolbar.
-  clientRect: DOMRect;
 };
 
 export default function DevotionalReader({
@@ -107,7 +116,6 @@ export default function DevotionalReader({
     anchor: Captured["ranges"][number];
     quote: string;
     existing: Note | null;
-    reference: string;
   }>(null);
 
   const showToast = useCallback((m: string) => {
@@ -163,11 +171,22 @@ export default function DevotionalReader({
   }, [supabase, userId, entry.date, showToast]);
 
   // -----------------------------------------------------------------
-  // The paint pass. Unconditional — same idea as the scripture reader
-  // fix. Every render wipes each block back to its plain text and then
-  // re-applies highlight wrappers and note markers from placed state.
-  // Because we start from truth every time, a selection or a scroll
-  // can never leave a highlight looking half-painted.
+  // The paint pass. Gated on marks + article — never on selection.
+  //
+  // This is the opposite pattern from the scripture reader. There, the
+  // paint has to be unconditional because React re-injects each verse's
+  // `dangerouslySetInnerHTML` on every render and would otherwise erase
+  // the wrappers we just wrote. Here we own the DOM directly, so an
+  // unconditional paint is a bug in the other direction: every render
+  // would call `block.innerHTML = ...`, which destroys any live text
+  // selection. During a drag, `selectionchange` fires many times per
+  // second and each one triggers a re-render. If paint ran with those,
+  // the browser would hand the selection back only to have us wipe it
+  // on the next frame, and the reader could never hold more than a word.
+  //
+  // The right trigger is the marks themselves: paint when a highlight
+  // or note is added, removed, or re-anchored; paint when the article
+  // changes; stay out of the way otherwise.
   // -----------------------------------------------------------------
   useEffect(() => {
     const root = containerRef.current;
@@ -208,7 +227,7 @@ export default function DevotionalReader({
         }));
       block.innerHTML = paintBlock(plain, hlsInBlock, notesInBlock);
     });
-  });
+  }, [placedHighlights, placedNotes, doc]);
 
   // -----------------------------------------------------------------
   // Selection handling. Watches the browser's own selection; when the
@@ -237,14 +256,17 @@ export default function DevotionalReader({
     return () => document.removeEventListener("selectionchange", onSelection);
   }, []);
 
-  // Clear the toolbar if the user taps outside of it and outside the article.
+  // Clear the toolbar if the reader taps outside of both the article
+  // and the toolbar itself. `.verse-bar` is the shared VerseToolbar
+  // class — a tap on a swatch or an action there must not collapse the
+  // selection before the button's own onClick has a chance to run.
   useEffect(() => {
     function onPointer(e: PointerEvent) {
       const root = containerRef.current;
       if (!root) return;
       const target = e.target as HTMLElement | null;
       if (!target) return;
-      if (target.closest(".dw-devo-toolbar")) return;
+      if (target.closest(".verse-bar")) return;
       if (root.contains(target)) return;
       const sel = window.getSelection();
       if (sel && !sel.isCollapsed) sel.removeAllRanges();
@@ -358,8 +380,7 @@ export default function DevotionalReader({
     setNoteSheet({
       anchor: r,
       quote: r.quote,
-      existing,
-      reference: captured.reference
+      existing
     });
     window.getSelection()?.removeAllRanges();
     setCaptured(null);
@@ -459,6 +480,63 @@ export default function DevotionalReader({
       showToast(friendlyError(err));
     }
   }, [noteSheet, notes, supabase, showToast]);
+
+  // -----------------------------------------------------------------
+  // Toolbar meta, derived from the current selection.
+  //
+  // `currentColour` is the colour on the selection when every placed
+  // highlight it overlaps shares one; otherwise null (mixed or none).
+  // `anyHighlighted` and `hasNote` decide whether the toolbar's labels
+  // read "Highlight" / "Note" or "Change colour" / "Edit note".
+  // -----------------------------------------------------------------
+  const toolbarMeta = useMemo(() => {
+    if (!captured) {
+      return {
+        currentColour: null as HighlightColour | null,
+        anyHighlighted: false,
+        hasNote: false
+      };
+    }
+    const overlappingColours = new Set<HighlightColour>();
+    let anyHighlighted = false;
+    for (const h of placedHighlights) {
+      if (h.placement.kind !== "placed") continue;
+      const p = h.placement;
+      const hit = captured.ranges.some((r) => {
+        if (r.section !== p.section || r.block !== p.block) return false;
+        const rEnd = r.offset + r.length;
+        const pEnd = p.offset + p.length;
+        return r.offset < pEnd && p.offset < rEnd;
+      });
+      if (hit) {
+        anyHighlighted = true;
+        overlappingColours.add(h.colour);
+      }
+    }
+    const currentColour =
+      overlappingColours.size === 1 ? [...overlappingColours][0] : null;
+    const first = captured.ranges[0];
+    const hasNote = first
+      ? placedNotes.some(
+          (n) =>
+            n.placement.kind === "placed" &&
+            n.placement.section === first.section &&
+            n.placement.block === first.block &&
+            (n.placement as { offset: number }).offset === first.offset &&
+            (n.placement as { length: number }).length === first.length
+        )
+      : false;
+    return { currentColour, anyHighlighted, hasNote };
+  }, [captured, placedHighlights, placedNotes]);
+
+  // The reference line for the toolbar. Prose has no verse address, so
+  // we show what identifies this piece: the article title (kept short by
+  // trimming everything after the first "·" if the source packs a date
+  // in there) and the human date beside it.
+  const toolbarReference = useMemo(() => {
+    const short = (entry.title || "Rhapsody").split("·")[0].trim();
+    return `${short} · ${humanDate}`;
+  }, [entry.title, humanDate]);
 
   // -----------------------------------------------------------------
   // Render. Keep the plain text of every block in the ref as it mounts,
@@ -606,80 +684,23 @@ export default function DevotionalReader({
         </section>
       )}
 
-      {/* Floating selection toolbar. Small, quiet, positioned near the
-          selection. Uses the same six-swatch palette as scripture. */}
-      {captured && (
-        <div
-          className="dw-devo-toolbar"
-          style={{
-            position: "fixed",
-            left: Math.max(
-              8,
-              Math.min(
-                (typeof window !== "undefined" ? window.innerWidth : 400) - 336,
-                captured.clientRect.left + captured.clientRect.width / 2 - 168
-              )
-            ),
-            top: Math.max(8, captured.clientRect.top - 60),
-            zIndex: 70,
-            background: "var(--bg)",
-            border: "1px solid var(--line)",
-            padding: 8,
-            display: "flex",
-            gap: 4,
-            alignItems: "center"
-          }}
-        >
-          {HIGHLIGHT_COLOURS.map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => saveHighlight(c)}
-              className="hl-swatch"
-              data-c={c}
-              aria-label={`Highlight ${c}`}
-              style={{ width: 36, height: 36 }}
-            />
-          ))}
-          <button
-            type="button"
-            onClick={removeHighlightsAtSelection}
-            className="meta"
-            aria-label="Remove highlight"
-            style={{ padding: "0 8px", height: 36, textDecoration: "underline" }}
-          >
-            Off
-          </button>
-          <span
-            aria-hidden
-            style={{ width: 1, height: 24, background: "var(--line)" }}
-          />
-          <button
-            type="button"
-            onClick={openNoteFromSelection}
-            className="meta"
-            style={{ padding: "0 8px", height: 36 }}
-          >
-            Note
-          </button>
-          <button
-            type="button"
-            onClick={copy}
-            className="meta"
-            style={{ padding: "0 8px", height: 36 }}
-          >
-            Copy
-          </button>
-          <button
-            type="button"
-            onClick={share}
-            className="meta"
-            style={{ padding: "0 8px", height: 36 }}
-          >
-            Share
-          </button>
-        </div>
-      )}
+      {/* The action bar is the shared VerseToolbar the scripture reader
+          uses, bottom-fixed and out of the way of the selected text.
+          Only the callbacks that make sense for prose are wired in —
+          Compare and Share (link + text) are omitted, so the toolbar
+          skips rendering those buttons. */}
+      <VerseToolbar
+        open={captured != null}
+        reference={toolbarReference}
+        currentColour={toolbarMeta.currentColour}
+        anyHighlighted={toolbarMeta.anyHighlighted}
+        hasNote={toolbarMeta.hasNote}
+        onHighlight={saveHighlight}
+        onRemoveHighlight={removeHighlightsAtSelection}
+        onNote={openNoteFromSelection}
+        onCopy={copy}
+        onShareImage={share}
+      />
 
       {noteSheet && (
         <DevotionalNoteSheet
@@ -889,10 +910,8 @@ function captureSelection(root: HTMLElement, sel: Selection): Captured | null {
   if (ranges.length === 0) return null;
 
   return {
-    reference: "",
     fullQuote: fullQuoteParts.join(" "),
-    ranges,
-    clientRect: range.getBoundingClientRect()
+    ranges
   };
 }
 

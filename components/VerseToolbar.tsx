@@ -19,34 +19,42 @@ import {
 const BenchChip = dynamic(() => import("./BenchChip"), { ssr: false });
 
 type Props = {
-  /** True when at least one verse is selected. */
+  /** True when at least one selection is live. */
   open: boolean;
-  /** Live reference for the current selection — "Psalm 42:3,7". */
+  /** Live reference for the current selection — "Psalm 42:3,7" for
+      scripture, or a short "Rhapsody · 13 September" line for a
+      devotional selection. */
   reference: string;
-  /** The cap, named in the quiet message when it is reached. */
-  cap: number;
-  atCap: boolean;
-  /** The colour on the selection, if every selected verse shares one. */
+  /** Scripture-only cap on how many verses may be held at once. Omit
+      for a devotional selection, which has no cap. */
+  cap?: number;
+  atCap?: boolean;
+  /** The colour on the selection, if every part of it shares one. */
   currentColour: HighlightColour | null;
-  /** True when any selected verse already carries a highlight. */
+  /** True when the selection already carries a highlight. */
   anyHighlighted: boolean;
-  /** True when a selected verse already has a note. */
+  /** True when the selection already has a note. */
   hasNote: boolean;
   onHighlight: (colour: HighlightColour) => void;
   onRemoveHighlight: () => void;
   onNote: () => void;
-  onCompare: () => void;
-  /** Elite only. False means the chip does not exist — there is no locked
-      button here for a member to find. */
-  showBench: boolean;
-  onBench: () => void;
-  /** True once the Bench has been collapsed back down onto this toolbar.
-      The handle it leaves behind is the second tap that closes everything;
-      the Bench never jumps straight from open to closed. */
-  benchCollapsed: boolean;
-  onCloseAll: () => void;
+  /** Scripture-only. Omit on a devotional selection — comparing
+      translations only makes sense for scripture. */
+  onCompare?: () => void;
+  /** Elite scripture-only chip. False (or omitted) means the chip does
+      not exist — there is no locked button here for a member to find. */
+  showBench?: boolean;
+  onBench?: () => void;
+  /** Scripture-only. True once the Bench has been collapsed back down
+      onto this toolbar. The handle it leaves behind is the second tap
+      that closes everything; the Bench never jumps straight from open
+      to closed. */
+  benchCollapsed?: boolean;
+  onCloseAll?: () => void;
   onCopy: () => void;
-  onShare: () => void;
+  /** Scripture-only "Share" (link + text). Devotional selections don't
+      have a public URL to link to, so this is omitted there. */
+  onShare?: () => void;
   onShareImage: () => void;
 };
 
@@ -173,19 +181,26 @@ export default function VerseToolbar({
           </button>
           {/* Sits next to Note rather than out by Share: comparing is
               something you do while you're still reading the verse, not
-              something you do with it afterwards. */}
-          <button type="button" className="verse-action" onClick={onCompare}>
-            Compare
-          </button>
+              something you do with it afterwards. Scripture only —
+              devotional prose has no translations to compare. */}
+          {onCompare && (
+            <button type="button" className="verse-action" onClick={onCompare}>
+              Compare
+            </button>
+          )}
           {/* The seventh chip. A reader without the flag never sees it,
               and never downloads it either — see BenchChip. */}
-          {showBench && <BenchChip onClick={onBench} />}
+          {showBench && onBench && <BenchChip onClick={onBench} />}
           <button type="button" className="verse-action" onClick={onCopy}>
             Copy
           </button>
-          <button type="button" className="verse-action" onClick={onShare}>
-            Share
-          </button>
+          {/* Scripture-only Share (link + text). A devotional selection
+              has no public URL to hand out, so the button is absent. */}
+          {onShare && (
+            <button type="button" className="verse-action" onClick={onShare}>
+              Share
+            </button>
+          )}
           <button type="button" className="verse-action" onClick={onShareImage}>
             Share as image
           </button>
