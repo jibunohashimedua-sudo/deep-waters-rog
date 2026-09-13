@@ -944,6 +944,32 @@ input::placeholder, textarea::placeholder {
 }
 .btn-danger:hover { background: var(--danger); color: var(--bg); }
 
+/* Small buttons. The system only ever defined one size — px-6 py-3, 14px —
+   so a button that has to sit in a tight row (an admin action, a card's
+   own inline CTA) kept getting resized with a one-off !important override,
+   a different pixel value every time. Compose with the colour class:
+   className="btn-primary btn-sm", "btn-secondary btn-sm",
+   "btn-danger btn-sm". Declared after the colour classes so its padding
+   and font-size win at equal specificity without needing !important. */
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+/* Quiet action. Smaller than any named button and not a filter either — a
+   "delete" link inside a row, a hover-reveal action under something someone
+   wrote. There was no shape for this, so four different one-off versions
+   existed, none of them guaranteeing a real tap target. This one does:
+   colour still comes from a semantic utility laid on top (.text-danger,
+   .meta, plain inherited colour), this class only sets the shape.
+   className="btn-quiet text-danger", "btn-quiet meta", etc. */
+.btn-quiet {
+  @apply tap-target inline-flex items-center;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 4px 2px;
+}
+
 
 /* =========================================================
    DARK-MODE GAPS
@@ -1351,6 +1377,26 @@ label[for],
   background: var(--text);
   border-color: var(--text);
   color: var(--bg);
+}
+
+/* Tall chip. .chip's own 34px pill already reaches 44px of tap target via
+   ::after above — but a chip sitting flush in a row of other 44px controls
+   (a reading-chrome bar, a header) needs the pill itself at 44px so its
+   visible edge lines up with its neighbours. That was getting reached for
+   with a one-off !min-h-[44px] every time; this names it instead.
+   Compose: className="chip chip-tall". */
+.chip-tall {
+  min-height: 44px;
+}
+
+/* Mono chip. For a chip that reads as data rather than as prose — a
+   translation code, a reference — inside reading chrome. Compose:
+   className="chip chip-tall chip-mono". */
+.chip-mono {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
 }
 
 /* An action under something someone wrote: amen, reply, report. Metadata
