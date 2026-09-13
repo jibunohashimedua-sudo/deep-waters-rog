@@ -320,7 +320,7 @@ export default function PrayerWall() {
         </button>
       </div>
 
-      <div className="mt-4 space-y-3">
+      <div className="mt-4 card-list">
         {loading ? (
           <LoadingRule label="Loading the prayer wall" />
         ) : shown.length === 0 ? (
@@ -346,7 +346,7 @@ export default function PrayerWall() {
                 <p className="selectable mt-3 text-rog-ink"><MentionText text={p.body} /></p>
                 {p.is_answered && p.answered_note && (
                   <div className="mt-3 p-3 bg-[var(--success-soft)] border border-[var(--success)]">
-                    <p className="text-[10px] uppercase tracking-wider text-success font-semibold">Testimony</p>
+                    <p className="meta text-success">Testimony</p>
                     <p className="text-sm mt-1">{p.answered_note}</p>
                   </div>
                 )}

@@ -152,7 +152,7 @@ export default function LeaderboardView() {
         <p className="mt-4 text-sm text-danger">{error}</p>
       )}
 
-      <div className="mt-6 space-y-2">
+      <div className="mt-6 card-list">
         {loading ? (
           <LoadingRule label="Loading the leaderboard" />
         ) : ranked.length === 0 ? (

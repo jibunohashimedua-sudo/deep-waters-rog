@@ -98,7 +98,7 @@ export default function NotificationsPage() {
           )}
         </div>
 
-        <div className="mt-6 space-y-2">
+        <div className="mt-6 card-list">
           {loading ? (
             <LoadingRule label="Loading notifications" />
           ) : items.length === 0 ? (
@@ -107,24 +107,27 @@ export default function NotificationsPage() {
             </div>
           ) : (
             items.map((n) => {
-              const inner = (
-                <div className={`card ${n.read ? "opacity-60" : "!border-rog-purple"}`}>
-                  <div className="flex-1">
-                    <p className="meta">
-                      {n.kind === "mention" ? "@ Mention" : KIND_LABEL[n.kind] ?? "Notice"}
-                    </p>
-                    <p className="font-semibold text-rog-ink text-sm mt-1">{n.title}</p>
-                    {n.body && <p className="text-xs text-rog-muted mt-0.5">{n.body}</p>}
-                    <p className="text-[10px] text-rog-muted mt-1">
-                      {new Date(n.created_at).toLocaleString("en-GB")}
-                    </p>
-                  </div>
-                </div>
+              const cardClass = `card ${n.read ? "opacity-60" : "!border-rog-purple"}`;
+              const content = (
+                <>
+                  <p className="meta">
+                    {n.kind === "mention" ? "@ Mention" : KIND_LABEL[n.kind] ?? "Notice"}
+                  </p>
+                  <p className="font-semibold text-rog-ink text-sm mt-1">{n.title}</p>
+                  {n.body && <p className="text-xs text-rog-muted mt-0.5">{n.body}</p>}
+                  <p className="text-[10px] text-rog-muted mt-1">
+                    {new Date(n.created_at).toLocaleString("en-GB")}
+                  </p>
+                </>
               );
               return n.link ? (
-                <Link key={n.id} href={n.link} onClick={() => markRead(n.id)}>{inner}</Link>
+                <Link key={n.id} href={n.link} onClick={() => markRead(n.id)} className={cardClass}>
+                  {content}
+                </Link>
               ) : (
-                <div key={n.id} onClick={() => markRead(n.id)}>{inner}</div>
+                <div key={n.id} onClick={() => markRead(n.id)} className={cardClass}>
+                  {content}
+                </div>
               );
             })
           )}

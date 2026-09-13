@@ -114,7 +114,7 @@ export default async function AdminReportsPage() {
           </p>
         )}
 
-        <div className="mt-6 space-y-3">
+        <div className="mt-6 card-list">
           {enriched.length === 0 ? (
             <div className="empty">
               <p>No reports.</p>
@@ -123,7 +123,7 @@ export default async function AdminReportsPage() {
             enriched.map((r) => (
               <div key={r.id} className={`card ${r.resolved ? "opacity-50" : ""}`}>
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-xs uppercase tracking-[0.2em] text-rog-muted font-medium">
+                  <p className="meta">
                     {r.target_type}
                     {!r.targetGone && <> by {r.author}</>}
                   </p>

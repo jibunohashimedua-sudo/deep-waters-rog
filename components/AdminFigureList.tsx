@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import Avatar from "./Avatar";
+import AdminPersonRow from "./AdminPersonRow";
 import { humanDate } from "@/lib/dates";
 import type { FigurePerson, FigureResult } from "@/lib/adminFigures";
 
@@ -152,31 +152,17 @@ export default function AdminFigureList({ figure }: { figure: FigureResult }) {
       ) : (
         <div className="admin-list mt-2">
           {rows.map((p) => (
-            <div key={p.id} className="admin-row">
-              <Avatar name={p.name} photoUrl={p.photoUrl} size="md" decorative />
-              <div className="admin-row-text">
-                <p className="admin-row-name">
-                  <span className="admin-row-name-text">{p.name}</span>
-                </p>
-                {/* One mono line, same as every other admin row, so the
-                    heights match down the list. */}
-                <p className="admin-row-meta">
-                  {p.nickname && (
-                    <>
-                      <span className="admin-row-nickname">{p.nickname}</span>
-                      {"  ·  "}
-                    </>
-                  )}
-                  {[
-                    p.cohortName ?? "No cohort",
-                    p.day !== null && `Day ${p.day}`,
-                    p.at && humanDate(p.at)
-                  ]
-                    .filter(Boolean)
-                    .join("  ·  ")}
-                </p>
-              </div>
-            </div>
+            <AdminPersonRow
+              key={p.id}
+              name={p.name}
+              nickname={p.nickname}
+              photoUrl={p.photoUrl}
+              meta={[
+                p.cohortName ?? "No cohort",
+                p.day !== null && `Day ${p.day}`,
+                p.at && humanDate(p.at)
+              ]}
+            />
           ))}
         </div>
       )}

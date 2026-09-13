@@ -54,7 +54,7 @@ export default function CohortsView() {
 
       {error && <p className="mt-4 text-sm text-danger">{error}</p>}
 
-      <div className="mt-6 space-y-3">
+      <div className="mt-6 card-list">
         {loading ? (
           <LoadingRule label="Loading your cohorts" />
         ) : cohorts.length === 0 ? (
@@ -93,7 +93,7 @@ export default function CohortsView() {
                       {c.member_count === 1 ? "" : "s"}
                     </p>
                   </div>
-                  <div className="text-xs text-rog-muted font-medium uppercase tracking-[0.2em] shrink-0">
+                  <div className="meta shrink-0">
                     View →
                   </div>
                 </div>

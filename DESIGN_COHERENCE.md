@@ -855,22 +855,41 @@ this tier was additive only, so Tier 2/3 can migrate onto these classes
 opportunistically as each screen is touched, rather than bundling a dozen
 JSX edits into one low-visibility commit. Type-checked clean.
 
-### Tier 2 — Low risk, high hit-rate
+### Tier 2 — Low risk, high hit-rate · ✅ done (2026-09-13)
 
 Everything in §8 and §9 that never touches the reading surface, the Bench,
 or anything a user would call "the app working":
 
-- Move Prayer, Cohorts, Notifications, Leaderboard, and the two straggling
+- Moved Prayer, Cohorts, Notifications, Leaderboard, and the two straggling
   admin list pages (`app/admin/reports`, `app/admin/testimonials`) onto
-  `.card-list` instead of boxed `.card` + gap.
-- Consolidate `AdminFigureList.tsx`'s hand-duplicated row markup onto
-  `AdminPersonRow`, so admin has one row component instead of two doing the
-  same thing.
-- Fix the four stray uppercase-tracked labels (§9) to `.meta` sentence case.
-- Route `TestimonialAdminControls.tsx`'s bare-text destructive/quiet actions
-  through `.btn-danger`/a real quiet-button class once Tier 1 defines one.
+  `.card-list` instead of boxed `.card` + gap. Notifications needed a small
+  restructure beyond a class rename — its `.card` div was nested a level
+  inside the `<Link>` rather than being the sheet's direct child, which
+  `.card-list > .card` requires, so the card classes moved onto the `Link`/
+  `div` itself.
+- Consolidated `AdminFigureList.tsx`'s hand-duplicated row markup onto
+  `AdminPersonRow` — confirmed live at `/admin/figures/completions-today`,
+  pixel-identical to the admin user list that already used the shared
+  component.
+- Fixed all four stray uppercase-tracked labels (§9) to `.meta` sentence
+  case: Cohorts' "View →", Prayer's "Testimony", the admin reports
+  target-type line, and the admin testimonials status badges.
+- Routed `TestimonialAdminControls.tsx`'s bare-text Delete through
+  `.btn-quiet text-danger` (the class Tier 1 added). Left its Approve/
+  Unapprove/Feature buttons' own size overrides untouched — those weren't
+  part of what this tier promised, and touching them wasn't necessary to
+  fix the one thing that was.
 
-**Cost:** moderate — touches five-plus files, but each is a swap of wrapper
+Type-checked and linted clean across the full project. Confirmed live:
+Cohorts, Notifications (including the subtle hairline — visible on zoom,
+correctly quiet at normal size), and Leaderboard all now read as one list
+instead of a stack of boxes. Admin reports/testimonials and the Prayer
+testimony callout have no current data to screenshot against (empty
+tables), so those two rest on the type-check plus the identical, already-
+verified pattern used elsewhere — I didn't create test rows in your
+database just to force a screenshot.
+
+**Cost:** moderate — touches eight files, but each is a swap of wrapper
 markup, not a rewrite of behavior. **Risk: low.** These lists have no
 complex interaction state; a broken row here is visually obvious immediately
 and easy to catch in review.
