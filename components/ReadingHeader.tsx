@@ -3,7 +3,6 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import TranslationSwitcher from "./TranslationSwitcher";
 import ReferencePicker from "./ReferencePicker";
-import BackControl from "./BackControl";
 import { useParallelOpener } from "@/lib/parallelUi";
 
 type Props = {
@@ -93,7 +92,20 @@ export default function ReadingHeader({
         data-condensed={condensed ? "true" : undefined}
         aria-label="Reading"
       >
-        <BackControl variant="bare" fallbackHref={backHref} label={backLabel} />
+        {/* An EXIT, not a step. The bottom Prev / Next arrows walk the
+            chapter sequence; this leaves the reader entirely. It is a plain
+            Link so the browser history never gets in the way: on a shared
+            link or a notification the destination is still the day view or
+            the book list, and inside the app a walk through several chapters
+            can't quietly turn this control into "one chapter back". */}
+        <Link
+          href={backHref}
+          className="reading-back"
+          aria-label={backLabel}
+          prefetch={false}
+        >
+          Exit
+        </Link>
 
         {/* The condensed reference, which is also the picker once it has
             faded up. It is invisible and unpressable until then — see

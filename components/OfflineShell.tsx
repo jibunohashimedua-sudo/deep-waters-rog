@@ -206,11 +206,17 @@ function OfflineChapter({
   const book = here ? bookByName(here.book) : null;
   const chapter = useChapter(me?.bibleId ?? null, book?.slug ?? null, here?.chapter ?? 0);
   const [alreadyRead, setAlreadyRead] = useState(false);
+  const [dayReadKeys, setDayReadKeys] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
     if (!here) return;
     void hasLocalRead({ day_number: day, book: here.book, chapter: here.chapter }).then(
       setAlreadyRead
+    );
+    // Every chapter the reader has noted for this day, so the pager's
+    // "Finish day" only fires when the day would genuinely finish.
+    void localReadsForDay(day).then((rows) =>
+      setDayReadKeys(new Set(rows.map((r) => `${r.book}|${r.chapter}`)))
     );
   }, [day, here]);
 
@@ -284,7 +290,23 @@ function OfflineChapter({
               prevHref={prev ? `/read/${day}/${slot - 1}` : null}
               prevLabel={prev ? `${prev.book} ${prev.chapter}` : null}
               nextHref={next ? `/read/${day}/${slot + 1}` : `/day/${day}`}
-              nextLabel={next ? `Next: ${next.book} ${next.chapter}` : "Finish day"}
+              nextLabel={
+                next
+                  ? `Next: ${next.book} ${next.chapter}`
+                  : (() => {
+                      // Same honest-label rule as the online reader: don't
+                      // promise "Finish day" if other chapters aren't recorded.
+                      const willCover = new Set(dayReadKeys);
+                      if (canRecord) willCover.add(`${here.book}|${here.chapter}`);
+                      const covered = slots.filter((s) =>
+                        willCover.has(`${s.book}|${s.chapter}`)
+                      ).length;
+                      const remaining = Math.max(0, slots.length - covered);
+                      return remaining === 0
+                        ? "Finish day"
+                        : `${remaining} chapter${remaining === 1 ? "" : "s"} left`;
+                    })()
+              }
               isLast={!next}
               canRecord={canRecord}
             />

@@ -58,13 +58,11 @@ export async function POST(request: Request) {
     );
   }
 
-  // is_full is true when the reader has either written a reflection or
-  // ticked every chapter for this day. Either signal counts as "day
-  // done" — a reflection saved without ticking chapters is still the
-  // reader saying "I'm done here", and unticking a chapter doesn't
-  // demote a day they wrote about.
-  const hasReflection = reflection !== null && reflection.length > 0;
-
+  // A day completes only when every chapter in it is recorded, across
+  // both testaments. Reflections are their own act; writing one no longer
+  // marks the day full on its own, because that used to complete the day
+  // for a reader who had only read one testament — writing off the other
+  // testament's chapters as done when they hadn't been touched.
   const reading = READING_PLAN[day_number - 1];
   const totalChapters = reading.ot.length + reading.nt.length;
   const { count: ticks } = await supabase
@@ -72,9 +70,7 @@ export async function POST(request: Request) {
     .select("*", { count: "exact", head: true })
     .eq("user_id", user.id)
     .eq("day_number", day_number);
-  const chaptersFull = (ticks ?? 0) >= totalChapters;
-
-  const isFull = hasReflection || chaptersFull;
+  const isFull = (ticks ?? 0) >= totalChapters;
 
   const { data: row, error } = await supabase
     .from("completions")

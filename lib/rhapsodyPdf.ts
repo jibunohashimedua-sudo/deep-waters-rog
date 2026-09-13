@@ -184,12 +184,33 @@ export function articleFromLines(perPage: PageLines[]): Article {
     }
   }
 
-  // The prayer or confession is set in its own face on the closing page.
-  const pageB = all.filter((l) => l.page !== first && !junk(l));
-  const counts: Record<string, number> = {};
-  for (const l of pageB) if (l.key !== bodyKey) counts[l.key] = (counts[l.key] || 0) + l.text.length;
-  const prayerKey = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
-  const prayerLines = prayerKey ? pageB.filter((l) => l.key === prayerKey) : [];
+  // The prayer sits below the "PRAYER" (or "CONFESSION") heading on its own
+  // page — anchor it by position, not by font. Font-counting was the old
+  // trick and it broke on any day whose body carried an italic scripture
+  // quote near the end: that italic outweighed the actual prayer on the
+  // closing page, and the wrong lines ended up in the prayer field.
+  //
+  // Using the label's own coordinates: everything on the same page as the
+  // label, below it (lower y — PDF y is bottom-up), and above whatever
+  // junk() already recognises (Further study, the reading plan block, the
+  // footer) is the prayer.
+  let prayerLines: Line[] = [];
+  if (labelLine) {
+    const labelPage = (labelLine as Line & { page: number }).page;
+    const labelY = labelLine.y;
+    prayerLines = all.filter(
+      (l) => (l as Line & { page: number }).page === labelPage && l.y < labelY && !junk(l)
+    );
+  } else {
+    // No PRAYER / CONFESSION heading found — one of the odd Sunday variants,
+    // or an article without a written prayer. Fall back to the font-frequency
+    // guess so the field isn't empty.
+    const pageB = all.filter((l) => l.page !== first && !junk(l));
+    const counts: Record<string, number> = {};
+    for (const l of pageB) if (l.key !== bodyKey) counts[l.key] = (counts[l.key] || 0) + l.text.length;
+    const prayerKey = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
+    prayerLines = prayerKey ? pageB.filter((l) => l.key === prayerKey) : [];
+  }
 
   const skip = new Set([...verseLines, ...prayerLines, ...titleLines].map((l) => `${l.y}:${l.text}`));
   const paras: string[] = [];

@@ -114,7 +114,12 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   const hasReflection = !!existingCompletion?.reflection?.trim();
-  const shouldBeFull = ticksCount >= totalChapters || hasReflection;
+  // Only every chapter recorded, across both testaments, completes a day.
+  // A reflection alone used to also flip the day to full, which meant a
+  // reader who wrote about a New Testament chapter but hadn't touched the
+  // Old Testament reading had the day marked "kept" — writing the Old
+  // Testament off unread. Reflections are a separate act now.
+  const shouldBeFull = ticksCount >= totalChapters;
 
   if (shouldBeFull) {
     // If there isn't a completions row yet, create one — same shape the

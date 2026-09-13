@@ -63,7 +63,7 @@ export default async function ReadChapterPage({
   );
 
   const supabase = createClient();
-  const [outcome, noteResult, tickResult] = await Promise.all([
+  const [outcome, noteResult, tickResult, dayReadsResult] = await Promise.all([
     fetchChapter(here.abbr, here.chapter, resolved.id),
     // The study note belongs to the day, so it rides on the first chapter
     // of it rather than repeating above all fourteen.
@@ -81,7 +81,15 @@ export default async function ReadChapterPage({
       .eq("day_number", day)
       .eq("book", here.book)
       .eq("chapter", here.chapter)
-      .maybeSingle()
+      .maybeSingle(),
+    // Every chapter the reader has recorded for this day, so the pager
+    // knows whether "Finish day" would genuinely finish it or would be
+    // lying to the reader.
+    supabase
+      .from("chapter_reads")
+      .select("book, chapter")
+      .eq("user_id", userId)
+      .eq("day_number", day)
   ]);
 
   if (noteResult.error) {
@@ -94,7 +102,31 @@ export default async function ReadChapterPage({
   const reference = `${here.book} ${here.chapter}`;
 
   const nextHref = next ? `/read/${day}/${slot + 1}` : `/day/${day}`;
-  const nextLabel = next ? `Next: ${next.book} ${next.chapter}` : "Finish day";
+  // On the last chapter of the day, the button used to say "Finish day"
+  // whether or not the day would actually finish. If the other testament
+  // is untouched, we say what is really left rather than lying with the
+  // label. `slotsInDay` counts the ticked chapters that appear anywhere
+  // in the day's plan (a stray tick outside the plan doesn't count), and
+  // we add 1 for this chapter because tapping Next records it.
+  const dayReads = new Set(
+    (dayReadsResult.data ?? []).map((r) => `${r.book}|${r.chapter}`)
+  );
+  const planKeys = new Set(slots.map((s) => `${s.book}|${s.chapter}`));
+  const alreadyRead = !!tickResult.data;
+  const willBeRecordedAfter = new Set(dayReads);
+  // Reading ahead is fine, marking ahead is refused server-side. On any
+  // day the reader has reached, tapping Next records the current chapter,
+  // so it counts toward the day's coverage.
+  if (day <= currentDay) {
+    willBeRecordedAfter.add(`${here.book}|${here.chapter}`);
+  }
+  const covered = Array.from(willBeRecordedAfter).filter((k) => planKeys.has(k)).length;
+  const remaining = Math.max(0, slots.length - covered);
+  const nextLabel = next
+    ? `Next: ${next.book} ${next.chapter}`
+    : remaining === 0
+      ? "Finish day"
+      : `${remaining} chapter${remaining === 1 ? "" : "s"} left`;
 
   return (
     <>
@@ -156,7 +188,7 @@ export default async function ReadChapterPage({
           book={here.book}
           chapter={here.chapter}
           words={words}
-          alreadyRead={!!tickResult.data}
+          alreadyRead={alreadyRead}
           position={slot}
           total={slots.length}
           prevHref={prev ? `/read/${day}/${slot - 1}` : null}
