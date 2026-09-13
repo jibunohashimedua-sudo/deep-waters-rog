@@ -14,7 +14,6 @@ import ReflectionForm from "@/components/ReflectionForm";
 import NudgeBanner from "@/components/NudgeBanner";
 import Greeting from "@/components/Greeting";
 import DayHeader from "@/components/DayHeader";
-import TimezoneNotice from "@/components/TimezoneNotice";
 
 /**
  * Any day, 1–90.
@@ -162,10 +161,6 @@ export default async function DayPage({
     <>
       <Nav profile={profile} />
       <main data-surface="reading" className="max-w-3xl mx-auto px-6 py-10">
-        {/* One-time notice about the timezone-drift fix. Self-retires two
-            weeks after deploy — see components/TimezoneNotice.tsx. */}
-        <TimezoneNotice />
-
         {/* Reader on Day 90, and it's already kept — a subtle line pointing
             at the "you finished" page. Non-blocking; the day view still
             renders in full underneath. */}
