@@ -102,6 +102,13 @@ export default function DevotionalReader({
   // Keep the plain text of every block so the paint pass always starts
   // from truth instead of reading a DOM the paint itself wrote.
   const plainTextRef = useRef<Map<string, string>>(new Map());
+  // True while the reader's most recent pointer went down on the
+  // toolbar. Tapping a toolbar button (Highlight, a swatch, Note…)
+  // collapses the browser's text selection as a side effect, which
+  // otherwise fires selectionchange with an empty range and closes the
+  // bar before the button's own click has a chance to run. This flag
+  // lets the selection handler ignore that particular collapse.
+  const toolbarTouchedRef = useRef(false);
 
   const doc: ArticleDoc = useMemo(() => articleFrom(entry), [entry]);
   const [highlights, setHighlights] = useState<Highlight[]>(initialHighlights);
@@ -241,6 +248,11 @@ export default function DevotionalReader({
       if (!root) return;
       const sel = window.getSelection();
       if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
+        // A tap on the toolbar itself collapses the selection as a
+        // side effect. Don't close the bar out from under its own tap
+        // — the button's onClick is next in line to run and will
+        // clear captured itself once it has done its work.
+        if (toolbarTouchedRef.current) return;
         setCaptured(null);
         return;
       }
@@ -256,24 +268,36 @@ export default function DevotionalReader({
     return () => document.removeEventListener("selectionchange", onSelection);
   }, []);
 
-  // Clear the toolbar if the reader taps outside of both the article
-  // and the toolbar itself. `.verse-bar` is the shared VerseToolbar
-  // class — a tap on a swatch or an action there must not collapse the
-  // selection before the button's own onClick has a chance to run.
+  // Track pointerdowns for two reasons:
+  //   (1) Set the toolbar-touched flag so the selection handler ignores
+  //       the collapse that follows a tap on a bar button. The flag is
+  //       lowered on the next pointerup — the collapse we're guarding
+  //       against fires between the two.
+  //   (2) A tap that lands outside both the article and the toolbar
+  //       clears the selection and closes the bar.
   useEffect(() => {
-    function onPointer(e: PointerEvent) {
+    function onDown(e: PointerEvent) {
       const root = containerRef.current;
       if (!root) return;
       const target = e.target as HTMLElement | null;
       if (!target) return;
-      if (target.closest(".verse-bar")) return;
+      const inToolbar = !!target.closest(".verse-bar");
+      toolbarTouchedRef.current = inToolbar;
+      if (inToolbar) return;
       if (root.contains(target)) return;
       const sel = window.getSelection();
       if (sel && !sel.isCollapsed) sel.removeAllRanges();
       setCaptured(null);
     }
-    document.addEventListener("pointerdown", onPointer);
-    return () => document.removeEventListener("pointerdown", onPointer);
+    function onUp() {
+      toolbarTouchedRef.current = false;
+    }
+    document.addEventListener("pointerdown", onDown, true);
+    document.addEventListener("pointerup", onUp, true);
+    return () => {
+      document.removeEventListener("pointerdown", onDown, true);
+      document.removeEventListener("pointerup", onUp, true);
+    };
   }, []);
 
   // -----------------------------------------------------------------
