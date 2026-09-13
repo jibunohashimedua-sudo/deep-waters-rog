@@ -3,7 +3,11 @@ import { requireProfile } from "@/lib/auth";
 import { longDate } from "@/lib/rhapsody";
 import { todayISOForUser } from "@/lib/dates";
 import { tzForCurrentRequest } from "@/lib/serverToday";
+import { currentDayNumber } from "@/lib/plan";
+import { todayForCurrentRequest } from "@/lib/serverToday";
 import Nav from "@/components/Nav";
+import DevotionalReader from "@/components/DevotionalReader";
+import type { Highlight, Note } from "@/lib/devotionalHighlights";
 
 // A fresh signed link every visit, so this page can never be cached. The
 // signed URL itself is minted at click time now — see `/api/rhapsody/pdf`.
@@ -12,21 +16,46 @@ export const dynamic = "force-dynamic";
 export default async function RhapsodyPage() {
   // requireProfile redirects to /login when signed out, so nothing below
   // this line ever runs for a stranger.
-  const { profile } = await requireProfile();
+  const { userId, profile } = await requireProfile();
   const supabase = createClient();
 
   // Reader's own timezone. Without the cookie (first paint of a fresh
   // session) this falls back to UTC — a reader in Asia at 04:00 local can
   // see yesterday's article until the cookie is set on the next request.
   const date = todayISOForUser(tzForCurrentRequest());
+  const dayNumber = currentDayNumber(
+    profile.start_date,
+    todayForCurrentRequest()
+  );
 
-  // Two plain queries, merged here. No nested select: this project has been
-  // bitten by ambiguous-relationship errors from PostgREST joins.
-  const { data: entry, error: entryError } = await supabase
-    .from("rhapsody_days")
-    .select("edition_id, title, page_number, verse_text, body, prayer, prayer_label")
-    .eq("date", date)
-    .maybeSingle();
+  // Article, PDF existence, and the reader's saved highlights + notes on
+  // this date — all in one round-trip, all in parallel.
+  const [
+    { data: entry, error: entryError },
+    { data: hlRows },
+    { data: noteRows }
+  ] = await Promise.all([
+    supabase
+      .from("rhapsody_days")
+      .select("edition_id, title, page_number, verse_text, body, prayer, prayer_label")
+      .eq("date", date)
+      .maybeSingle(),
+    supabase
+      .from("devotional_highlights")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("date", date)
+      .order("created_at"),
+    supabase
+      .from("devotional_notes")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("date", date)
+      .order("created_at")
+  ]);
+
+  const initialHighlights = (hlRows ?? []) as Highlight[];
+  const initialNotes = (noteRows ?? []) as Note[];
 
   // We only need to know a PDF exists — the actual signed URL is minted at
   // click time by /api/rhapsody/pdf. A 30-minute signed URL minted at page
@@ -46,11 +75,6 @@ export default async function RhapsodyPage() {
   const problem = entryError?.message ?? editionError;
   if (problem) console.error("[deep-waters] rhapsody reader:", problem);
 
-  const rawBody: string = entry?.body ?? "";
-  const paragraphs = rawBody
-    .split(/\n{2,}/)
-    .map((p) => p.trim())
-    .filter(Boolean);
   // The `page` param lets /api/rhapsody/pdf append `#page=N` to the signed
   // URL's Location header, so the reader lands on the mapped article page
   // rather than the front cover.
@@ -83,40 +107,31 @@ export default async function RhapsodyPage() {
           </div>
         )}
 
-        {/* The opening scripture, set apart from the article the way it is
-            in the devotional itself. */}
-        {entry?.verse_text?.trim() && (
-          <blockquote className="mt-10 surface-soft selectable">
-            <p className="scripture-prose text-lg leading-relaxed text-rog-ink">
-              {entry.verse_text.trim()}
-            </p>
-          </blockquote>
-        )}
-
-        {/* The article. Same serif, same measure, same rhythm as scripture —
-            it's meant to be read, not viewed. */}
-        {paragraphs.length > 0 && (
-          <div className="mt-10 bible-content selectable">
-            {paragraphs.map((p, i) => (
-              <p key={i}>{p}</p>
-            ))}
-          </div>
-        )}
-
-        {entry?.prayer?.trim() && (
-          <div className="mt-16 surface-soft selectable">
-            <p className="chapter-mark accent-pink">
-              {entry.prayer_label?.trim() || "Prayer"}
-            </p>
-            <p className="mt-3 font-serif text-base leading-relaxed text-rog-ink">
-              {entry.prayer.trim()}
-            </p>
-          </div>
+        {/* The article, rendered by DevotionalReader so scripture-selection
+            highlighting and per-passage notes work on the prose. It carries
+            every existing highlight for today, and shows the toolbar the
+            moment a run of text is selected. */}
+        {entry && (
+          <DevotionalReader
+            userId={userId}
+            currentDayNumber={dayNumber}
+            entry={{
+              date,
+              title: entry.title ?? "",
+              verse_text: entry.verse_text,
+              body: entry.body,
+              prayer: entry.prayer,
+              prayer_label: entry.prayer_label
+            }}
+            initialHighlights={initialHighlights}
+            initialNotes={initialNotes}
+            humanDate={longDate(date)}
+          />
         )}
 
         {/* Nothing to read means the text hasn't been pulled in yet — the PDF
             is still there, so send them to it rather than to an empty page. */}
-        {entry && paragraphs.length === 0 && pdfHref && (
+        {entry && !entry.body?.trim() && pdfHref && (
           <div className="mt-10 card empty">
             <p>Today&rsquo;s article hasn&rsquo;t been typed up yet.</p>
           </div>

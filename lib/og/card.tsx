@@ -42,6 +42,11 @@ export const CARD_H = ORIENT_SPECS.portrait.h;
 export type CardOptions = {
   orient?: Orient;
   bg?: Background | "random";
+  /** A short credit line rendered as a mono metadata row under the
+      reference. Used for Rhapsody selections; omitted for scripture, so
+      the existing scripture cards render identically to before this
+      option existed. */
+  attribution?: string;
 };
 
 type LoadedFont = {
@@ -293,6 +298,19 @@ export async function verseCard(
           >
             {ref || "DEEP WATERS"}
           </div>
+          {opts.attribution && (
+            <div
+              style={{
+                fontFamily: mono,
+                fontSize: Math.round(spec.refSize * 0.72),
+                letterSpacing: "0.09em",
+                color: QUIET,
+                marginTop: Math.round(spec.refMarginTop * 0.35)
+              }}
+            >
+              {opts.attribution.toUpperCase()}
+            </div>
+          )}
         </div>
 
         <Footer spec={spec} mono={mono} depth={depth} />

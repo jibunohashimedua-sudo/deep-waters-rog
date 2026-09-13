@@ -37,12 +37,20 @@ export async function GET(req: NextRequest) {
     ? "random"
     : (isBackground(bgParam) ? bgParam : "plain");
 
+  // Optional attribution string, rendered as a mono line under the
+  // reference. Used for Rhapsody selections; omitted for scripture.
+  const attributionRaw = searchParams.get("attribution");
+  const attribution =
+    attributionRaw && attributionRaw.trim().length > 0
+      ? attributionRaw.trim().slice(0, 200)
+      : undefined;
+
   try {
     return await verseCard(
       reference,
       text,
       Number(searchParams.get("day")) || undefined,
-      { orient, bg }
+      { orient, bg, attribution }
     );
   } catch (err) {
     console.error("[deep-waters] verse card:", err);

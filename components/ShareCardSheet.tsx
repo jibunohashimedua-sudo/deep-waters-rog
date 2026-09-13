@@ -58,6 +58,10 @@ type Props = {
   reference: string;
   verseText: string;
   dayNumber?: number;
+  /** A small mono credit line under the reference on the card. Used for
+      Rhapsody selections; omitted for scripture so the existing card
+      renders identically to before. */
+  attribution?: string;
   onClose: () => void;
   /** How the sheet reports what it did back to the reader. */
   onToast: (message: string) => void;
@@ -70,6 +74,7 @@ export default function ShareCardSheet({
   reference,
   verseText,
   dayNumber,
+  attribution,
   onClose,
   onToast,
   onShared
@@ -145,6 +150,7 @@ export default function ShareCardSheet({
         bg
       });
       if (dayNumber) params.set("day", String(dayNumber));
+      if (attribution) params.set("attribution", attribution);
       const res = await fetch(`/api/og/verse?${params.toString()}`);
       if (!res.ok) throw new Error(`card responded ${res.status}`);
       const blob = await res.blob();
@@ -235,6 +241,7 @@ export default function ShareCardSheet({
               reference={reference}
               text={verseText}
               dayNumber={dayNumber}
+              attribution={attribution}
               isRandom={bg === "random"}
             />
           </div>
@@ -338,6 +345,7 @@ function SharePreview({
   reference,
   text,
   dayNumber,
+  attribution,
   isRandom
 }: {
   orient: Orient;
@@ -345,6 +353,7 @@ function SharePreview({
   reference: string;
   text: string;
   dayNumber?: number;
+  attribution?: string;
   isRandom: boolean;
 }) {
   const spec = useMemo(() => PREVIEW_SPECS[orient], [orient]);
@@ -406,6 +415,19 @@ function SharePreview({
               >
                 {ref || "DEEP WATERS"}
               </div>
+              {attribution && (
+                <div
+                  style={{
+                    fontFamily: "var(--font-mono), monospace",
+                    fontSize: Math.round(spec.refSize * 0.72),
+                    letterSpacing: "0.09em",
+                    color: "#8B87A3",
+                    marginTop: Math.round(spec.refMarginTop * 0.35)
+                  }}
+                >
+                  {attribution.toUpperCase()}
+                </div>
+              )}
             </div>
 
             <div

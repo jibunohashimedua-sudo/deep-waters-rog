@@ -1723,6 +1723,41 @@ label[for],
 .hl-swatch[data-c="silt"]    { --hl-ground: var(--hl-silt-ground);     --hl-rule: var(--hl-silt-rule); }
 
 /* =========================================================
+   DEVOTIONAL HIGHLIGHTS
+   Inline wrappers on prose. Same six-colour palette as scripture,
+   painted as a tinted ground with a hairline colour-rule stroke on
+   the left of every wrapped line. `box-decoration-break: clone` is
+   what carries the tint continuously across a line wrap.
+   ========================================================= */
+.dw-devo-hl {
+  background: var(--hl-ground);
+  box-shadow: inset 2px 0 0 var(--hl-rule);
+  padding: 1px 4px 1px 6px;
+  /* Wrap the tint on to every wrapped line, not just the first. */
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.dw-devo-hl[data-hl="shoal"]   { --hl-ground: var(--hl-shoal-ground);    --hl-rule: var(--hl-shoal-rule); }
+.dw-devo-hl[data-hl="current"] { --hl-ground: var(--hl-current-ground);  --hl-rule: var(--hl-current-rule); }
+.dw-devo-hl[data-hl="coral"]   { --hl-ground: var(--hl-coral-ground);    --hl-rule: var(--hl-coral-rule); }
+.dw-devo-hl[data-hl="beacon"]  { --hl-ground: var(--hl-beacon-ground);   --hl-rule: var(--hl-beacon-rule); }
+.dw-devo-hl[data-hl="fathom"]  { --hl-ground: var(--hl-fathom-ground);   --hl-rule: var(--hl-fathom-rule); }
+.dw-devo-hl[data-hl="silt"]    { --hl-ground: var(--hl-silt-ground);     --hl-rule: var(--hl-silt-rule); }
+
+/* A small filled dot the reader can tap to open the note. Sits inline,
+   so it inherits font metrics — floats along with the wrapped text. */
+.dw-devo-note-marker {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin: 0 2px 0 4px;
+  vertical-align: middle;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+}
+
+/* =========================================================
    SHARE CARD PICKER
    The bottom sheet that opens from the verse toolbar's "Share as image".
    Every control here is a hairline pill — same idiom as the pager
