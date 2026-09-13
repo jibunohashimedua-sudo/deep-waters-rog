@@ -74,7 +74,6 @@ export default function ChapterPager({
   canRecord
 }: Props) {
   const router = useRouter();
-  const [menuOpen, setMenuOpen] = useState(false);
   const [recorded, setRecorded] = useState(alreadyRead);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -212,7 +211,6 @@ export default function ChapterPager({
   /** The one fallback: the audio Bible in the car, a paper Bible at the
       kitchen table. Quiet, in the overflow, never the main path. */
   function markElsewhere() {
-    setMenuOpen(false);
     if (!canRecord || recorded) return;
     record();
     setToast(`${book} ${chapter} marked read`);
@@ -226,11 +224,27 @@ export default function ChapterPager({
         <span className="meta">
           Chapter {position} of {total} today
         </span>
-        {recorded && (
-          <span className="meta chapter-pager-kept" aria-label="Recorded as read">
-            Read
-          </span>
-        )}
+        <span className="chapter-pager-where-right">
+          {recorded ? (
+            <span className="meta chapter-pager-kept" aria-label="Recorded as read">
+              Read
+            </span>
+          ) : canRecord ? (
+            // "I read this elsewhere" — the override the dot menu used
+            // to hide. Same voice as the meta line beside it; a proper
+            // button with a 44px hit area so nobody hits it by accident
+            // and screen readers name it. Hidden on a day the reader
+            // hasn't reached, because recording ahead is refused.
+            <button
+              type="button"
+              onClick={markElsewhere}
+              aria-label={`Mark ${book} ${chapter} as read elsewhere`}
+              className="chapter-pager-elsewhere"
+            >
+              I read this elsewhere
+            </button>
+          ) : null}
+        </span>
       </div>
 
       <div className="chapter-pager-controls mt-3">
@@ -238,7 +252,7 @@ export default function ChapterPager({
           <button
             type="button"
             onClick={() => router.push(prevHref)}
-            className="btn-secondary chapter-pager-prev"
+            className="chapter-pager-prev"
           >
             <span aria-hidden>&larr;</span>
             <span className="truncate">{prevLabel}</span>
@@ -247,43 +261,10 @@ export default function ChapterPager({
           <span className="chapter-pager-prev" />
         )}
 
-        <button type="button" onClick={onNext} className="btn-primary chapter-pager-next">
+        <button type="button" onClick={onNext} className="chapter-pager-next">
           <span className="truncate">{nextLabel}</span>
           <span aria-hidden>{isLast ? "✓" : "→"}</span>
         </button>
-      </div>
-
-      {/* The override. One item, behind a dot menu, because it answers a
-          real question — "I read this somewhere the app couldn't see" —
-          that is not the usual one. */}
-      <div className="chapter-pager-more mt-3">
-        <button
-          type="button"
-          onClick={() => setMenuOpen((v) => !v)}
-          aria-haspopup="menu"
-          aria-expanded={menuOpen}
-          aria-label="More for this chapter"
-          className="chapter-pager-dots"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-            <circle cx="6" cy="12" r="1.6" />
-            <circle cx="12" cy="12" r="1.6" />
-            <circle cx="18" cy="12" r="1.6" />
-          </svg>
-        </button>
-        {menuOpen && (
-          <div role="menu" className="chapter-pager-menu">
-            <button
-              type="button"
-              role="menuitem"
-              onClick={markElsewhere}
-              disabled={!canRecord || recorded}
-              className="chapter-pager-menu-item"
-            >
-              {recorded ? "Already recorded" : "I read this elsewhere"}
-            </button>
-          </div>
-        )}
       </div>
 
       {toast && (

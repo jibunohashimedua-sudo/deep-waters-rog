@@ -292,7 +292,7 @@ function OfflineChapter({
               nextHref={next ? `/read/${day}/${slot + 1}` : `/day/${day}`}
               nextLabel={
                 next
-                  ? `Next: ${next.book} ${next.chapter}`
+                  ? `${next.book} ${next.chapter}`
                   : (() => {
                       // Same honest-label rule as the online reader: don't
                       // promise "Finish day" if other chapters aren't recorded.

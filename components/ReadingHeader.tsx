@@ -137,7 +137,11 @@ export default function ReadingHeader({
         )}
       </header>
 
-      <div className="pt-8">
+      {/* pt-3 (12px), not pt-8 (32px). The sticky bar above already
+          gives the title a hairline of space to breathe against; the
+          rest was air we bought at the cost of scripture below the
+          fold on a 390px phone. */}
+      <div className="pt-3">
         <h1>
           {/* The title is the book-and-chapter control. Somebody looking at
               "Psalm 42" and wanting Psalm 43 should be able to say so by

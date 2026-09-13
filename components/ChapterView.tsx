@@ -153,21 +153,33 @@ export default async function ChapterView({
           </div>
         )}
 
-        {/* Previous / next, rolling across books: Genesis 50 goes to Exodus 1. */}
-        <nav className="mt-16 flex gap-3" aria-label="Chapter navigation">
+        {/* Previous / next, rolling across books: Genesis 50 goes to
+            Exodus 1. Same hairline pair as the plan reader — the accent
+            names the onward action, not a fill. */}
+        <nav
+          className="mt-16"
+          aria-label="Chapter navigation"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1.6fr)",
+            gap: 8
+          }}
+        >
           {prev ? (
-            <Link href={href(prev)!} className="btn-secondary flex-1 text-center">
-              &larr; {prev.book.name} {prev.chapter}
+            <Link href={href(prev)!} className="chapter-pager-prev">
+              <span aria-hidden>&larr;</span>
+              <span className="truncate">{prev.book.name} {prev.chapter}</span>
             </Link>
           ) : (
-            <span className="flex-1" />
+            <span className="chapter-pager-prev" />
           )}
           {next ? (
-            <Link href={href(next)!} className="btn-primary flex-1 text-center">
-              {next.book.name} {next.chapter} &rarr;
+            <Link href={href(next)!} className="chapter-pager-next">
+              <span className="truncate">{next.book.name} {next.chapter}</span>
+              <span aria-hidden>&rarr;</span>
             </Link>
           ) : (
-            <span className="flex-1" />
+            <span className="chapter-pager-next" />
           )}
         </nav>
 

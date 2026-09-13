@@ -1502,12 +1502,21 @@ label[for],
      bar. Body already carries `padding-top: env(safe-area-inset-top)`,
      so without pulling back through it the bar would pin at y=0 with
      the iPhone's clock sitting on top of the book name. The negative
-     margin takes it up into that strip and the matching padding puts
-     its contents back below the notch, so the ground is opaque all the
-     way to the top edge and nothing scrolls through the gap. Both are
-     zero on a phone without one, and on every desktop. */
+     margin takes it up into that strip; the matching `padding-top:
+     env(safe-area-inset-top)` from .safe-top-bar puts its contents back
+     below the notch, so the ground is opaque all the way to the top
+     edge and nothing scrolls through the gap.
+     `padding-inline` (not the `padding` shorthand) so this rule does
+     not clobber .safe-top-bar's `padding-top` — the shorthand quietly
+     sets top and bottom to zero and left the contents jammed under
+     the status bar with a band of dead space below. Both insets are
+     zero on a phone without a notch, and on every desktop. */
   margin: 0 -24px;
-  padding: 0 12px;
+  padding-inline: 12px;
+  /* Deliberately no `padding-block` — .safe-top-bar sets padding-top for
+     the notch, and no bottom padding is wanted. Setting padding-block
+     here (or using the `padding` shorthand) silently sets padding-top
+     back to 0 and re-triggers the exact bug this fix is for. */
   background: var(--bg);      /* opaque. Nothing is frosted anywhere. */
   border-bottom: 1px solid var(--line);
 }
@@ -3153,9 +3162,15 @@ html[data-bench="beside"] .verse-bar {
 
 .chapter-pager-where {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
+  min-height: 44px;
+}
+.chapter-pager-where-right {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
 }
 
 /* "Read". Sonar, because it is state the app is reporting back — the
@@ -3166,9 +3181,34 @@ html[data-bench="beside"] .verse-bar {
   color: var(--sonar);
 }
 
-/* Two controls on one row. Next is wider than Previous because it is
-   the one being aimed at; Previous is there for going back over
-   something, which is a rarer thing to want. */
+/* The override: "I read this elsewhere". Lives in the top row of the
+   pager, opposite the "Chapter N of M today" meta. Same mono-metadata
+   voice, quietly underlined, and given a 44px hit area so it is neither
+   easy to miss nor easy to hit by accident. When the chapter is already
+   recorded the "Read" chip takes this slot; on a future day nothing
+   renders here at all. */
+.chapter-pager-elsewhere {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  min-height: 44px;
+  padding-inline: 4px;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.15s ease;
+}
+.chapter-pager-elsewhere:hover { color: var(--text); }
+
+/* The pair. Two hairline pills, matched in weight and shape so they
+   read as one control with two options. Prev takes the neutral line
+   and neutral text; Next carries the accent hue in the line and the
+   text, and nothing else — the accent is what says which is primary,
+   not a fill. No solid violet on a page of scripture. */
 .chapter-pager-controls {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
@@ -3181,57 +3221,32 @@ html[data-bench="beside"] .verse-bar {
   gap: 8px;
   min-height: 48px;
   min-width: 0;
+  border-radius: 9999px;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
 }
 .chapter-pager-prev {
   justify-content: flex-start;
   padding-inline: 16px;
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+.chapter-pager-prev:hover {
+  background: var(--soft-bg);
 }
 .chapter-pager-next {
   justify-content: space-between;
   padding-inline: 20px;
+  color: var(--accent);
+  border: 1px solid var(--accent);
 }
-
-/* The override lives under the controls, aligned right, drawn as a dot
-   menu and nothing more. It is one answer to one uncommon question and
-   should never read as a second way to do the main thing. */
-.chapter-pager-more {
-  position: relative;
-  display: flex;
-  justify-content: flex-end;
-}
-.chapter-pager-dots {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  color: var(--muted);
-  transition: color 0.15s ease;
-}
-.chapter-pager-dots:hover { color: var(--text); }
-
-.chapter-pager-menu {
-  position: absolute;
-  right: 0;
-  bottom: calc(100% + 4px);
-  z-index: 30;
-  min-width: 208px;
-  background: var(--bg);
-  border: 1px solid var(--line);
-}
-.chapter-pager-menu-item {
-  display: block;
-  width: 100%;
-  padding: 12px 16px;
-  text-align: left;
-  font-size: 14px;
-  color: var(--text);
-  min-height: 44px;
-}
-.chapter-pager-menu-item:hover:not(:disabled) { background: var(--soft-bg); }
-.chapter-pager-menu-item:disabled {
-  color: var(--muted);
-  cursor: default;
+.chapter-pager-next:hover {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  border-color: var(--accent-strong);
 }
 
 /* =========================================================

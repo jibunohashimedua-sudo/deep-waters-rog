@@ -123,7 +123,7 @@ export default async function ReadChapterPage({
   const covered = Array.from(willBeRecordedAfter).filter((k) => planKeys.has(k)).length;
   const remaining = Math.max(0, slots.length - covered);
   const nextLabel = next
-    ? `Next: ${next.book} ${next.chapter}`
+    ? `${next.book} ${next.chapter}`
     : remaining === 0
       ? "Finish day"
       : `${remaining} chapter${remaining === 1 ? "" : "s"} left`;
