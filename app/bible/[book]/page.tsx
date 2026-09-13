@@ -4,6 +4,7 @@ import { requireProfile } from "@/lib/auth";
 import { bookBySlug } from "@/lib/bibleBooks";
 import { readChaptersForBook } from "@/lib/plan";
 import Nav from "@/components/Nav";
+import PageHeading from "@/components/PageHeading";
 import ChapterGrid from "@/components/ChapterGrid";
 
 export async function generateMetadata({ params }: { params: { book: string } }) {
@@ -42,9 +43,7 @@ export default async function BookChaptersPage({
       <Nav profile={profile} />
       <main className="max-w-3xl mx-auto px-6 py-10">
         {/* The app bar's arrow is the way back to the book list. */}
-        <h1 className="text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">
-          {book.name}
-        </h1>
+        <PageHeading>{book.name}</PageHeading>
         <p className="mt-2 text-sm text-rog-muted">
           {book.group}. {book.chapters}{" "}
           {book.chapters === 1 ? "chapter" : "chapters"}

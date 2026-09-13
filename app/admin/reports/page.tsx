@@ -1,4 +1,5 @@
 import Nav from "@/components/Nav";
+import PageHeading from "@/components/PageHeading";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth";
 import ReportActions from "@/components/ReportActions";
@@ -106,7 +107,7 @@ export default async function AdminReportsPage() {
     <>
       <Nav profile={profile} />
       <main className="max-w-4xl mx-auto px-6 py-10">
-        <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Reports</h1>
+        <PageHeading>Reports</PageHeading>
 
         {reportsError && (
           <p className="mt-6 text-sm text-danger">

@@ -2,6 +2,7 @@ import { requireProfile } from "@/lib/auth";
 import { readPreferences } from "@/lib/preferences";
 import { DEFAULT_BIBLE_ID } from "@/lib/translations";
 import Nav from "@/components/Nav";
+import PageHeading from "@/components/PageHeading";
 import PreferencesForm from "@/components/PreferencesForm";
 
 export const metadata = { title: "Preferences · Deep Waters" };
@@ -25,9 +26,7 @@ export default async function PreferencesPage() {
     <>
       <Nav profile={profile} />
       <main className="max-w-3xl mx-auto px-6 py-10">
-        <h1 className="text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">
-          Preferences
-        </h1>
+        <PageHeading>Preferences</PageHeading>
         <p className="mt-2 text-sm text-rog-muted">
           Yours alone, and saved as you change them. They follow you to any
           device you sign in on.

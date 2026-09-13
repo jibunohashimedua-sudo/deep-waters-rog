@@ -144,7 +144,7 @@ export default function VerseToolbar({
       {benchCollapsed && (
         <button
           type="button"
-          className="verse-grab"
+          className="verse-grab tap-target"
           onClick={onCloseAll}
           aria-label="Close"
         >

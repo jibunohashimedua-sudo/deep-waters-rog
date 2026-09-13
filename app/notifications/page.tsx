@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import LoadingRule from "@/components/LoadingRule";
 import Link from "next/link";
 import Nav from "@/components/Nav";
+import PageHeading from "@/components/PageHeading";
 import { createClient } from "@/lib/supabase/client";
 import { rememberView } from "@/lib/offline/views";
 
@@ -89,7 +90,7 @@ export default function NotificationsPage() {
       <main className="max-w-2xl mx-auto px-6 py-10">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Notifications</h1>
+            <PageHeading>Notifications</PageHeading>
           </div>
           {items.some((n) => !n.read) && (
             <button onClick={markAllRead} className="text-xs text-rog-purple underline">

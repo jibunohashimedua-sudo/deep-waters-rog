@@ -4,6 +4,7 @@ import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/errors";
+import Sheet from "@/components/Sheet";
 import {
   TRANSLATIONS,
   TRANSLATION_GROUPS,
@@ -167,32 +168,12 @@ export default function TranslationSwitcher({
         {busy ? "Changing translation" : `Reading in ${current.name}`}
       </span>
 
-      <div
-        data-verse-sheet
-        className={`fixed inset-0 z-[70] ${open ? "" : "pointer-events-none"}`}
-        aria-hidden={!open}
+      <Sheet
+        open={open}
+        onClose={() => setOpen(false)}
+        label="Choose a translation"
+        dataVerseSheet
       >
-        <button
-          aria-label="Close"
-          onClick={() => setOpen(false)}
-          className={`sheet-backdrop absolute inset-0 transition-opacity duration-[250ms] ${
-            open ? "opacity-100" : "opacity-0"
-          }`}
-        />
-
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Choose a translation"
-          className={`sheet ${
-            open ? "translate-y-0" : "translate-y-full"
-          }`}
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}
-        >
-          <div className="pt-2 pb-2 flex justify-center">
-            <div className="w-10 h-1.5 rounded-full bg-black/15 dark:bg-white/20" />
-          </div>
-
           <div className="px-5 pb-5">
             <p className="meta">Reading in {current.abbr}</p>
             <h2 className="mt-2 font-serif text-2xl font-medium text-rog-ink leading-tight">
@@ -257,8 +238,7 @@ export default function TranslationSwitcher({
               );
             })}
           </div>
-        </div>
-      </div>
+      </Sheet>
     </>
   );
 }

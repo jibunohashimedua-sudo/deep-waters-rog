@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Nav from "@/components/Nav";
+import PageHeading from "@/components/PageHeading";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth";
 import { countPeople } from "@/lib/adminFigures";
@@ -73,7 +74,7 @@ export default async function AdminPage() {
     <>
       <Nav profile={profile} />
       <main className="max-w-4xl mx-auto px-6 py-10">
-        <h1 className="text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Admin dashboard</h1>
+        <PageHeading>Admin dashboard</PageHeading>
 
         <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
           {stat("Total users", totalUsers, "/admin/users")}

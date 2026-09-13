@@ -7,6 +7,7 @@ import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { purgeOffline } from "@/lib/offline/session";
+import Sheet from "./Sheet";
 import Avatar from "./Avatar";
 import { currentDayNumber } from "@/lib/plan";
 import { todayISOForUser } from "@/lib/dates";
@@ -170,39 +171,18 @@ export default function MoreSheet({
   const group = "mt-2 pt-2 border-t border-rog-line";
 
   return (
-    <div
-      /* Not md:hidden any more. The wide-screen bar opens this same sheet
-         — same rows, same theme control, same sign out — so there is one
-         More in the app rather than one per bar. */
-      className={`fixed inset-0 z-50 ${open ? "" : "pointer-events-none"}`}
-      aria-hidden={!open}
+    // Not md:hidden any more. The wide-screen bar opens this same sheet —
+    // same rows, same theme control, same sign out — so there is one More
+    // in the app rather than one per bar. On a wide screen the panel stops
+    // at a readable measure and centres, rather than running a list of six
+    // rows across a whole iPad.
+    <Sheet
+      open={open}
+      onClose={onClose}
+      label="More"
+      zIndexClass="z-50"
+      className="md:mx-auto md:max-w-md"
     >
-      {/* Backdrop — dim + soft blur so the page behind softens */}
-      <button
-        aria-label="Close"
-        onClick={onClose}
-        className={`sheet-backdrop absolute inset-0 transition-opacity duration-[250ms] ${
-          open ? "opacity-100" : "opacity-0"
-        }`}
-      />
-
-      {/* Sheet */}
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="More"
-        /* On a wide screen it stops at a readable measure and centres,
-           rather than running a list of six rows across a whole iPad. */
-        className={`sheet md:mx-auto md:max-w-md ${
-          open ? "translate-y-0" : "translate-y-full"
-        }`}
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}
-      >
-        {/* Grabber */}
-        <div className="pt-2 pb-1 flex justify-center">
-          <div className="w-10 h-1.5 rounded-full bg-black/15 dark:bg-white/20" />
-        </div>
-
         <div className="px-2 pb-2">
           {/* You, first. Depth is the profile, and this is the row that
               says so — portrait, name, and one mono line of where you
@@ -324,7 +304,6 @@ export default function MoreSheet({
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </Sheet>
   );
 }

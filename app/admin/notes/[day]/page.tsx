@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Nav from "@/components/Nav";
+import PageHeading from "@/components/PageHeading";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth";
 import { READING_PLAN, formatReading } from "@/lib/plan";
@@ -26,7 +27,7 @@ export default async function EditNotePage({ params }: { params: { day: string }
       <main className="max-w-3xl mx-auto px-6 py-10">
         {/* The app bar's arrow climbs to /admin/notes. */}
         <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-rog-ink">Study note</h2>
-        <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Day {day}</h1>
+        <PageHeading className="mt-2">Day {day}</PageHeading>
         <p className="mt-2 text-sm text-rog-muted">
           OT: {formatReading(reading.ot)}
           <br />

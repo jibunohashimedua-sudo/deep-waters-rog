@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/errors";
 import Mark from "@/components/Mark";
+import PageHeading from "@/components/PageHeading";
 
 const MIN_PASSWORD = 8;
 
@@ -102,9 +103,7 @@ export default function ResetPasswordPage() {
         <div className="mx-auto mb-6 flex justify-center">
           <Mark size={64} />
         </div>
-        <h1 className="text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight text-center">
-          Choose a password
-        </h1>
+        <PageHeading center>Choose a password</PageHeading>
 
         {status === "checking" && (
           <p className="mt-8 text-center text-rog-muted text-sm">Checking your link…</p>

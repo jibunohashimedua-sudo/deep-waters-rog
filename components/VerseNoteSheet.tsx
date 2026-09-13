@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
+import Sheet from "@/components/Sheet";
 
 type Props = {
   open: boolean;
@@ -53,38 +54,12 @@ export default function VerseNoteSheet({
   }, [open, onClose]);
 
   return (
-    <div
-      // Tagged so ScriptureReader's "tap outside clears the selection"
-      // rule knows this counts as inside — a tap on the note sheet is
-      // the reason the verses were selected in the first place.
-      data-verse-sheet
-      className={`fixed inset-0 z-[70] ${open ? "" : "pointer-events-none"}`}
-      aria-hidden={!open}
+    <Sheet
+      open={open}
+      onClose={onClose}
+      label={`Note on ${reference}`}
+      dataVerseSheet
     >
-      {/* Backdrop */}
-      <button
-        aria-label="Close"
-        onClick={onClose}
-        className={`sheet-backdrop absolute inset-0 transition-opacity duration-[250ms] ${
-          open ? "opacity-100" : "opacity-0"
-        }`}
-      />
-
-      {/* Sheet */}
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={`Note on ${reference}`}
-        className={`sheet ${
-          open ? "translate-y-0" : "translate-y-full"
-        }`}
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}
-      >
-        {/* Grabber */}
-        <div className="pt-2 pb-2 flex justify-center">
-          <div className="w-10 h-1.5 rounded-full bg-black/15 dark:bg-white/20" />
-        </div>
-
         <div className="px-5 pb-5">
           <p className="meta">Note on</p>
           <h2 className="mt-2 font-serif text-2xl font-medium text-rog-ink leading-tight">
@@ -145,7 +120,6 @@ export default function VerseNoteSheet({
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </Sheet>
   );
 }

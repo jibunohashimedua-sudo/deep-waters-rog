@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Nav from "@/components/Nav";
+import PageHeading from "@/components/PageHeading";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {
@@ -108,9 +109,7 @@ export default async function SourcesPage() {
 
       <main className="max-w-3xl mx-auto px-6 py-10">
         <p className="meta">Sources</p>
-        <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">
-          Where the study material comes from
-        </h1>
+        <PageHeading className="mt-2">Where the study material comes from</PageHeading>
         <p className="mt-4 max-w-[34rem] text-[13.5px] leading-5 text-rog-muted">
           The Bench reads scholarship other people made and gave away. Several
           of these are licensed{" "}

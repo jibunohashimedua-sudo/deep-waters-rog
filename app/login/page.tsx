@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/errors";
 import Mark from "@/components/Mark";
+import PageHeading from "@/components/PageHeading";
 
 function LoginPageInner() {
   const [email, setEmail] = useState("");
@@ -38,9 +39,7 @@ function LoginPageInner() {
         <div className="mx-auto mb-6 flex justify-center">
           <Mark size={64} />
         </div>
-        <h1 className="text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight text-center">
-          Sign in
-        </h1>
+        <PageHeading center>Sign in</PageHeading>
         <p className="mt-2 text-center text-rog-muted text-sm">
           Welcome back. Pick up where you left off.
         </p>

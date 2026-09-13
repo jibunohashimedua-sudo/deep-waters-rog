@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import Sheet from "@/components/Sheet";
 
 /**
  * The picker that opens when the reader taps "Share as image".
@@ -190,48 +191,15 @@ export default function ShareCardSheet({
     }
   }
 
-  if (!open) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-[70]"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Share as image"
-    >
-      {/* Dim behind the sheet. Tap it to dismiss. */}
-      <button
-        type="button"
-        aria-label="Dismiss"
-        onClick={onClose}
-        className="sheet-backdrop"
-        style={{ position: "absolute", inset: 0, border: 0, cursor: "pointer" }}
-      />
-
-      <div
-        className="share-sheet"
-        role="document"
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          maxHeight: "92vh",
-          overflowY: "auto",
-          background: "var(--bg)",
-          borderTop: "1px solid var(--line)",
-          padding: "20px 20px calc(env(safe-area-inset-bottom) + 20px)"
-        }}
-      >
+    <Sheet open={open} onClose={onClose} label="Share as image">
+      <div className="px-5 pb-5">
         <div style={{ maxWidth: 560, margin: "0 auto" }}>
           <p className="meta">Share as image</p>
 
-          <p
-            className="mt-2 text-[13px] leading-5"
-            style={{ color: "var(--muted)" }}
-          >
+          <h2 className="mt-2 font-serif text-2xl font-medium text-rog-ink leading-tight">
             {reference}
-          </p>
+          </h2>
 
           {/* Live preview, drawn in the same tokens as the OG endpoint. */}
           <div className="mt-4" style={{ display: "flex", justifyContent: "center" }}>
@@ -329,7 +297,7 @@ export default function ShareCardSheet({
           </div>
         </div>
       </div>
-    </div>
+    </Sheet>
   );
 }
 

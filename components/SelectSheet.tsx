@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Sheet from "@/components/Sheet";
 
 /**
  * A select, as a bottom sheet.
@@ -100,46 +101,26 @@ export default function SelectSheet({
         </span>
       </button>
 
-      <div
-        className={`fixed inset-0 z-[70] ${open ? "" : "pointer-events-none"}`}
-        aria-hidden={!open}
-      >
-        <button
-          type="button"
-          tabIndex={-1}
-          aria-label="Close"
-          onClick={() => setOpen(false)}
-          className={`sheet-backdrop absolute inset-0 transition-opacity duration-[250ms] ${
-            open ? "opacity-100" : "opacity-0"
-          }`}
-        />
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={label}
-          className={`sheet ${open ? "translate-y-0" : "translate-y-full"}`}
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
-        >
-          <p className="meta px-6 pt-6 pb-3">{label}</p>
-          <div>
-            {options.map((o, i) => (
-              <button
-                key={o.value}
-                type="button"
-                role="option"
-                aria-selected={o.value === value}
-                onClick={() => pick(o.value)}
-                className="option-row"
-              >
-                <span className="flex-1">{o.label}</span>
-                {groups && o.group && (
-                  <span className="meta">{o.group}</span>
-                )}
-              </button>
-            ))}
-          </div>
+      <Sheet open={open} onClose={() => setOpen(false)} label={label} bottomPad={12}>
+        <p className="meta px-6 pt-6 pb-3">{label}</p>
+        <div>
+          {options.map((o, i) => (
+            <button
+              key={o.value}
+              type="button"
+              role="option"
+              aria-selected={o.value === value}
+              onClick={() => pick(o.value)}
+              className="option-row"
+            >
+              <span className="flex-1">{o.label}</span>
+              {groups && o.group && (
+                <span className="meta">{o.group}</span>
+              )}
+            </button>
+          ))}
         </div>
-      </div>
+      </Sheet>
     </>
   );
 }

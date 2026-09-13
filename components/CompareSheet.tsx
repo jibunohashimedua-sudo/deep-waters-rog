@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { TRANSLATIONS, translationById, type Translation } from "@/lib/translations";
 import { useParallelRows } from "@/lib/parallelVerse";
+import Sheet from "@/components/Sheet";
 
 type Props = {
   open: boolean;
@@ -109,34 +110,12 @@ export default function CompareSheet({
   }
 
   return (
-    <div
-      // Tagged like the note sheet: a tap in here is the reason the verses
-      // were selected, so it must not clear the selection.
-      data-verse-sheet
-      className={`fixed inset-0 z-[70] ${open ? "" : "pointer-events-none"}`}
-      aria-hidden={!open}
+    <Sheet
+      open={open}
+      onClose={onClose}
+      label={`${reference} in several translations`}
+      dataVerseSheet
     >
-      <button
-        aria-label="Close"
-        onClick={onClose}
-        className={`sheet-backdrop absolute inset-0 transition-opacity duration-[250ms] ${
-          open ? "opacity-100" : "opacity-0"
-        }`}
-      />
-
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={`${reference} in several translations`}
-        className={`sheet ${
-          open ? "translate-y-0" : "translate-y-full"
-        }`}
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}
-      >
-        <div className="pt-2 pb-2 flex justify-center">
-          <div className="w-10 h-1.5 rounded-full bg-black/15 dark:bg-white/20" />
-        </div>
-
         <div className="px-5 pb-5">
           <h2 className="mt-2 font-serif text-2xl font-medium text-rog-ink leading-tight">
             {reference}
@@ -208,7 +187,6 @@ export default function CompareSheet({
             </>
           )}
         </div>
-      </div>
-    </div>
+    </Sheet>
   );
 }

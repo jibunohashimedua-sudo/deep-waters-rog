@@ -894,23 +894,41 @@ markup, not a rewrite of behavior. **Risk: low.** These lists have no
 complex interaction state; a broken row here is visually obvious immediately
 and easy to catch in review.
 
-### Tier 3 — Medium risk, most visible
+### Tier 3 — Medium risk, most visible · ✅ done (2026-09-13)
 
-- **One shared sheet component.** Extend `SelectSheet` (already the closest
-  thing to canonical, already used elsewhere) with the grabber pill the
-  other six sheets add by hand, then move `ReferencePicker`,
-  `TranslationSwitcher`, `DayPicker`, `MoreSheet`, `CompareSheet`, and
-  `VerseNoteSheet` onto it instead of each hand-copying the same ~15 lines.
-  Bring `ShareCardSheet` in line with the shape at the same time (real
-  `.sheet-backdrop`/`.sheet`, a real title, a mount/unmount that can
-  animate) since it's the furthest outlier and the most visible one (it's
-  the share flow).
-- **One shared page-header component**, replacing the 25-file copy-pasted
-  `<h1 className="text-[28px] md:text-[34px] font-semibold …">` string, so
-  the next screen gets it by import instead of by copy-paste-and-hope.
-- Fix the two clear tap-target misses (`DayPicker`'s day grid, using the
-  same fix `.chapter-tile` already applies two components away; the Bench's
-  `.verse-grab` handle).
+- **One shared sheet component.** Built [components/Sheet.tsx](components/Sheet.tsx) —
+  the backdrop, the panel, the grabber, the open/close mechanics — and
+  moved `SelectSheet`, `ReferencePicker`, `TranslationSwitcher`,
+  `DayPicker`, `MoreSheet`, `CompareSheet`, and `VerseNoteSheet` onto it,
+  each keeping its own header/body/footer content exactly as it was.
+  `SelectSheet` gained the grabber pill it never had — confirmed live on
+  Leaderboard's cohort filter. `ShareCardSheet` was the furthest outlier
+  (a custom `.share-sheet` div, inline styles, no title, `if (!open) return
+  null` instead of an animatable mount) and is now on the same shell, with
+  a real `<h2>` reference heading where it only had a small grey line
+  before — confirmed live, screenshotted mid-share.
+- **One shared page-header component.** Built
+  [components/PageHeading.tsx](components/PageHeading.tsx) and moved all 26
+  call sites onto it (25 named in the audit, plus `CohortGone.tsx`, which
+  carried the identical string but wasn't caught by the original file
+  search). This is also where the "unexplained `mt-3`" finding got
+  resolved rather than just reproduced: of the 14 files that had it, only
+  three actually sit under a real eyebrow/breadcrumb that earns a gap
+  (`admin/notes/[day]`, `sources`, `admin/figures/[metric]` — standardized
+  to `mt-2`, the tighter of the two values those three had been using);
+  the other 11 had the heading as the literal first thing in `<main>`,
+  identical in structure to every plain call site, so the margin was
+  dropped rather than preserved. Confirmed live on nine screens spanning
+  every variant (plain, `mt-2`-after-eyebrow, and centered auth screens).
+- Fixed both tap-target misses: `DayPicker`'s day grid now carries
+  `.tap-target` (not `.chapter-tile`'s `min-width`/`min-height` — at 10
+  columns in a narrow sheet, forcing 44px-wide cells would overflow a
+  phone screen, so the invisible-hit-area pattern was the correct fix here,
+  not the literal one named in the audit); the Bench's `.verse-grab` handle
+  now carries `.tap-target` too.
+
+Type-checked, linted, and production-built clean (all 61 routes). Every
+sheet and several header variants confirmed live in the running app.
 
 **Cost:** real, but bounded — six sheets and ~25 header call sites, each a
 mechanical swap once the shared component exists. **Risk: medium.** These

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Nav from "@/components/Nav";
+import PageHeading from "@/components/PageHeading";
 import { requireAdmin } from "@/lib/auth";
 import { isFigureKey, loadFigure } from "@/lib/adminFigures";
 import AdminFigureList from "@/components/AdminFigureList";
@@ -31,9 +32,7 @@ export default async function AdminFigurePage({
         <Link href="/admin" className="meta">
           Admin
         </Link>
-        <h1 className="mt-2 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">
-          {figure.title}
-        </h1>
+        <PageHeading className="mt-2">{figure.title}</PageHeading>
         <p className="mt-2 max-w-[34rem] text-sm text-rog-muted">
           {figure.blurb} Account names are shown here, with the name members
           see underneath.

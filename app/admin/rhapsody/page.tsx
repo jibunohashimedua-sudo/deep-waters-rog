@@ -1,4 +1,5 @@
 import Nav from "@/components/Nav";
+import PageHeading from "@/components/PageHeading";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth";
 import { monthStart, todayISO, datesInMonth } from "@/lib/rhapsody";
@@ -42,9 +43,7 @@ export default async function AdminRhapsodyPage({
       <Nav profile={profile} />
       <main className="max-w-3xl mx-auto px-6 py-10">
         <div className="select-none">
-          <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">
-            Rhapsody of Realities
-          </h1>
+          <PageHeading>Rhapsody of Realities</PageHeading>
           <p className="mt-2 text-sm text-rog-muted">
             Upload the month&rsquo;s PDF, then say which article belongs to each day.
             Members see today&rsquo;s article on their Today page.

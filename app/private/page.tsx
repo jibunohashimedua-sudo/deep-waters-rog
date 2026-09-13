@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import Nav from "@/components/Nav";
+import PageHeading from "@/components/PageHeading";
 import { createClient } from "@/lib/supabase/server";
 import { requirePrivateOwner } from "@/lib/auth";
 import { currentDayNumber } from "@/lib/plan";
@@ -57,9 +58,7 @@ export default async function PrivateMembersPage() {
     <>
       <Nav profile={profile} />
       <main className="max-w-3xl mx-auto px-6 py-10">
-        <h1 className="text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">
-          Private members
-        </h1>
+        <PageHeading>Private members</PageHeading>
         <p className="mt-2 text-sm text-rog-muted">
           Visible to you and to nobody else on this project — not to the other
           admins, not to the pastoral team, not in Church Pulse, not in any

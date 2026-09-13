@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { checkNickname, NICKNAME_MAX } from "@/lib/nickname";
+import PageHeading from "@/components/PageHeading";
 import PhotoCropper from "@/components/PhotoCropper";
 
 function OnboardingPageInner() {
@@ -162,9 +163,7 @@ function OnboardingPageInner() {
   return (
     <main className="main-plain min-h-screen flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-md">
-        <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight text-center">
-          Set up your profile
-        </h1>
+        <PageHeading center>Set up your profile</PageHeading>
         <p className="mt-3 text-center text-rog-muted text-sm">
           This is how you&rsquo;ll show up in Deep Waters.
         </p>

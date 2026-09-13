@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Nav from "@/components/Nav";
+import PageHeading from "@/components/PageHeading";
 import { createClient } from "@/lib/supabase/client";
 import { COHORT_NAME_MAX, capText } from "@/lib/limits";
 import { friendlyError } from "@/lib/errors";
@@ -78,9 +79,7 @@ export default function NewCohortPage() {
     <>
       <Nav />
       <main className="max-w-lg mx-auto px-6 py-10">
-        <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">
-          Create a new cohort
-        </h1>
+        <PageHeading>Create a new cohort</PageHeading>
         <p className="mt-2 text-sm text-rog-muted">
           A group starting Deep Waters together. Share the link with your people.
         </p>

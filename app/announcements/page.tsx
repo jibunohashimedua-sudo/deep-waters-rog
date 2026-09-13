@@ -1,4 +1,5 @@
 import Nav from "@/components/Nav";
+import PageHeading from "@/components/PageHeading";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 
@@ -30,7 +31,7 @@ export default async function AnnouncementsPage() {
     <>
       <Nav profile={profile} />
       <main className="max-w-2xl mx-auto px-6 py-10">
-        <h1 className="mt-3 text-[28px] md:text-[34px] font-semibold tracking-[-0.03em] text-rog-ink leading-tight">Announcements</h1>
+        <PageHeading>Announcements</PageHeading>
 
         <div className="mt-6 space-y-3">
           {(items ?? []).length === 0 ? (
