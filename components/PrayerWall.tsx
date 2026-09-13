@@ -345,7 +345,7 @@ export default function PrayerWall() {
                 </div>
                 <p className="selectable mt-3 text-rog-ink"><MentionText text={p.body} /></p>
                 {p.is_answered && p.answered_note && (
-                  <div className="mt-3 p-3 bg-white border border-green-200">
+                  <div className="mt-3 p-3 bg-[var(--success-soft)] border border-[var(--success)]">
                     <p className="text-[10px] uppercase tracking-wider text-success font-semibold">Testimony</p>
                     <p className="text-sm mt-1">{p.answered_note}</p>
                   </div>

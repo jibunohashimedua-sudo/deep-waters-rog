@@ -161,7 +161,7 @@ export default function OfflineDownload({ translationId }: { translationId: stri
               Nothing is removed from your account.
             </p>
             <div className="mt-3 flex gap-2">
-              <button type="button" onClick={remove} className="btn-primary">
+              <button type="button" onClick={remove} className="btn-danger">
                 Delete it
               </button>
               <button
